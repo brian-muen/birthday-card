@@ -63,9 +63,18 @@ export default async function CardPage({ params }: PageParams) {
         }))}
       />
 
-      <p className="mt-10 text-center text-xs text-foreground/40">
-        Anyone with this link can read every message.
-      </p>
+      <div className="mt-10 flex flex-col items-center gap-3">
+        <a
+          href={`/card/${masterToken}/pdf`}
+          download
+          className="text-sm font-medium text-foreground/70 underline decoration-foreground/30 underline-offset-4 transition hover:text-foreground hover:decoration-foreground"
+        >
+          Download as PDF
+        </a>
+        <p className="text-center text-xs text-foreground/40">
+          Anyone with this link can read every message.
+        </p>
+      </div>
     </main>
   );
 }
