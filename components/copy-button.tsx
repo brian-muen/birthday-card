@@ -10,7 +10,7 @@ type CopyState = "idle" | "copied" | "failed";
 
 export function CopyButton({
   value,
-  label = "Copy link",
+  label = "Copy",
 }: {
   value: string;
   label?: string;
@@ -37,9 +37,9 @@ export function CopyButton({
       type="button"
       onClick={copy}
       aria-live="polite"
-      className="shrink-0 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-500/20 transition hover:from-rose-600 hover:to-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+      className="shrink-0 rounded-md border border-foreground/25 bg-white px-4 py-2.5 text-sm font-medium text-foreground transition hover:border-foreground/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
     >
-      {state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : label}
+      {state === "copied" ? "Copied" : state === "failed" ? "Copy failed" : label}
     </button>
   );
 }
@@ -58,8 +58,8 @@ export function CopyLink({ path }: { path: string }) {
   const url = `${origin}${path}`;
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-amber-50 px-4 py-3 font-mono text-sm break-all text-amber-950 ring-1 ring-amber-900/10">
+    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
+      <code className="min-w-0 flex-1 overflow-x-auto rounded-md border border-foreground/15 bg-background px-3.5 py-2.5 font-mono text-[13px] break-all text-foreground/75">
         {url}
       </code>
       <CopyButton value={url} />

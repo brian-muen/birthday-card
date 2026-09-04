@@ -6,14 +6,17 @@ const steps = [
     body: "Name the recipient and the occasion. Takes about ten seconds.",
   },
   {
-    title: "Share the contributor link",
+    title: "Share the link",
     body: "Friends add a private message. Nobody sees anyone else's note.",
   },
   {
     title: "Send it over",
-    body: "When it's full of love, hand the master link to someone special.",
+    body: "When it's full, hand the master link to someone special.",
   },
 ];
+
+const inputClass =
+  "w-full rounded-md border border-foreground/20 bg-white px-3.5 py-2.5 text-base outline-none transition placeholder:text-foreground/30 focus:border-foreground/60";
 
 export default async function Home({
   searchParams,
@@ -27,41 +30,35 @@ export default async function Home({
   const { error, recipientName, occasion } = await searchParams;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-5 py-12 sm:px-8 sm:py-20">
-      <section className="flex flex-col gap-5 text-center sm:text-left">
-        <span className="mx-auto w-fit rounded-full bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-1.5 text-xs font-semibold tracking-wide text-white uppercase sm:mx-0">
-          Group cards, no accounts
-        </span>
-        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Create a group card, collect heartfelt messages, send it to someone
-          special.
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-16 sm:py-24">
+      <header className="text-center">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
+          Group cards &middot; No accounts
+        </p>
+        <h1 className="mt-5 font-serif text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
+          A card everyone can&nbsp;sign.
         </h1>
-        <p className="mx-auto max-w-xl text-lg text-balance text-amber-950/70 sm:mx-0">
-          Start a card, share one link with friends, and every message stays
-          private until you send the finished card to the recipient.
+        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60 text-balance">
+          Start a card and share one link. Every message stays private until
+          you send the finished card to the recipient.
         </p>
-      </section>
+      </header>
 
-      <section className="rounded-2xl bg-white p-6 shadow-lg shadow-amber-900/5 ring-1 ring-amber-900/5 sm:p-8">
-        <h2 className="text-xl font-semibold">Start a card</h2>
-        <p className="mt-1 text-sm text-amber-950/60">
-          You&rsquo;ll get a link to share and a private link to keep.
-        </p>
-
+      <section className="mt-12 rounded-lg border border-foreground/12 bg-white p-6 sm:p-8">
         {error ? (
           <p
             role="alert"
-            className="mt-5 rounded-xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 ring-1 ring-rose-200"
+            className="mb-6 border-l-2 border-foreground/60 pl-3 text-sm text-foreground/80"
           >
             {error}
           </p>
         ) : null}
 
-        <form action={createCard} className="mt-6 flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
+        <form action={createCard} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="recipientName"
-              className="text-sm font-medium text-amber-950"
+              className="text-sm font-medium text-foreground/80"
             >
               Who is it for?
             </label>
@@ -74,14 +71,14 @@ export default async function Home({
               defaultValue={recipientName}
               autoComplete="off"
               placeholder="Priya"
-              className="rounded-xl border border-amber-900/15 bg-[#fffdfa] px-4 py-3 text-base outline-none placeholder:text-amber-950/35 focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+              className={inputClass}
             />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="occasion"
-              className="text-sm font-medium text-amber-950"
+              className="text-sm font-medium text-foreground/80"
             >
               What&rsquo;s the occasion?
             </label>
@@ -94,20 +91,20 @@ export default async function Home({
               defaultValue={occasion}
               autoComplete="off"
               placeholder="Birthday"
-              className="rounded-xl border border-amber-900/15 bg-[#fffdfa] px-4 py-3 text-base outline-none placeholder:text-amber-950/35 focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+              className={inputClass}
             />
-            <p className="text-xs text-amber-950/55">
+            <p className="text-xs text-foreground/45">
               Birthday, farewell, new baby, thank you &mdash; anything goes.
             </p>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label
               htmlFor="intro"
-              className="text-sm font-medium text-amber-950"
+              className="text-sm font-medium text-foreground/80"
             >
               Welcome note{" "}
-              <span className="font-normal text-amber-950/50">(optional)</span>
+              <span className="font-normal text-foreground/45">(optional)</span>
             </label>
             <textarea
               id="intro"
@@ -115,32 +112,33 @@ export default async function Home({
               rows={4}
               maxLength={500}
               placeholder="A few words your friends will see before they write their message."
-              className="resize-y rounded-xl border border-amber-900/15 bg-[#fffdfa] px-4 py-3 text-base outline-none placeholder:text-amber-950/35 focus:border-rose-400 focus:ring-2 focus:ring-rose-200"
+              className={`${inputClass} resize-y`}
             />
           </div>
 
           <button
             type="submit"
-            className="mt-1 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 px-6 py-3.5 text-base font-semibold text-white shadow-md shadow-rose-500/20 transition hover:from-rose-600 hover:to-amber-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
+            className="mt-1 rounded-md bg-foreground px-6 py-3 text-base font-medium text-background transition hover:bg-foreground/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
           >
             Create the card
           </button>
         </form>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-3">
-        {steps.map((step, index) => (
-          <div
-            key={step.title}
-            className="rounded-2xl bg-white/70 p-5 ring-1 ring-amber-900/5"
-          >
-            <span className="flex size-7 items-center justify-center rounded-full bg-gradient-to-r from-rose-500 to-amber-500 text-sm font-semibold text-white">
-              {index + 1}
-            </span>
-            <h3 className="mt-3 font-semibold">{step.title}</h3>
-            <p className="mt-1 text-sm text-amber-950/65">{step.body}</p>
-          </div>
-        ))}
+      <section className="mt-14 border-t border-foreground/12 pt-8">
+        <ol className="grid gap-6 sm:grid-cols-3">
+          {steps.map((step, index) => (
+            <li key={step.title}>
+              <p className="font-serif text-2xl italic text-foreground/35">
+                {index + 1}
+              </p>
+              <h3 className="mt-1.5 text-sm font-medium">{step.title}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/55">
+                {step.body}
+              </p>
+            </li>
+          ))}
+        </ol>
       </section>
     </main>
   );

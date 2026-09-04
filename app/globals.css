@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fff8f1;
-  --foreground: #3b2a20;
+  --background: #faf8f4;
+  --foreground: #26211b;
 }
 
 @theme inline {
@@ -10,10 +10,34 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Page-turn transitions for the card book. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+@keyframes page-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+
+.animate-page-in {
+  animation: page-in 260ms ease-out both;
+}
+
+.animate-page-in-back {
+  animation: page-in-back 260ms ease-out both;
 }

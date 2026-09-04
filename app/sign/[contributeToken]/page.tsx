@@ -21,22 +21,22 @@ export default async function SignPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10 sm:gap-8 sm:px-6 sm:py-16">
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-16 sm:py-24">
       <header className="text-center">
-        <span className="inline-block rounded-full bg-gradient-to-r from-rose-500 to-amber-500 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white shadow-sm shadow-rose-500/20">
+        <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
           {card.occasion}
-        </span>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-          Leave a message for {card.recipientName}
+        </p>
+        <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
+          A message for {card.recipientName}
         </h1>
-        <p className="mt-3 text-base text-stone-600 sm:text-lg">
-          Friends are signing a group card together. Add your note below —
-          nobody else&rsquo;s messages are shown here.
+        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
+          Friends are signing a group card together. Add your note below
+          &mdash; nobody else&rsquo;s messages are shown here.
         </p>
       </header>
 
       {card.intro && (
-        <blockquote className="rounded-2xl border border-amber-200/70 bg-amber-50/70 px-5 py-4 text-[0.975rem] leading-relaxed text-amber-950 sm:px-6">
+        <blockquote className="border-l-2 border-foreground/30 pl-4 font-serif text-lg italic leading-relaxed text-foreground/70 whitespace-pre-wrap">
           {card.intro}
         </blockquote>
       )}
@@ -46,7 +46,7 @@ export default async function SignPage({
         recipientName={card.recipientName}
       />
 
-      <p className="text-center text-xs text-stone-500">
+      <p className="text-center text-xs text-foreground/45">
         Your message stays private until {card.recipientName} opens the card.
       </p>
     </main>
