@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Group Card
 
-## Getting Started
+A Thankbox-style group card app. Create a card for someone, share a
+**contributor link** so friends can privately leave messages (they never see
+each other's messages), and keep a **master link** that shows every message —
+send it to the recipient when you're ready.
 
-First, run the development server:
+## How it works
+
+- No user accounts. Security comes from unguessable URL tokens.
+- Each card has two independent 24-char tokens:
+  - `contributeToken` → `/sign/[contributeToken]` — write-only message form
+  - `masterToken` → `/card/[masterToken]` — view all messages, delete messages
+- `/` — landing page with a create-card form. After creating, you're shown
+  both links at `/created/[masterToken]`.
+
+## Tech
+
+- Next.js (App Router) + TypeScript + Tailwind CSS v4
+- Drizzle ORM. Local dev uses an embedded PGlite database (`.pglite/`,
+  gitignored, zero setup). Production uses hosted Postgres via `DATABASE_URL`
+  (e.g. Neon on Vercel). Tables are auto-created on first use.
+
+## Shared modules (the contract)
+
+- `lib/db/schema.ts` — `cards` and `messages` tables, `Card`/`Message` types
+- `lib/db/index.ts` — `getDb(): Promise<Db>` returns the Drizzle instance
+- `lib/tokens.ts` — `generateToken()` for URL tokens
+
+Example usage in a server action:
+
+```ts
+import { getDb } from "@/lib/db";
+import { cards } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+
+const db = await getDb();
+const card = await db.query.cards.findFirst({
+  where: eq(cards.masterToken, token),
+});
+```
+
+## Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
