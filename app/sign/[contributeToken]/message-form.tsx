@@ -7,7 +7,7 @@ const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
 
 const inputClass =
-  "w-full rounded-md border border-foreground/20 bg-white px-3.5 py-2.5 text-base outline-none transition placeholder:text-foreground/30 focus:border-foreground/60 disabled:opacity-60";
+  "w-full rounded-lg border border-foreground/15 bg-background/60 px-3.5 py-2.5 text-base outline-none transition placeholder:text-foreground/30 focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:opacity-60";
 
 export default function MessageForm({
   contributeToken,
@@ -62,8 +62,11 @@ export default function MessageForm({
 
   if (sentBy) {
     return (
-      <div className="rounded-lg border border-foreground/12 bg-white p-8 text-center sm:p-10">
-        <h2 className="font-serif text-2xl tracking-tight sm:text-3xl">
+      <div className="shadow-card rounded-2xl border border-foreground/10 bg-paper p-8 text-center sm:p-10">
+        <p aria-hidden className="font-serif text-3xl text-accent">
+          &#10047;
+        </p>
+        <h2 className="mt-3 font-serif text-2xl tracking-tight sm:text-3xl">
           Thank you, {sentBy}.
         </h2>
         <p className="mt-3 leading-relaxed text-foreground/60">
@@ -72,7 +75,7 @@ export default function MessageForm({
         <button
           type="button"
           onClick={() => setSentBy(null)}
-          className="mt-6 text-sm font-medium underline decoration-foreground/30 underline-offset-4 transition hover:decoration-foreground"
+          className="mt-6 text-sm font-medium text-accent underline decoration-accent/40 underline-offset-4 transition hover:decoration-accent"
         >
           Write another message
         </button>
@@ -83,7 +86,7 @@ export default function MessageForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-lg border border-foreground/12 bg-white p-6 sm:p-8"
+      className="shadow-card rounded-2xl border border-foreground/10 bg-paper p-6 sm:p-8"
     >
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">
@@ -119,7 +122,7 @@ export default function MessageForm({
             <span
               className={`text-xs tabular-nums ${
                 body.length > MAX_BODY_LENGTH * 0.95
-                  ? "text-foreground"
+                  ? "text-accent"
                   : "text-foreground/40"
               }`}
             >
@@ -143,7 +146,7 @@ export default function MessageForm({
         {error && (
           <p
             role="alert"
-            className="border-l-2 border-foreground/60 pl-3 text-sm text-foreground/80"
+            className="rounded-lg border border-accent/25 bg-accent/5 px-3.5 py-2.5 text-sm text-accent-deep"
           >
             {error}
           </p>
@@ -152,7 +155,7 @@ export default function MessageForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-foreground px-6 py-3 text-base font-medium text-background transition hover:bg-foreground/85 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg bg-accent px-6 py-3 text-base font-medium text-white shadow-sm transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? "Sending..." : "Add my message"}
         </button>

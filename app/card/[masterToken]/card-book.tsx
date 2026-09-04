@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
+import Confetti from "@/components/confetti";
 
 type Note = {
   id: number;
@@ -56,16 +57,16 @@ export default function CardBook({
       <div className="relative w-full">
         <span
           aria-hidden
-          className="absolute inset-0 translate-x-2 translate-y-2 rounded-md border border-foreground/10 bg-white"
+          className="absolute inset-0 translate-x-2 translate-y-2 rounded-xl border border-foreground/10 bg-paper"
         />
         <span
           aria-hidden
-          className="absolute inset-0 translate-x-1 translate-y-1 rounded-md border border-foreground/10 bg-white"
+          className="absolute inset-0 translate-x-1 translate-y-1 rounded-xl border border-foreground/10 bg-paper"
         />
 
         <div
           key={index}
-          className={`relative flex min-h-[26rem] w-full flex-col rounded-md border border-foreground/15 bg-white px-8 py-10 sm:min-h-[30rem] sm:px-14 sm:py-12 ${
+          className={`shadow-card relative flex min-h-[26rem] w-full flex-col rounded-xl border border-foreground/15 bg-paper px-8 py-10 sm:min-h-[30rem] sm:px-14 sm:py-12 ${
             direction === "forward"
               ? "animate-page-in"
               : "animate-page-in-back"
@@ -103,7 +104,7 @@ export default function CardBook({
           type="button"
           onClick={() => goTo(index - 1)}
           disabled={index === 0}
-          className="text-sm font-medium text-foreground/70 underline-offset-4 transition hover:text-foreground hover:underline disabled:pointer-events-none disabled:opacity-0"
+          className="rounded-full border border-foreground/15 bg-paper px-4 py-1.5 text-sm font-medium text-foreground/70 transition hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-0"
         >
           &larr; Previous
         </button>
@@ -116,7 +117,7 @@ export default function CardBook({
           type="button"
           onClick={() => goTo(index + 1)}
           disabled={index >= pageCount - 1}
-          className="text-sm font-medium text-foreground/70 underline-offset-4 transition hover:text-foreground hover:underline disabled:pointer-events-none disabled:opacity-0"
+          className="rounded-full border border-foreground/15 bg-paper px-4 py-1.5 text-sm font-medium text-foreground/70 transition hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-0"
         >
           Next &rarr;
         </button>
@@ -135,17 +136,32 @@ function CoverPage({
   messageCount: number;
 }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center text-center">
-      <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
+    <div className="relative flex flex-1 flex-col items-center justify-center text-center">
+      <Confetti />
+
+      {/* Decorative inner frame, like a printed card */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -inset-x-4 -inset-y-6 rounded-lg border border-accent/15 sm:-inset-x-8"
+      />
+
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
         A birthday card
       </p>
       <h1 className="mt-6 font-serif text-4xl leading-[1.15] tracking-tight text-balance sm:text-5xl">
         Happy Birthday,
         <br />
-        <em>{recipientName}</em>
+        <em className="text-accent">{recipientName}</em>
       </h1>
 
-      <span aria-hidden className="mt-8 h-px w-16 bg-foreground/20" />
+      <span
+        aria-hidden
+        className="mt-8 flex items-center gap-3 text-gold"
+      >
+        <span className="h-px w-12 bg-gold/40" />
+        &#10047;
+        <span className="h-px w-12 bg-gold/40" />
+      </span>
 
       {intro ? (
         <p className="mt-8 max-w-md font-serif text-lg italic leading-relaxed text-foreground/65 whitespace-pre-wrap">
@@ -177,7 +193,7 @@ function MessagePage({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <p className="text-center font-serif text-sm italic text-foreground/35">
+      <p className="text-center font-serif text-sm italic text-gold/80">
         {pageNumber} of {pageTotal}
       </p>
 
@@ -190,7 +206,9 @@ function MessagePage({
       <footer className="flex items-end justify-between gap-4">
         <RemoveControl masterToken={masterToken} messageId={note.id} />
         <div className="text-right">
-          <p className="font-serif text-lg italic">&mdash; {note.authorName}</p>
+          <p className="font-serif text-lg italic text-accent-deep">
+            &mdash; {note.authorName}
+          </p>
           <p className="mt-1 text-xs text-foreground/40">{note.date}</p>
         </div>
       </footer>

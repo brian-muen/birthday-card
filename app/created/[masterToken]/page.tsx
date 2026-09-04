@@ -25,7 +25,7 @@ export default async function CardCreated({
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-16 sm:py-24">
       <header className="text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
           Card created
         </p>
         <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
@@ -36,8 +36,8 @@ export default async function CardCreated({
         </p>
       </header>
 
-      <section className="mt-12 rounded-lg border border-foreground/12 bg-white p-6 sm:p-8">
-        <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-foreground/45">
+      <section className="shadow-card mt-12 rounded-2xl border border-accent/20 bg-paper p-6 sm:p-8">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           Contributor link
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-foreground/60">
@@ -49,8 +49,8 @@ export default async function CardCreated({
         </div>
       </section>
 
-      <section className="mt-5 rounded-lg border border-foreground/25 bg-white p-6 sm:p-8">
-        <h2 className="text-xs font-medium uppercase tracking-[0.2em] text-foreground/70">
+      <section className="shadow-card mt-5 rounded-2xl border border-gold/30 bg-paper p-6 sm:p-8">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
           Master link &mdash; keep private
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-foreground/60">
@@ -60,7 +60,7 @@ export default async function CardCreated({
         <div className="mt-4">
           <CopyLink path={`/card/${card.masterToken}`} />
         </div>
-        <p className="mt-5 border-l-2 border-foreground/50 pl-3 text-sm leading-relaxed text-foreground/70">
+        <p className="mt-5 rounded-r-lg border-l-2 border-gold/60 bg-gold/[0.06] py-2.5 pl-3 pr-3 text-sm leading-relaxed text-foreground/70">
           Save this link somewhere safe now &mdash; email it to yourself or
           bookmark it. There are no accounts, so a lost link means a lost
           card.
@@ -70,13 +70,13 @@ export default async function CardCreated({
       <div className="mt-8 flex flex-col gap-2.5 sm:flex-row">
         <Link
           href={`/card/${card.masterToken}`}
-          className="flex-1 rounded-md bg-foreground px-6 py-3 text-center text-base font-medium text-background transition hover:bg-foreground/85"
+          className="flex-1 rounded-lg bg-accent px-6 py-3 text-center text-base font-medium text-white shadow-sm transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Open the card
         </Link>
         <Link
           href={`/sign/${card.contributeToken}`}
-          className="flex-1 rounded-md border border-foreground/25 bg-white px-6 py-3 text-center text-base font-medium transition hover:border-foreground/60"
+          className="flex-1 rounded-lg border border-foreground/20 bg-paper px-6 py-3 text-center text-base font-medium transition hover:border-accent hover:text-accent"
         >
           Preview the signing page
         </Link>

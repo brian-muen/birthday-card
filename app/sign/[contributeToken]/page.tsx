@@ -23,11 +23,11 @@ export default async function SignPage({
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-16 sm:py-24">
       <header className="text-center">
-        <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
           A birthday card
         </p>
         <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
-          A message for {card.recipientName}
+          A message for <em className="text-accent">{card.recipientName}</em>
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
           Friends are signing {card.recipientName}&rsquo;s birthday card
@@ -37,7 +37,7 @@ export default async function SignPage({
       </header>
 
       {card.intro && (
-        <blockquote className="border-l-2 border-foreground/30 pl-4 font-serif text-lg italic leading-relaxed text-foreground/70 whitespace-pre-wrap">
+        <blockquote className="rounded-r-lg border-l-2 border-accent/50 bg-accent/[0.04] py-3 pl-4 pr-3 font-serif text-lg italic leading-relaxed text-foreground/70 whitespace-pre-wrap">
           {card.intro}
         </blockquote>
       )}
