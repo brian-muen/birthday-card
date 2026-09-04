@@ -12,15 +12,11 @@ type Note = {
 
 export default function CardBook({
   masterToken,
-  heading,
-  occasion,
   recipientName,
   intro,
   notes,
 }: {
   masterToken: string;
-  heading: string;
-  occasion: string;
   recipientName: string;
   intro: string | null;
   notes: Note[];
@@ -56,66 +52,73 @@ export default function CardBook({
 
   return (
     <div className="flex flex-col items-center">
-      {/* The page */}
-      <div
-        key={index}
-        className={`relative flex min-h-[26rem] w-full flex-col rounded-md border border-foreground/15 bg-white px-8 py-10 shadow-[0_1px_2px_rgba(0,0,0,0.03),0_16px_40px_-24px_rgba(0,0,0,0.25)] sm:min-h-[30rem] sm:px-14 sm:py-12 ${
-          direction === "forward" ? "animate-page-in" : "animate-page-in-back"
-        }`}
-      >
-        {/* Bound-edge detail */}
+      {/* The book: stacked pages behind the current one */}
+      <div className="relative w-full">
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-5 left-5 w-px bg-foreground/8 sm:left-8"
+          className="absolute inset-0 translate-x-2 translate-y-2 rounded-md border border-foreground/10 bg-white"
+        />
+        <span
+          aria-hidden
+          className="absolute inset-0 translate-x-1 translate-y-1 rounded-md border border-foreground/10 bg-white"
         />
 
-        {note ? (
-          <MessagePage
-            masterToken={masterToken}
-            note={note}
-            pageNumber={index}
-            pageTotal={notes.length}
+        <div
+          key={index}
+          className={`relative flex min-h-[26rem] w-full flex-col rounded-md border border-foreground/15 bg-white px-8 py-10 sm:min-h-[30rem] sm:px-14 sm:py-12 ${
+            direction === "forward"
+              ? "animate-page-in"
+              : "animate-page-in-back"
+          }`}
+        >
+          {/* Bound-edge detail */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-5 left-5 w-px bg-foreground/8 sm:left-8"
           />
-        ) : (
-          <CoverPage
-            heading={heading}
-            occasion={occasion}
-            recipientName={recipientName}
-            intro={intro}
-            messageCount={notes.length}
-          />
-        )}
+
+          {note ? (
+            <MessagePage
+              masterToken={masterToken}
+              note={note}
+              pageNumber={index}
+              pageTotal={notes.length}
+            />
+          ) : (
+            <CoverPage
+              recipientName={recipientName}
+              intro={intro}
+              messageCount={notes.length}
+            />
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
       <nav
         aria-label="Card pages"
-        className="mt-6 flex w-full items-center justify-between"
+        className="mt-7 flex w-full items-center justify-between px-1"
       >
         <button
           type="button"
           onClick={() => goTo(index - 1)}
           disabled={index === 0}
-          aria-label="Previous page"
-          className="flex size-10 items-center justify-center rounded-full border border-foreground/20 bg-white text-foreground/70 transition hover:border-foreground/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+          className="text-sm font-medium text-foreground/70 underline-offset-4 transition hover:text-foreground hover:underline disabled:pointer-events-none disabled:opacity-0"
         >
-          &larr;
+          &larr; Previous
         </button>
 
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-foreground/45">
-          {index === 0
-            ? "Cover"
-            : `Page ${index} of ${notes.length}`}
+          {index === 0 ? "Cover" : `Page ${index} of ${notes.length}`}
         </p>
 
         <button
           type="button"
           onClick={() => goTo(index + 1)}
           disabled={index >= pageCount - 1}
-          aria-label="Next page"
-          className="flex size-10 items-center justify-center rounded-full border border-foreground/20 bg-white text-foreground/70 transition hover:border-foreground/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+          className="text-sm font-medium text-foreground/70 underline-offset-4 transition hover:text-foreground hover:underline disabled:pointer-events-none disabled:opacity-0"
         >
-          &rarr;
+          Next &rarr;
         </button>
       </nav>
     </div>
@@ -123,14 +126,10 @@ export default function CardBook({
 }
 
 function CoverPage({
-  heading,
-  occasion,
   recipientName,
   intro,
   messageCount,
 }: {
-  heading: string;
-  occasion: string;
   recipientName: string;
   intro: string | null;
   messageCount: number;
@@ -138,16 +137,18 @@ function CoverPage({
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
-        {occasion}
+        A birthday card
       </p>
-      <h1 className="mt-5 font-serif text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
-        {heading}
+      <h1 className="mt-6 font-serif text-4xl leading-[1.15] tracking-tight text-balance sm:text-5xl">
+        Happy Birthday,
+        <br />
+        <em>{recipientName}</em>
       </h1>
 
-      <span aria-hidden className="mt-7 h-px w-16 bg-foreground/20" />
+      <span aria-hidden className="mt-8 h-px w-16 bg-foreground/20" />
 
       {intro ? (
-        <p className="mt-7 max-w-md font-serif text-lg italic leading-relaxed text-foreground/65 whitespace-pre-wrap">
+        <p className="mt-8 max-w-md font-serif text-lg italic leading-relaxed text-foreground/65 whitespace-pre-wrap">
           {intro}
         </p>
       ) : null}
@@ -156,8 +157,8 @@ function CoverPage({
         {messageCount === 0
           ? "No messages yet — share the contributor link and they'll appear here."
           : messageCount === 1
-            ? `One message inside, for ${recipientName}.`
-            : `${messageCount} messages inside, for ${recipientName}.`}
+            ? "One message inside. Turn the page."
+            : `${messageCount} messages inside. Turn the page.`}
       </p>
     </div>
   );
@@ -176,8 +177,8 @@ function MessagePage({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <p className="text-center text-xs font-medium uppercase tracking-[0.2em] text-foreground/30">
-        {pageNumber} / {pageTotal}
+      <p className="text-center font-serif text-sm italic text-foreground/35">
+        {pageNumber} of {pageTotal}
       </p>
 
       <div className="flex flex-1 items-center py-8">

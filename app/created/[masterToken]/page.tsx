@@ -29,8 +29,7 @@ export default async function CardCreated({
           Card created
         </p>
         <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
-          {card.recipientName}&rsquo;s {card.occasion.toLowerCase()} card is
-          ready.
+          {card.recipientName}&rsquo;s birthday card is ready.
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
           Two links, two jobs. Share the first one, guard the second.

@@ -19,9 +19,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Group Card",
+  title: "Birthday Card",
   description:
-    "Create a group card, collect private messages from friends, and share it with someone special.",
+    "Create a birthday card everyone can sign. Friends leave private messages, and the birthday person reads them like pages of a book.",
 };
 
 export default function RootLayout({

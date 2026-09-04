@@ -24,14 +24,15 @@ export default async function SignPage({
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-16 sm:py-24">
       <header className="text-center">
         <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
-          {card.occasion}
+          A birthday card
         </p>
         <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
           A message for {card.recipientName}
         </h1>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
-          Friends are signing a group card together. Add your note below
-          &mdash; nobody else&rsquo;s messages are shown here.
+          Friends are signing {card.recipientName}&rsquo;s birthday card
+          together. Add your note below &mdash; nobody else&rsquo;s messages
+          are shown here.
         </p>
       </header>
 

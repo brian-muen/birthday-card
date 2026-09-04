@@ -3,15 +3,15 @@ import { createCard } from "@/app/actions/create-card";
 const steps = [
   {
     title: "Create the card",
-    body: "Name the recipient and the occasion. Takes about ten seconds.",
+    body: "Add the birthday person's name. Takes about ten seconds.",
   },
   {
     title: "Share the link",
     body: "Friends add a private message. Nobody sees anyone else's note.",
   },
   {
-    title: "Send it over",
-    body: "When it's full, hand the master link to someone special.",
+    title: "Hand it over",
+    body: "On the day, send them the card — a little book of messages.",
   },
 ];
 
@@ -24,27 +24,26 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
-    occasion?: string;
   }>;
 }) {
-  const { error, recipientName, occasion } = await searchParams;
+  const { error, recipientName } = await searchParams;
 
   return (
     <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-16 sm:py-24">
       <header className="text-center">
         <p className="text-xs font-medium uppercase tracking-[0.25em] text-foreground/45">
-          Group cards &middot; No accounts
+          Birthday cards, signed together
         </p>
-        <h1 className="mt-5 font-serif text-4xl leading-tight tracking-tight text-balance sm:text-5xl">
-          A card everyone can&nbsp;sign.
+        <h1 className="mt-6 font-serif text-4xl leading-[1.15] tracking-tight text-balance sm:text-[3.4rem]">
+          The birthday card <em>everyone</em> can sign.
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60 text-balance">
+        <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-foreground/60 text-balance">
           Start a card and share one link. Every message stays private until
-          you send the finished card to the recipient.
+          the birthday, then they read them all — like pages of a little book.
         </p>
       </header>
 
-      <section className="mt-12 rounded-lg border border-foreground/12 bg-white p-6 sm:p-8">
+      <section className="mt-14 rounded-lg border border-foreground/12 bg-white p-6 sm:p-8">
         {error ? (
           <p
             role="alert"
@@ -60,7 +59,7 @@ export default async function Home({
               htmlFor="recipientName"
               className="text-sm font-medium text-foreground/80"
             >
-              Who is it for?
+              Whose birthday is it?
             </label>
             <input
               id="recipientName"
@@ -73,29 +72,6 @@ export default async function Home({
               placeholder="Priya"
               className={inputClass}
             />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="occasion"
-              className="text-sm font-medium text-foreground/80"
-            >
-              What&rsquo;s the occasion?
-            </label>
-            <input
-              id="occasion"
-              name="occasion"
-              type="text"
-              required
-              maxLength={60}
-              defaultValue={occasion}
-              autoComplete="off"
-              placeholder="Birthday"
-              className={inputClass}
-            />
-            <p className="text-xs text-foreground/45">
-              Birthday, farewell, new baby, thank you &mdash; anything goes.
-            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">

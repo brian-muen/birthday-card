@@ -15,37 +15,6 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-// Occasions that already read as a greeting ("Merry Christmas") shouldn't get
-// another "Happy" bolted onto the front.
-const GREETINGS = [
-  "happy",
-  "merry",
-  "congrat",
-  "thank",
-  "good luck",
-  "welcome",
-  "farewell",
-  "get well",
-  "bon voyage",
-  "well done",
-  "best wishes",
-  "so long",
-];
-
-function buildHeading(occasion: string, recipientName: string) {
-  const name = recipientName.trim();
-  const occ = occasion.trim().replace(/[!.,]+$/, "");
-
-  if (!occ) return name ? `For ${name}` : "A group card";
-
-  const lower = occ.toLowerCase();
-  const phrase = GREETINGS.some((g) => lower.startsWith(g))
-    ? occ
-    : `Happy ${occ}`;
-
-  return name ? `${phrase}, ${name}` : phrase;
-}
-
 const getCard = cache(async (masterToken: string) => {
   const db = await getDb();
   return db.query.cards.findFirst({
@@ -61,7 +30,7 @@ export async function generateMetadata({
 
   return {
     title: card
-      ? buildHeading(card.occasion, card.recipientName)
+      ? `Happy Birthday, ${card.recipientName}`
       : "Card not found",
     // The master link is secret — keep it out of search results.
     robots: { index: false, follow: false },
@@ -84,8 +53,6 @@ export default async function CardPage({ params }: PageParams) {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-5 py-12 sm:py-16">
       <CardBook
         masterToken={masterToken}
-        heading={buildHeading(card.occasion, card.recipientName)}
-        occasion={card.occasion}
         recipientName={card.recipientName}
         intro={card.intro}
         notes={notes.map((note) => ({
