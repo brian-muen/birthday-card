@@ -80,32 +80,230 @@ select:focus-visible {
     0 14px 34px -20px rgb(27 36 64 / 0.28);
 }
 
-/* Page turns answer a click, so the motion shows which way the page went. */
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: translateX(14px);
-  }
+/* ---------------------------------------------------------------------------
+   The card, as a physical object.
+
+   A portrait card folded down its left edge. Closed, you see the front cover.
+   Opening swings the cover on the fold; after that it is a booklet of
+   two-sided leaves, each rotating about the same fold. Wide screens read a
+   two-page spread, phones read the right-hand panel alone.
+   --------------------------------------------------------------------------- */
+
+.card-frame {
+  /* Cover board is heavier stock than the pages, so it moves slower. */
+  --card-turn: 660ms;
+  --card-cover-turn: 900ms;
+  /* Slow to lift, then settles: paper has to be picked up before it falls. */
+  --card-ease: cubic-bezier(0.34, 0.04, 0.2, 1);
 }
 
-@keyframes page-in-back {
-  from {
-    opacity: 0;
-    transform: translateX(-14px);
-  }
+/* On a phone only the right-hand panel is in frame, so a leaf swinging past
+   the fold gets clipped at the crease. Vertical overflow stays visible so the
+   paper's shadow isn't sliced off. */
+.card-frame[data-spread="false"] {
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
-.animate-page-in {
-  animation: page-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+/* Room for the cut page edges that sit just outside each panel. */
+.card-frame[data-spread="true"] {
+  padding-inline: 0.625rem;
 }
 
-.animate-page-in-back {
-  animation: page-in-back 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.card-stage {
+  position: relative;
+  width: 100%;
+  perspective: 2200px;
+  transition:
+    transform var(--card-cover-turn) var(--card-ease),
+    perspective-origin var(--card-cover-turn) var(--card-ease);
+}
+
+.card-frame[data-spread="false"] .card-stage {
+  aspect-ratio: 1 / 1.42;
+}
+
+.card-frame[data-spread="true"] .card-stage {
+  aspect-ratio: 2 / 1.42;
+}
+
+/* Nothing moves on the way in. The spread resolves once on load — after that
+   the object sits still until someone opens it. */
+.card-frame[data-animate="false"] .card-stage,
+.card-frame[data-animate="false"] .card-edges,
+.card-frame[data-animate="false"] .card-panel[data-half="left"] {
+  transition: none;
+}
+
+/* Closed, the cover should sit centred rather than marooned in the right half
+   of an open spread's footprint — so the whole object slides across as it
+   opens, and the eye stays over the middle of whatever is showing. */
+.card-frame[data-spread="true"] .card-stage[data-closed="true"] {
+  transform: translateX(-25%);
+  perspective-origin: 75% 50%;
+}
+
+/* The card's body: the paper the leaves are bound to. */
+.card-panel {
+  position: absolute;
+  inset-block: 0;
+  border: 1px solid var(--rule);
+  background: var(--raised);
+}
+
+.card-frame[data-spread="true"] .card-panel[data-half="right"] {
+  left: 50%;
+  width: 50%;
+}
+
+.card-frame[data-spread="false"] .card-panel[data-half="right"] {
+  left: 0;
+  width: 100%;
+}
+
+.card-panel[data-half="left"] {
+  left: 0;
+  width: 50%;
+  /* There is nothing left of the fold until the cover comes down onto it. */
+  opacity: 0;
+  transition: opacity 300ms linear 400ms;
+}
+
+.card-stage[data-closed="false"] .card-panel[data-half="left"] {
+  opacity: 1;
+}
+
+.card-leaf {
+  position: absolute;
+  inset-block: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform var(--card-turn) var(--card-ease);
+}
+
+.card-frame[data-spread="true"] .card-leaf {
+  left: 50%;
+  width: 50%;
+}
+
+.card-frame[data-spread="false"] .card-leaf {
+  left: 0;
+  width: 100%;
+}
+
+.card-leaf[data-cover="true"] {
+  transition-duration: var(--card-cover-turn);
+}
+
+.card-leaf[data-turned="true"] {
+  transform: rotateY(-180deg);
+}
+
+/* A leaf in motion is off the stack, so it carries its own shadow. */
+.card-leaf[data-moving="true"] .card-face {
+  box-shadow: 0 16px 38px -22px rgb(27 36 64 / 0.4);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--raised);
+  backface-visibility: hidden;
+  text-align: inherit;
+}
+
+.card-face[data-face="back"] {
+  transform: rotateY(180deg);
+}
+
+/* Cover stock, a shade warmer and heavier than the writing paper inside. */
+.card-face[data-stock="cover"] {
+  background: color-mix(in oklab, var(--paper) 60%, var(--raised));
+}
+
+/* The fold. Paper curves into the gutter, so the inner edge of every panel
+   loses a little light — this is what makes two panels read as one object. */
+.card-gutter {
+  position: absolute;
+  inset-block: 0;
+  width: 9%;
+  pointer-events: none;
+}
+
+.card-gutter[data-side="recto"] {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgb(27 36 64 / 0.09),
+    rgb(27 36 64 / 0) 74%
+  );
+}
+
+.card-gutter[data-side="verso"] {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgb(27 36 64 / 0.09),
+    rgb(27 36 64 / 0) 74%
+  );
+}
+
+/* Cut page edges: the block of paper still to come on the fore-edge, and the
+   block already turned stacked against the fold. */
+.card-edges {
+  position: absolute;
+  inset-block: 0.1875rem;
+  background: repeating-linear-gradient(
+    to right,
+    rgb(27 36 64 / 0.14) 0 1px,
+    rgb(27 36 64 / 0) 1px 2.5px
+  );
+  transition: width var(--card-turn) var(--card-ease);
+  pointer-events: none;
+}
+
+.card-edges[data-side="fore"] {
+  left: 100%;
+}
+
+.card-edges[data-side="spine"] {
+  right: 100%;
+}
+
+.card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* A long message scrolls inside its page rather than bursting the object.
+   Short messages sit centred and never reach the foot of this box, so the fade
+   only ever shows up when there is genuinely more to read below. */
+.card-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 1rem,
+    #000 calc(100% - 1rem),
+    transparent 100%
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-page-in,
-  .animate-page-in-back {
-    animation: none;
+  .card-stage,
+  .card-leaf,
+  .card-leaf[data-cover="true"],
+  .card-edges,
+  .card-panel[data-half="left"] {
+    transition: none;
   }
 }
