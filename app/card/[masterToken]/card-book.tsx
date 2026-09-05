@@ -79,7 +79,8 @@ function coverTypeSize(name: string) {
  * Cover back is the first note; the next leaf's front is the second; turning
  * that leaf puts its back on the left and the following front on the right.
  *
- * A phone only has room for one panel, so each note gets its own leaf.
+ * On a phone each note is its own leaf, stacked on the panel, so the
+ * writing turns away with the page instead of swapping after the turn.
  */
 function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
   if (notes.length === 0) {
@@ -87,9 +88,13 @@ function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
   }
 
   if (!spread) {
-    // Cover only. Notes sit on the panel as a stack after it opens, because a
-    // turning leaf would leave the frame on a phone.
-    return [{ front: { kind: "cover" }, back: { kind: "empty" } }];
+    return [
+      { front: { kind: "cover" }, back: { kind: "empty" } },
+      ...notes.map((note) => ({
+        front: { kind: "note" as const, note },
+        back: { kind: "empty" as const },
+      })),
+    ];
   }
 
   const leaves: Leaf[] = [
@@ -159,6 +164,7 @@ export default function CardBook({
   );
 
   const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
+  const notesEnd = lastNotePlace(leaves, spread, notes.length);
   const last = lastPlace(leaves, spread, notes.length);
 
   // 0 is the closed cover. Each step after that turns one more leaf.
@@ -171,6 +177,7 @@ export default function CardBook({
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
   const atKeep = notes.length > 0 && place === last && !closed;
+  const showPlace = atKeep ? notesEnd : place;
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -178,21 +185,21 @@ export default function CardBook({
         const from = Math.min(previous.place, last);
         const next = from + delta;
         if (next < 0 || next > last) return previous;
-        const coverMove = from === 0 || next === 0;
+        const keepMove =
+          (from === last && next === last - 1) ||
+          (from === last - 1 && next === last && notes.length > 0);
         return {
           place: next,
-          moving: reducedMotion
+          moving: reducedMotion || keepMove
             ? null
-            : !spread && !coverMove
-              ? null
-              : delta === 1
-                ? from
-                : next,
+            : delta === 1
+              ? from
+              : next,
           touched: true,
         };
       });
     },
-    [last, reducedMotion, spread],
+    [last, notes.length, reducedMotion],
   );
 
   useEffect(() => {
@@ -216,15 +223,12 @@ export default function CardBook({
     );
   }
 
-  const phoneNote = !spread && place > 0 ? notes[place - 1] ?? null : null;
-  const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
+  const leftFace = spread && showPlace > 0 ? leaves[showPlace - 1]?.back : undefined;
   const rightFace = closed
     ? leaves[0]?.front
     : spread
-      ? leaves[place]?.front
-      : phoneNote
-        ? { kind: "note" as const, note: phoneNote }
-        : { kind: "inside" as const };
+      ? leaves[showPlace]?.front
+      : leaves[showPlace]?.front;
 
   const announcement = atKeep
     ? "Manna loves you. Make sure to save the PDF."
@@ -244,23 +248,23 @@ export default function CardBook({
         style={{ ["--card-stock" as string]: stockHex(stock) }}
       >
         <div className="card-stage" data-closed={closed}>
-          <div aria-hidden className="card-panel paper-lift" data-half="right">
+          <div aria-hidden className="card-panel" data-half="right">
             <span className="card-crease" data-side="right" />
           </div>
 
           {spread ? (
-            <div aria-hidden className="card-panel paper-lift" data-half="left">
+            <div aria-hidden className="card-panel" data-half="left">
               <span className="card-crease" data-side="left" />
             </div>
           ) : null}
 
           {leaves.map((leaf, index) => {
-            const turned = spread ? index < place : place > 0 && index === 0;
-            const frontVisible = closed
+            const turned = index < showPlace;
+            const facingFront = closed
               ? index === 0
-              : spread && index === place;
-            const backVisible = spread && index === place - 1;
-            const stacked = spread || index === 0;
+              : index === showPlace;
+            const facingBack = showPlace > 0 && index === showPlace - 1;
+            const inMotion = moving === index;
 
             return (
               <div
@@ -268,23 +272,21 @@ export default function CardBook({
                 className="card-leaf"
                 data-cover={index === 0}
                 data-turned={turned}
-                data-moving={moving === index}
+                data-moving={inMotion}
                 onTransitionEnd={settle}
                 style={{
-                  visibility: stacked ? "visible" : "hidden",
-                  zIndex: spread
-                    ? moving === index
-                      ? leaves.length + 20
-                      : turned
-                        ? index + 1
-                        : leaves.length - index
-                    : 4,
+                  zIndex: inMotion
+                    ? leaves.length + 20
+                    : turned
+                      ? index + 1
+                      : leaves.length - index,
                 }}
               >
                 <LeafFace
                   face={leaf.front}
                   side="right"
-                  visible={Boolean(frontVisible)}
+                  facing={facingFront}
+                  turning={inMotion}
                   masterToken={masterToken}
                   canManage={canManage}
                   recipientName={recipientName}
@@ -295,7 +297,8 @@ export default function CardBook({
                 <LeafFace
                   face={leaf.back}
                   side="left"
-                  visible={Boolean(backVisible)}
+                  facing={facingBack}
+                  turning={inMotion}
                   masterToken={masterToken}
                   canManage={canManage}
                   recipientName={recipientName}
@@ -306,25 +309,18 @@ export default function CardBook({
             );
           })}
 
-          {!closed && (atKeep || !spread) ? (
+          {!closed && (atKeep || (!spread && notes.length === 0)) ? (
             <div
-              key={atKeep ? "keep" : (phoneNote?.id ?? "inside")}
+              key={atKeep ? "keep" : "inside"}
               className={
                 "card-insert " +
-                (place > 1 ? "animate-insert-in" : "")
+                (showPlace > 1 ? "animate-insert-in" : "")
               }
               data-span={atKeep && spread ? "card" : undefined}
             >
               <span className="card-crease" data-side="right" aria-hidden />
               {atKeep ? (
                 <KeepFace pdfHref={pdfHref} />
-              ) : phoneNote ? (
-                <NoteFace
-                  masterToken={masterToken}
-                  canManage={canManage}
-                  note={phoneNote}
-                  side="right"
-                />
               ) : (
                 <InsideFace recipientName={recipientName} canManage={canManage} />
               )}
@@ -366,7 +362,8 @@ export default function CardBook({
 function LeafFace({
   face,
   side,
-  visible,
+  facing,
+  turning,
   masterToken,
   canManage,
   recipientName,
@@ -376,7 +373,8 @@ function LeafFace({
 }: {
   face: Face;
   side: "left" | "right";
-  visible: boolean;
+  facing: boolean;
+  turning: boolean;
   masterToken: string;
   canManage: boolean;
   recipientName: string;
@@ -384,7 +382,7 @@ function LeafFace({
   notes: Note[];
   onOpen?: () => void;
 }) {
-  const hidden = !visible;
+  const towardReader = facing || turning;
   const stock =
     face.kind === "cover" ? "cover" : face.kind === "inside" ? "liner" : undefined;
   const crease = (
@@ -413,8 +411,8 @@ function LeafFace({
         className="card-face group cursor-pointer"
         data-face="front"
         data-stock="cover"
-        aria-hidden={hidden}
-        inert={hidden}
+        aria-hidden={!towardReader}
+        tabIndex={facing ? 0 : -1}
       >
         {contents}
       </button>
@@ -426,8 +424,7 @@ function LeafFace({
       className="card-face"
       data-face={side === "left" ? "back" : "front"}
       data-stock={stock}
-      aria-hidden={hidden}
-      inert={hidden}
+      aria-hidden={!towardReader}
     >
       {contents}
     </div>
