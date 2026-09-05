@@ -124,10 +124,15 @@ select:focus-visible {
   transition: none;
 }
 
-/* Closed, the cover sits centred. Opening slides the bifold into place. */
+/* Closed, the cover sits centred. The back sits the other way, fold on the far edge. */
 .card-frame[data-spread="true"] .card-stage[data-closed="true"] {
   transform: translateX(-25%);
   perspective-origin: 75% 50%;
+}
+
+.card-frame[data-spread="true"] .card-stage[data-closed="true"][data-shut="back"] {
+  transform: translateX(25%);
+  perspective-origin: 25% 50%;
 }
 
 .card-panel {
@@ -208,6 +213,11 @@ select:focus-visible {
 .card-frame[data-spread="false"] .card-leaf {
   left: 0;
   width: 100%;
+}
+
+.card-frame[data-spread="true"] .card-leaf[data-back="true"] {
+  left: 0;
+  width: 50%;
 }
 
 .card-leaf[data-turned="true"] {
@@ -293,12 +303,13 @@ select:focus-visible {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.28;
+  opacity: 0.42;
   mix-blend-mode: multiply;
   background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='fiber'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23fiber)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='mottle'><feTurbulence type='fractalNoise' baseFrequency='0.32' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23mottle)'/></svg>");
-  background-size: 160px 160px, 260px 260px;
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='fiber'><feTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='5' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23fiber)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='scratch'><feTurbulence type='turbulence' baseFrequency='2.4 0.55' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23scratch)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='mottle'><feTurbulence type='fractalNoise' baseFrequency='0.28' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23mottle)'/></svg>");
+  background-size: 140px 140px, 80px 80px, 240px 240px;
 }
 
 /* A scored fold in the paper — no pale seam, no book spine. */
@@ -329,7 +340,7 @@ select:focus-visible {
   );
 }
 
-.card-stage[data-closed="true"] .card-crease {
+.card-stage[data-closed="true"]:not([data-shut="back"]) .card-crease {
   opacity: 0;
 }
 

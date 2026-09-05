@@ -109,7 +109,9 @@ async function buildCardPdf(input: {
     sans,
     paper,
     recipientName: sanitize(input.recipientName),
-    intro: input.intro ? sanitize(input.intro) : null,
+    dedication: input.showCount
+      ? null
+      : "From your brothers and sisters in Christ",
     messageCount: input.showCount ? input.notes.length : null,
   });
 
@@ -175,7 +177,7 @@ function drawCoverPage(
     sans: PDFFont;
     paper: ReturnType<typeof rgb>;
     recipientName: string;
-    intro: string | null;
+    dedication: string | null;
     messageCount: number | null;
   },
 ) {
@@ -188,8 +190,8 @@ function drawCoverPage(
     ),
   ];
 
-  const introLines = input.intro
-    ? wrapText(input.intro, input.serifItalic, 12, TEXT_WIDTH - 24).slice(0, 14)
+  const introLines = input.dedication
+    ? wrapText(input.dedication, input.serifItalic, 12, TEXT_WIDTH - 24)
     : [];
 
   const countText =
