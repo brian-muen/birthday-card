@@ -6,7 +6,7 @@
   --ink: #1b2440;
   --muted: #59617a;
   --rule: #dedcd4;
-  --brass: #a8792c;
+  --brass: #7c5416;
 }
 
 @theme inline {
@@ -81,41 +81,25 @@ select:focus-visible {
 }
 
 /* ---------------------------------------------------------------------------
-   The card, as a physical object.
+   A folded greeting card.
 
-   A portrait card folded down its left edge. Closed, you see the front cover.
-   Opening swings the cover on the fold; after that it is a booklet of
-   two-sided leaves, each rotating about the same fold. Wide screens read a
-   two-page spread, phones read the right-hand panel alone.
+   Closed, one 5×7 panel. Opening swings the cover on the crease. After that
+   it is still a card — a note on the left, a note on the right — and further
+   leaves turn to the next pair. No folio, no book block, no title-page close.
    --------------------------------------------------------------------------- */
 
 .card-frame {
-  /* Cover board is heavier stock than the pages, so it moves slower. */
-  --card-turn: 520ms;
-  --card-cover-turn: 900ms;
-  /* A page accelerates away and drops onto the stack under its own weight. */
-  --card-ease: ease-in;
-  /* A cover is placed, not dropped, so it eases at both ends. */
+  --card-turn: 640ms;
+  --card-cover-turn: 880ms;
+  --card-ease: cubic-bezier(0.55, 0.05, 0.35, 1);
   --card-ease-cover: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
-/* On a phone only the right-hand panel is in frame, so a leaf swinging past
-   the fold gets clipped at the crease. Vertical overflow stays visible so the
-   paper's shadow isn't sliced off. */
 .card-frame[data-spread="false"] {
   overflow-x: clip;
   overflow-y: visible;
 }
 
-/* Room for the cut page edges that sit just outside each panel. */
-.card-frame[data-spread="true"] {
-  padding-inline: 0.625rem;
-}
-
-/* A long lens. Roughly 4.75x the stage height puts the vertical field of view
-   near 12 degrees — the near-orthographic look of a real product photograph,
-   rather than the 2x (~28 degree) wide angle that makes flipbook demos read as
-   a gimmick. */
 .card-stage {
   position: relative;
   width: 100%;
@@ -126,33 +110,25 @@ select:focus-visible {
 }
 
 .card-frame[data-spread="false"] .card-stage {
-  aspect-ratio: 1 / 1.42;
+  aspect-ratio: 5 / 7;
 }
 
 .card-frame[data-spread="true"] .card-stage {
-  /* Half as tall for a given width as the single panel, so the lens has to
-     lengthen to keep the same field of view. */
-  aspect-ratio: 2 / 1.42;
+  aspect-ratio: 10 / 7;
   perspective: 2600px;
 }
 
-/* Nothing moves on the way in. The spread resolves once on load — after that
-   the object sits still until someone opens it. */
 .card-frame[data-animate="false"] .card-stage,
-.card-frame[data-animate="false"] .card-edges,
 .card-frame[data-animate="false"] .card-panel[data-half="left"] {
   transition: none;
 }
 
-/* Closed, the cover should sit centred rather than marooned in the right half
-   of an open spread's footprint — so the whole object slides across as it
-   opens, and the eye stays over the middle of whatever is showing. */
+/* Closed, the cover sits centred. Opening slides the bifold into place. */
 .card-frame[data-spread="true"] .card-stage[data-closed="true"] {
   transform: translateX(-25%);
   perspective-origin: 75% 50%;
 }
 
-/* The card's body: the paper the leaves are bound to. */
 .card-panel {
   position: absolute;
   inset-block: 0;
@@ -173,9 +149,8 @@ select:focus-visible {
 .card-panel[data-half="left"] {
   left: 0;
   width: 50%;
-  /* There is nothing left of the fold until the cover comes down onto it. */
   opacity: 0;
-  transition: opacity 300ms linear 400ms;
+  transition: opacity 280ms linear 420ms;
 }
 
 .card-stage[data-closed="false"] .card-panel[data-half="left"] {
@@ -187,7 +162,13 @@ select:focus-visible {
   inset-block: 0;
   transform-origin: left center;
   transform-style: preserve-3d;
+  z-index: 8;
   transition: transform var(--card-turn) var(--card-ease);
+}
+
+.card-leaf[data-cover="true"] {
+  transition-duration: var(--card-cover-turn);
+  transition-timing-function: var(--card-ease-cover);
 }
 
 .card-frame[data-spread="true"] .card-leaf {
@@ -200,21 +181,20 @@ select:focus-visible {
   width: 100%;
 }
 
-.card-leaf[data-cover="true"] {
-  transition-duration: var(--card-cover-turn);
-  transition-timing-function: var(--card-ease-cover);
-}
-
 .card-leaf[data-turned="true"] {
   transform: rotateY(-180deg);
 }
 
-/* A leaf in motion is off the stack, so it carries its own shadow. */
+.card-leaf[data-moving="true"] {
+  z-index: 20;
+}
+
 .card-leaf[data-moving="true"] .card-face {
   box-shadow: 0 16px 38px -22px rgb(27 36 64 / 0.4);
 }
 
-.card-face {
+.card-face,
+.card-insert {
   position: absolute;
   inset: 0;
   display: flex;
@@ -222,12 +202,13 @@ select:focus-visible {
   overflow: hidden;
   border: 1px solid var(--rule);
   background: var(--raised);
-  backface-visibility: hidden;
   text-align: inherit;
 }
 
-/* The two faces of a leaf are coplanar, which can fight for the same pixels at
-   exactly 90 degrees. A hair of separation settles it. */
+.card-face {
+  backface-visibility: hidden;
+}
+
 .card-face[data-face="front"] {
   transform: translate3d(0, 0, 0.02px);
 }
@@ -236,71 +217,70 @@ select:focus-visible {
   transform: rotateY(180deg);
 }
 
-/* Cover stock, a shade warmer and heavier than the writing paper inside. */
 .card-face[data-stock="cover"] {
-  background: color-mix(in oklab, var(--paper) 60%, var(--raised));
+  background: color-mix(in oklab, #eadfc8 42%, var(--raised));
   transition: transform 200ms ease-out;
 }
 
-/* A card you could pick up, rather than a button you could click. */
 .card-face[data-stock="cover"]:not([inert]):hover {
   transform: translate3d(0, -2px, 0.02px);
 }
 
-/* The inside of the cover, a tonal step deeper than the leaves bound to it —
-   the same job an envelope liner does, and it sells the fold better than any
-   extra shadow would. */
 .card-face[data-stock="liner"] {
-  background: color-mix(in oklab, var(--paper) 45%, var(--raised));
+  background: color-mix(in oklab, #eadfc8 22%, var(--raised));
 }
 
-/* The fold. Paper curves into the gutter, so the inner edge of every panel
-   loses a little light — this is what makes two panels read as one object. */
-.card-gutter {
+/* Notes sit on the writing panel. They never travel across the crease. */
+.card-insert {
+  left: 0;
+  width: 100%;
+  z-index: 6;
+  background: var(--raised);
+}
+
+.card-frame[data-spread="true"] .card-insert {
+  left: 50%;
+  width: 50%;
+}
+
+.card-face::after,
+.card-insert::after,
+.card-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* A scored crease, not a bound spine. */
+.card-crease {
   position: absolute;
   inset-block: 0;
-  width: 9%;
+  width: 12px;
   pointer-events: none;
 }
 
-.card-gutter[data-side="recto"] {
+.card-crease[data-side="right"] {
   left: 0;
   background: linear-gradient(
     to right,
-    rgb(27 36 64 / 0.09),
-    rgb(27 36 64 / 0) 74%
+    rgb(27 36 64 / 0.07),
+    rgb(27 36 64 / 0) 88%
   );
+  box-shadow: inset 1px 0 0 rgb(27 36 64 / 0.06);
 }
 
-.card-gutter[data-side="verso"] {
+.card-crease[data-side="left"] {
   right: 0;
   background: linear-gradient(
     to left,
-    rgb(27 36 64 / 0.09),
-    rgb(27 36 64 / 0) 74%
+    rgb(27 36 64 / 0.05),
+    rgb(27 36 64 / 0) 88%
   );
-}
-
-/* Cut page edges: the block of paper still to come on the fore-edge, and the
-   block already turned stacked against the fold. */
-.card-edges {
-  position: absolute;
-  inset-block: 0.1875rem;
-  background: repeating-linear-gradient(
-    to right,
-    rgb(27 36 64 / 0.14) 0 1px,
-    rgb(27 36 64 / 0) 1px 2.5px
-  );
-  transition: width var(--card-turn) var(--card-ease);
-  pointer-events: none;
-}
-
-.card-edges[data-side="fore"] {
-  left: 100%;
-}
-
-.card-edges[data-side="spine"] {
-  right: 100%;
+  box-shadow: inset -1px 0 0 rgb(27 36 64 / 0.05);
 }
 
 .card-body {
@@ -310,9 +290,6 @@ select:focus-visible {
   min-height: 0;
 }
 
-/* A long message scrolls inside its page rather than bursting the object.
-   Short messages sit centred and never reach the foot of this box, so the fade
-   only ever shows up when there is genuinely more to read below. */
 .card-scroll {
   flex: 1;
   min-height: 0;
@@ -327,13 +304,43 @@ select:focus-visible {
   );
 }
 
+@keyframes insert-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+@keyframes insert-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+.animate-insert-in {
+  animation: insert-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-insert-in-back {
+  animation: insert-in-back 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.card-frame[data-animate="false"] .animate-insert-in,
+.card-frame[data-animate="false"] .animate-insert-in-back {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-stage,
   .card-leaf,
-  .card-leaf[data-cover="true"],
-  .card-edges,
   .card-panel[data-half="left"],
   .card-face[data-stock="cover"] {
     transition: none;
+  }
+
+  .animate-insert-in,
+  .animate-insert-in-back {
+    animation: none;
   }
 }

@@ -17,15 +17,21 @@ type Note = {
   date: string;
 };
 
+type Face =
+  | { kind: "cover" }
+  | { kind: "inside" }
+  | { kind: "note"; note: Note }
+  | { kind: "empty" };
+
+type Leaf = { front: Face; back: Face };
+
 /**
- * Below this the card reads as a single panel — the right-hand page, with the
- * fold at its left edge. Above it, the card opens into a two-page spread.
- * Kept in step with the aspect-ratio rules in globals.css.
+ * Below this the open card is a single panel. Above it, a greeting-card
+ * bifold with a note on each side.
  */
 const SPREAD_QUERY = "(min-width: 52rem)";
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-// Browser-only values, read the way the rest of this app reads them.
 function subscribeTo(query: string) {
   return (onChange: () => void) => {
     const list = window.matchMedia(query);
@@ -39,74 +45,83 @@ const getSpread = () => window.matchMedia(SPREAD_QUERY).matches;
 const getReducedMotion = () => window.matchMedia(MOTION_QUERY).matches;
 const getServerFalse = () => false;
 
-// Real signatures never line up. Derive a stable tilt from the name so each
-// one sits at its own angle without changing on every render.
-function tiltFor(name: string) {
+function hashOf(value: string) {
   let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = (hash * 31 + name.charCodeAt(i)) % 1000;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 33 + value.charCodeAt(i)) % 10007;
   }
-  return ((hash % 9) - 4) / 2;
+  return hash;
 }
 
-// A cover is set to fit the name, the way a printer would set it.
+// Real signatures never line up. Size, slant, and tilt stay stable per name.
+function handFor(name: string) {
+  const hash = hashOf(name);
+  return {
+    rotate: ((hash % 13) - 6) * 0.55,
+    skew: (((hash / 13) | 0) % 9) - 4,
+    size: 1.55 + ((((hash / 117) | 0) % 6) * 0.14),
+  };
+}
+
+function inkFor(text: string) {
+  return 0.8 + (hashOf(text) % 16) / 100;
+}
+
 function coverTypeSize(name: string) {
   if (name.length > 24) return "text-[1.625rem] sm:text-[1.875rem]";
   if (name.length > 13) return "text-[2rem] sm:text-[2.375rem]";
   return "text-[2.375rem] sm:text-[2.875rem]";
 }
 
-type Page =
-  | { kind: "cover" }
-  | { kind: "inside-front" }
-  | { kind: "message"; note: Note; number: number }
-  | { kind: "closing" }
-  | { kind: "blank" };
-
 /**
- * The card as an ordered run of pages: front cover, the panel inside the fold,
- * one page per message, then a closing panel.
+ * Desktop leaves are two-sided, so each opening shows two notes.
+ * Cover back is the first note; the next leaf's front is the second; turning
+ * that leaf puts its back on the left and the following front on the right.
  *
- * A spread pairs pages into two-sided leaves (leaf i shows page 2i, and page
- * 2i+1 on its back), so the run is padded to an odd length — that keeps the
- * closing panel on the right of the final spread instead of stranding it
- * opposite nothing. A phone shows one page per leaf and needs no padding.
+ * A phone only has room for one panel, so each note gets its own leaf.
  */
-function buildPages(notes: Note[], spread: boolean): Page[] {
-  const pages: Page[] = [{ kind: "cover" }, { kind: "inside-front" }];
-
-  notes.forEach((note, index) => {
-    pages.push({ kind: "message", note, number: index + 1 });
-  });
-
-  if (notes.length > 0) {
-    if (spread && pages.length % 2 !== 0) pages.push({ kind: "blank" });
-    pages.push({ kind: "closing" });
+function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
+  if (notes.length === 0) {
+    return [{ front: { kind: "cover" }, back: { kind: "inside" } }];
   }
-  if (spread && pages.length % 2 === 0) pages.push({ kind: "blank" });
 
-  return pages;
+  if (!spread) {
+    // Cover only. Notes sit on the panel as a stack after it opens, because a
+    // turning leaf would leave the frame on a phone.
+    return [{ front: { kind: "cover" }, back: { kind: "empty" } }];
+  }
+
+  const leaves: Leaf[] = [
+    { front: { kind: "cover" }, back: { kind: "note", note: notes[0] } },
+  ];
+  for (let i = 1; i < notes.length; i += 2) {
+    leaves.push({
+      front: { kind: "note", note: notes[i] },
+      back: notes[i + 1]
+        ? { kind: "note", note: notes[i + 1] }
+        : { kind: "empty" },
+    });
+  }
+  return leaves;
 }
 
-function normalizeLead(lead: number, lastPage: number, spread: boolean) {
-  const clamped = Math.max(0, Math.min(lead, lastPage));
-  return spread ? clamped - (clamped % 2) : clamped;
+function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
+  if (!spread) return Math.max(1, noteCount);
+  let max = 1;
+  for (let i = 1; i < leaves.length; i += 1) {
+    const revealsLeft = leaves[i].back.kind === "note";
+    const revealsRight = leaves[i + 1]?.front.kind === "note";
+    if (revealsLeft || revealsRight) max = i + 1;
+  }
+  return max;
 }
 
-function describePage(page: Page | undefined, total: number) {
-  if (!page) return null;
-  switch (page.kind) {
-    case "cover":
-      return "Front cover";
-    case "inside-front":
-      return "Inside the front cover";
-    case "message":
-      return `Message ${page.number} of ${total}, from ${page.note.authorName}`;
-    case "closing":
-      return "The last page";
-    case "blank":
-      return "Blank page";
-  }
+function describeFace(face: Face | undefined) {
+  if (!face) return null;
+  if (face.kind === "note") return `Note from ${face.note.authorName}`;
+  if (face.kind === "inside") return "Inside the card";
+  if (face.kind === "cover") return "Front cover";
+  return null;
 }
 
 export default function CardBook({
@@ -131,47 +146,40 @@ export default function CardBook({
     getServerFalse,
   );
 
-  // `lead` is the page showing on the right — the only piece of position state.
-  // `moving` is the leaf mid-turn, which needs to sit above the whole stack
-  // until it lands.
-  // `touched` keeps the object still on the way in: the spread resolves once on
-  // load without sliding into place, and only answers motion after that.
-  const [{ lead: rawLead, moving, touched }, setPlace] = useState<{
-    lead: number;
+  const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
+  const last = lastPlace(leaves, spread, notes.length);
+
+  // 0 is the closed cover. Each step after that turns one more leaf.
+  const [{ place: rawPlace, moving, touched }, setPlace] = useState<{
+    place: number;
     moving: number | null;
     touched: boolean;
-  }>({ lead: 0, moving: null, touched: false });
+  }>({ place: 0, moving: null, touched: false });
 
-  const pages = useMemo(() => buildPages(notes, spread), [notes, spread]);
-
-  const pagesPerLeaf = spread ? 2 : 1;
-  const lastPage = pages.length - 1;
-  // Clamp in case a deletion took pages out from under us, and keep the lead
-  // page on a leaf boundary when the layout switches to a spread.
-  const lead = normalizeLead(rawLead, lastPage, spread);
-  const closed = lead === 0;
-
-  const leafCount = Math.ceil(pages.length / pagesPerLeaf);
-  const leavesTurned = lead / pagesPerLeaf;
+  const place = Math.min(rawPlace, last);
+  const closed = place === 0;
 
   const turn = useCallback(
     (delta: 1 | -1) => {
       setPlace((previous) => {
-        const from = normalizeLead(previous.lead, lastPage, spread);
-        const next = from + delta * pagesPerLeaf;
-        if (next < 0 || next > lastPage) return previous;
+        const from = Math.min(previous.place, last);
+        const next = from + delta;
+        if (next < 0 || next > last) return previous;
+        const coverMove = from === 0 || next === 0;
         return {
-          lead: next,
-          // Turning forward moves the leaf we were resting on; turning back
-          // moves the one we are returning to.
+          place: next,
           moving: reducedMotion
             ? null
-            : (delta === 1 ? from : next) / pagesPerLeaf,
+            : !spread && !coverMove
+              ? null
+              : delta === 1
+                ? from
+                : next,
           touched: true,
         };
       });
     },
-    [lastPage, pagesPerLeaf, reducedMotion, spread],
+    [last, reducedMotion, spread],
   );
 
   useEffect(() => {
@@ -195,85 +203,78 @@ export default function CardBook({
     );
   }
 
-  const rightPage = lead;
-  // -2 can never match a real back-face index, so on a phone (where leaves have
-  // no visible back) nothing is treated as the left-hand page.
-  const leftPage = spread ? lead - 1 : -2;
+  const phoneNote = !spread && place > 0 ? notes[place - 1] ?? null : null;
+  const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
+  const rightFace = closed
+    ? leaves[0]?.front
+    : spread
+      ? leaves[place]?.front
+      : phoneNote
+        ? { kind: "note" as const, note: phoneNote }
+        : { kind: "inside" as const };
 
-  const announcement = spread
-    ? [describePage(pages[leftPage], notes.length), describePage(pages[rightPage], notes.length)]
+  const announcement = closed
+    ? `Birthday card for ${recipientName}, closed`
+    : [describeFace(leftFace), describeFace(rightFace)]
         .filter(Boolean)
-        .join(". ")
-    : describePage(pages[rightPage], notes.length);
-
-  // The paper still to come stacks on the fore-edge; what you have read
-  // stacks against the fold.
-  const foreEdge = Math.min(7, (leafCount - leavesTurned) * 1.4);
-  const spineEdge = Math.min(7, leavesTurned * 1.4);
+        .filter((item, index, all) => all.indexOf(item) === index)
+        .join(". ") || `Inside ${recipientName}'s card`;
 
   return (
     <div>
       <div className="card-frame" data-spread={spread} data-animate={touched}>
         <div className="card-stage" data-closed={closed}>
-          {/* The card's body, under the leaves. */}
           <div aria-hidden className="card-panel paper-lift" data-half="right">
-            <span className="card-gutter" data-side="recto" />
-            <span
-              className="card-edges"
-              data-side="fore"
-              style={{ width: `${foreEdge}px` }}
-            />
+            <span className="card-crease" data-side="right" />
           </div>
 
           {spread ? (
             <div aria-hidden className="card-panel paper-lift" data-half="left">
-              <span className="card-gutter" data-side="verso" />
-              <span
-                className="card-edges"
-                data-side="spine"
-                style={{ width: `${spineEdge}px` }}
-              />
+              <span className="card-crease" data-side="left" />
             </div>
           ) : null}
 
-          {Array.from({ length: leafCount }, (_, leaf) => {
-            const frontIndex = leaf * pagesPerLeaf;
-            const backIndex = spread ? frontIndex + 1 : -1;
-            const turned = leaf < leavesTurned;
+          {leaves.map((leaf, index) => {
+            const turned = spread ? index < place : place > 0 && index === 0;
+            const frontVisible = closed
+              ? index === 0
+              : spread && index === place;
+            const backVisible = spread && index === place - 1;
+            const stacked = spread || index === 0;
 
             return (
               <div
-                key={leaf}
+                key={index}
                 className="card-leaf"
-                data-cover={leaf === 0}
+                data-cover={index === 0}
                 data-turned={turned}
-                data-moving={moving === leaf}
+                data-moving={moving === index}
                 onTransitionEnd={settle}
                 style={{
-                  zIndex:
-                    moving === leaf
-                      ? leafCount + 20
+                  visibility: stacked ? "visible" : "hidden",
+                  zIndex: spread
+                    ? moving === index
+                      ? leaves.length + 20
                       : turned
-                        ? leaf + 1
-                        : leafCount - leaf,
+                        ? index + 1
+                        : leaves.length - index
+                    : 4,
                 }}
               >
-                <PageFace
-                  page={pages[frontIndex]}
-                  side="recto"
-                  visible={frontIndex === rightPage}
-                  face="front"
+                <LeafFace
+                  face={leaf.front}
+                  side="right"
+                  visible={Boolean(frontVisible)}
                   masterToken={masterToken}
                   recipientName={recipientName}
                   intro={intro}
                   notes={notes}
-                  onOpen={() => turn(1)}
+                  onOpen={index === 0 ? () => turn(1) : undefined}
                 />
-                <PageFace
-                  page={pages[backIndex]}
-                  side="verso"
-                  visible={backIndex === leftPage}
-                  face="back"
+                <LeafFace
+                  face={leaf.back}
+                  side="left"
+                  visible={Boolean(backVisible)}
                   masterToken={masterToken}
                   recipientName={recipientName}
                   intro={intro}
@@ -282,6 +283,27 @@ export default function CardBook({
               </div>
             );
           })}
+
+          {!spread && !closed ? (
+            <div
+              key={phoneNote?.id ?? "inside"}
+              className={
+                "card-insert " +
+                (place > 1 ? "animate-insert-in" : "")
+              }
+            >
+              <span className="card-crease" data-side="right" aria-hidden />
+              {phoneNote ? (
+                <NoteFace
+                  masterToken={masterToken}
+                  note={phoneNote}
+                  side="right"
+                />
+              ) : (
+                <InsideFace recipientName={recipientName} />
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -289,8 +311,7 @@ export default function CardBook({
         {announcement}
       </p>
 
-      {/* Reserved height so opening the card doesn't shunt the page around. */}
-      <nav aria-label="Card pages" className="mt-9 min-h-11">
+      <nav aria-label="Card" className="mt-9 min-h-11">
         {closed ? null : (
           <div className="flex items-center justify-between gap-6">
             <button
@@ -298,16 +319,16 @@ export default function CardBook({
               onClick={() => turn(-1)}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
             >
-              {lead - pagesPerLeaf === 0 ? "Close the card" : "Turn back"}
+              {place === 1 ? "Close the card" : "Previous"}
             </button>
 
             <button
               type="button"
               onClick={() => turn(1)}
-              disabled={lead >= lastPage}
+              disabled={place >= last}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass disabled:pointer-events-none disabled:opacity-0"
             >
-              Turn the page
+              Next
             </button>
           </div>
         )}
@@ -316,10 +337,9 @@ export default function CardBook({
   );
 }
 
-function PageFace({
-  page,
-  side,
+function LeafFace({
   face,
+  side,
   visible,
   masterToken,
   recipientName,
@@ -327,9 +347,8 @@ function PageFace({
   notes,
   onOpen,
 }: {
-  page: Page | undefined;
-  side: "recto" | "verso";
-  face: "front" | "back";
+  face: Face;
+  side: "left" | "right";
   visible: boolean;
   masterToken: string;
   recipientName: string;
@@ -337,39 +356,38 @@ function PageFace({
   notes: Note[];
   onOpen?: () => void;
 }) {
-  // Pages that aren't in view stay in the DOM — they're the far side of a leaf
-  // — so they have to be kept away from the reader and out of the tab order.
   const hidden = !visible;
-  const shell = (
+  const stock =
+    face.kind === "cover" ? "cover" : face.kind === "inside" ? "liner" : undefined;
+  const crease = (
+    <span className="card-crease" data-side={side} aria-hidden />
+  );
+  const contents = (
     <>
-      <span className="card-gutter" data-side={side} aria-hidden />
-      {page ? (
-        <PageContents
-          page={page}
-          side={side}
-          masterToken={masterToken}
-          recipientName={recipientName}
-          intro={intro}
-          notes={notes}
-        />
-      ) : null}
+      {crease}
+      <FaceContents
+        face={face}
+        side={side}
+        masterToken={masterToken}
+        recipientName={recipientName}
+        intro={intro}
+        notes={notes}
+      />
     </>
   );
 
-  // The closed cover is the one affordance for opening the card, so the whole
-  // panel is the target.
-  if (page?.kind === "cover") {
+  if (face.kind === "cover") {
     return (
       <button
         type="button"
         onClick={onOpen}
         className="card-face group cursor-pointer"
-        data-face={face}
+        data-face="front"
         data-stock="cover"
         aria-hidden={hidden}
         inert={hidden}
       >
-        {shell}
+        {contents}
       </button>
     );
   }
@@ -377,169 +395,155 @@ function PageFace({
   return (
     <div
       className="card-face"
-      data-face={face}
-      // The panel inside the fold is the back of the cover, not a leaf, so it
-      // takes the cover's tone.
-      data-stock={page?.kind === "inside-front" ? "liner" : undefined}
+      data-face={side === "left" ? "back" : "front"}
+      data-stock={stock}
       aria-hidden={hidden}
       inert={hidden}
     >
-      {shell}
+      {contents}
     </div>
   );
 }
 
-function PageContents({
-  page,
+function FaceContents({
+  face,
   side,
   masterToken,
   recipientName,
   intro,
   notes,
 }: {
-  page: Page;
-  side: "recto" | "verso";
+  face: Face;
+  side: "left" | "right";
   masterToken: string;
   recipientName: string;
   intro: string | null;
   notes: Note[];
 }) {
-  // Books give the gutter side a wider margin than the outer edge. Pages set
-  // centred — the cover and the closing panel — get even margins instead.
-  const centred = page.kind === "cover" || page.kind === "closing";
-  // Type centred between equal margins reads as sitting too low, so print gives
-  // the foot a deeper margin than the head and lets the focal line ride up to
-  // the optical centre, about a third of the way down.
-  const vertical = centred ? "pt-8 pb-14 sm:pt-9 sm:pb-16" : "py-8 sm:py-10";
-  const horizontal = centred
-    ? "px-7 sm:px-9"
-    : side === "recto"
-      ? "pl-9 pr-6 sm:pl-11 sm:pr-8"
-      : "pl-6 pr-9 sm:pl-8 sm:pr-11";
-  const body = `card-body ${vertical} ${horizontal}`;
-
-  switch (page.kind) {
+  switch (face.kind) {
     case "cover":
       return (
-        <span className={`${body} items-center text-center`}>
-          {/* One focal line, generous air, a single rule for ornament. */}
-          <span className="my-auto flex flex-col items-center">
-            <span className="font-serif text-[1.0625rem] italic text-muted">
-              Happy birthday,
-            </span>
-            {/* A name is never hyphenated; it breaks at a hyphen it already
-                has, or not at all. */}
-            <span
-              className={`mt-2 font-serif leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName)}`}
-            >
-              {recipientName}
-            </span>
-            <span className="mt-7 h-px w-10 bg-brass/70" />
-          </span>
-
-          {/* Three type sizes on a cover is enough, so the two lines at the
-              foot share one and differ by weight instead. */}
-          <span className="flex flex-col items-center text-[0.8125rem]">
-            <span className="text-muted">
-              {notes.length === 0
-                ? "Nothing inside yet"
-                : notes.length === 1
-                  ? "One message inside"
-                  : `${notes.length} messages inside`}
-            </span>
-            <span className="mt-2.5 font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass">
-              Open the card
-            </span>
-          </span>
-        </span>
+        <CoverFace
+          recipientName={recipientName}
+          intro={intro}
+          noteCount={notes.length}
+        />
       );
-
-    case "inside-front":
+    case "inside":
+      return <InsideFace recipientName={recipientName} />;
+    case "note":
       return (
-        <div className={body}>
-          {intro ? (
-            <p className="font-serif text-[1.0625rem] leading-[1.62] whitespace-pre-wrap">
-              {intro}
-            </p>
-          ) : null}
-
-          {notes.length === 0 ? (
-            <p className="my-auto leading-relaxed text-muted">
-              Nobody has signed this yet. Share the signing link and every
-              message becomes a page in here.
-            </p>
-          ) : (
-            <div className={intro ? "mt-9" : "my-auto"}>
-              <p className="text-[0.8125rem] text-muted">Signed by</p>
-              <ul className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-3">
-                {Array.from(new Set(notes.map((note) => note.authorName))).map(
-                  (name) => (
-                    <li
-                      key={name}
-                      className="font-hand text-[1.5rem] leading-none text-ink/85"
-                      style={{ transform: `rotate(${tiltFor(name)}deg)` }}
-                    >
-                      {name}
-                    </li>
-                  ),
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
+        <NoteFace masterToken={masterToken} note={face.note} side={side} />
       );
-
-    case "message":
-      return (
-        <div className={body}>
-          <p
-            className={`text-[0.75rem] tabular-nums text-brass ${side === "recto" ? "text-right" : ""}`}
-          >
-            {page.number} of {notes.length}
-          </p>
-
-          {/* Focusable so a long message can be read from the keyboard; the
-              arrow keys stay bound to turning pages. */}
-          <div className="card-scroll mt-6 flex flex-col" tabIndex={0}>
-            <p className="my-auto font-serif text-[1.125rem] leading-[1.62] whitespace-pre-wrap break-words">
-              {page.note.body}
-            </p>
-          </div>
-
-          <div className="mt-7 text-right">
-            <p
-              className="font-hand text-[1.75rem] leading-none"
-              style={{ transform: `rotate(${tiltFor(page.note.authorName)}deg)` }}
-            >
-              {page.note.authorName}
-            </p>
-            <p className="mt-2 text-[0.75rem] text-muted">{page.note.date}</p>
-          </div>
-
-          <div className="mt-5 border-t border-rule pt-4">
-            <RemoveControl masterToken={masterToken} messageId={page.note.id} />
-          </div>
-        </div>
-      );
-
-    case "closing":
-      return (
-        <div className={`${body} items-center justify-center text-center`}>
-          <p className="font-serif text-[1.5rem] leading-tight">
-            That&rsquo;s everyone.
-          </p>
-          <span className="mt-6 h-px w-10 bg-brass/70" />
-          <p className="mt-6 max-w-[26ch] text-[0.9375rem] leading-relaxed text-muted">
-            {notes.length === 1
-              ? `One message, collected for ${recipientName}.`
-              : `${notes.length} messages, collected for ${recipientName}.`}
-          </p>
-        </div>
-      );
-
-    case "blank":
-      return null;
+    case "empty":
+      return <div className="card-body" />;
   }
+}
+
+function CoverFace({
+  recipientName,
+  intro,
+  noteCount,
+}: {
+  recipientName: string;
+  intro: string | null;
+  noteCount: number;
+}) {
+  return (
+    <span className="card-body items-center px-7 pt-8 pb-14 text-center sm:px-9 sm:pt-9 sm:pb-16">
+      <span className="my-auto flex flex-col items-center">
+        <span className="font-serif text-[1.0625rem] italic text-muted">
+          Happy birthday,
+        </span>
+        <span
+          className={`mt-2 font-serif leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName)}`}
+        >
+          {recipientName}
+        </span>
+        <span className="mt-7 h-px w-10 bg-brass/80" />
+        {intro ? (
+          <span className="mt-8 max-w-[28ch] font-serif text-[0.9375rem] leading-[1.55] text-ink/80 whitespace-pre-wrap">
+            {intro}
+          </span>
+        ) : null}
+      </span>
+
+      <span className="flex flex-col items-center text-[0.8125rem]">
+        <span className="text-muted">
+          {noteCount === 0
+            ? "Nothing inside yet"
+            : noteCount === 1
+              ? "One note inside"
+              : `${noteCount} notes inside`}
+        </span>
+        <span className="mt-2.5 font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass">
+          Open the card
+        </span>
+      </span>
+    </span>
+  );
+}
+
+function InsideFace({ recipientName }: { recipientName: string }) {
+  return (
+    <div className="card-body px-7 py-8 sm:px-10 sm:py-10">
+      <p className="my-auto leading-relaxed text-muted">
+        Nobody has signed {recipientName}&rsquo;s card yet. Share the signing
+        link and every note will land in here.
+      </p>
+    </div>
+  );
+}
+
+function NoteFace({
+  masterToken,
+  note,
+  side,
+}: {
+  masterToken: string;
+  note: Note;
+  side: "left" | "right";
+}) {
+  const pad =
+    side === "left"
+      ? "pl-7 pr-9 py-8 sm:pl-8 sm:pr-11 sm:py-10"
+      : "pl-9 pr-7 py-8 sm:pl-11 sm:pr-8 sm:py-10";
+
+  return (
+    <div className={`card-body ${pad}`}>
+      <div className="card-scroll flex flex-col" tabIndex={0}>
+        <p
+          className="my-auto font-serif text-[1.1875rem] leading-[1.62] whitespace-pre-wrap break-words sm:text-[1.25rem]"
+          style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}
+        >
+          {note.body}
+        </p>
+      </div>
+
+      <div className="mt-8 flex items-end justify-between gap-6">
+        <RemoveControl masterToken={masterToken} messageId={note.id} />
+        <div className="text-right">
+          <Signature name={note.authorName} />
+          <p className="mt-2 text-[0.75rem] text-muted">{note.date}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Signature({ name }: { name: string }) {
+  const hand = handFor(name);
+  return (
+    <p
+      className="font-hand leading-none text-ink/90"
+      style={{
+        fontSize: `${hand.size}rem`,
+        transform: `rotate(${hand.rotate}deg) skewX(${hand.skew}deg)`,
+      }}
+    >
+      {name}
+    </p>
+  );
 }
 
 function RemoveControl({
@@ -569,7 +573,7 @@ function RemoveControl({
     return (
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.75rem] text-muted">
         <span>
-          {error ?? (isPending ? "Removing…" : "Remove this page for good?")}
+          {error ?? (isPending ? "Removing…" : "Remove this note for good?")}
         </span>
         <button
           type="button"
@@ -600,7 +604,7 @@ function RemoveControl({
       onClick={() => setConfirming(true)}
       className="text-[0.75rem] text-muted underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-brass"
     >
-      Remove this page
+      Remove this note
     </button>
   );
 }
