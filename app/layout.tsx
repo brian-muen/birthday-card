@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Geist_Mono } from "next/font/google";
+import { Caveat, EB_Garamond, Karla } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Garamond sets the messages and headlines; the card is a bookish object.
+const garamond = EB_Garamond({
+  variable: "--font-garamond",
   subsets: ["latin"],
   style: ["normal", "italic"],
+});
+
+// Karla carries the interface: labels, buttons, meta.
+const karla = Karla({
+  variable: "--font-karla",
+  subsets: ["latin"],
+});
+
+// Caveat is reserved for signatures — names only, never body text.
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "Birthday Card",
   description:
-    "Create a birthday card everyone can sign. Friends leave private messages, and the birthday person reads them like pages of a book.",
+    "Start a birthday card, share one link, and collect a message from everyone. They stay hidden until the day you hand it over.",
 };
 
 export default function RootLayout({
@@ -32,7 +35,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${karla.variable} ${garamond.variable} ${caveat.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

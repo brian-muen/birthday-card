@@ -50,7 +50,7 @@ export default async function CardPage({ params }: PageParams) {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-5 py-12 sm:py-16">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-14 sm:py-20">
       <CardBook
         masterToken={masterToken}
         recipientName={card.recipientName}
@@ -63,15 +63,15 @@ export default async function CardPage({ params }: PageParams) {
         }))}
       />
 
-      <div className="mt-10 flex flex-col items-center gap-3">
+      <div className="mt-14 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-rule pt-6">
         <a
           href={`/card/${masterToken}/pdf`}
           download
-          className="text-sm font-medium text-foreground/70 underline decoration-foreground/30 underline-offset-4 transition hover:text-foreground hover:decoration-foreground"
+          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
         >
-          Download as PDF
+          Download the card as a PDF
         </a>
-        <p className="text-center text-xs text-foreground/40">
+        <p className="text-[0.8125rem] text-muted">
           Anyone with this link can read every message.
         </p>
       </div>

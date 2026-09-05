@@ -21,23 +21,17 @@ export default async function SignPage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-8 px-5 py-16 sm:py-24">
-      <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
-          A birthday card
-        </p>
-        <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
-          A message for <em className="text-accent">{card.recipientName}</em>
-        </h1>
-        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
-          Friends are signing {card.recipientName}&rsquo;s birthday card
-          together. Add your note below &mdash; nobody else&rsquo;s messages
-          are shown here.
-        </p>
-      </header>
+    <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16 sm:py-24">
+      <h1 className="font-serif text-[2.25rem] leading-[1.15] tracking-[-0.01em] sm:text-[2.75rem]">
+        Add your message to {card.recipientName}&rsquo;s card.
+      </h1>
+      <p className="mt-5 max-w-[58ch] text-[1.0625rem] leading-relaxed text-muted">
+        Friends are signing a birthday card for {card.recipientName} together.
+        Yours becomes one page of it.
+      </p>
 
       {card.intro && (
-        <blockquote className="rounded-r-lg border-l-2 border-accent/50 bg-accent/[0.04] py-3 pl-4 pr-3 font-serif text-lg italic leading-relaxed text-foreground/70 whitespace-pre-wrap">
+        <blockquote className="mt-10 border-l border-rule pl-5 font-serif text-xl leading-[1.6] whitespace-pre-wrap">
           {card.intro}
         </blockquote>
       )}
@@ -46,10 +40,6 @@ export default async function SignPage({
         contributeToken={card.contributeToken}
         recipientName={card.recipientName}
       />
-
-      <p className="text-center text-xs text-foreground/45">
-        Your message stays private until {card.recipientName} opens the card.
-      </p>
     </main>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
-import Confetti from "@/components/confetti";
 
 type Note = {
   id: number;
@@ -10,6 +9,16 @@ type Note = {
   body: string;
   date: string;
 };
+
+// Real signatures never line up. Derive a stable tilt from the name so each
+// one sits at its own angle without changing on every render.
+function tiltFor(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) {
+    hash = (hash * 31 + name.charCodeAt(i)) % 1000;
+  }
+  return ((hash % 9) - 4) / 2;
+}
 
 export default function CardBook({
   masterToken,
@@ -52,32 +61,24 @@ export default function CardBook({
   const note = index > 0 ? notes[index - 1] : null;
 
   return (
-    <div className="flex flex-col items-center">
-      {/* The book: stacked pages behind the current one */}
-      <div className="relative w-full">
+    <div>
+      {/* The book: two sheets behind the page being read. */}
+      <div className="relative">
         <span
           aria-hidden
-          className="absolute inset-0 translate-x-2 translate-y-2 rounded-xl border border-foreground/10 bg-paper"
+          className="absolute inset-0 translate-x-[6px] translate-y-[6px] border border-rule bg-raised"
         />
         <span
           aria-hidden
-          className="absolute inset-0 translate-x-1 translate-y-1 rounded-xl border border-foreground/10 bg-paper"
+          className="absolute inset-0 translate-x-[3px] translate-y-[3px] border border-rule bg-raised"
         />
 
         <div
           key={index}
-          className={`shadow-card relative flex min-h-[26rem] w-full flex-col rounded-xl border border-foreground/15 bg-paper px-8 py-10 sm:min-h-[30rem] sm:px-14 sm:py-12 ${
-            direction === "forward"
-              ? "animate-page-in"
-              : "animate-page-in-back"
+          className={`paper-lift relative flex min-h-[27rem] flex-col border border-rule bg-raised px-7 py-9 sm:min-h-[32rem] sm:px-14 sm:py-12 ${
+            direction === "forward" ? "animate-page-in" : "animate-page-in-back"
           }`}
         >
-          {/* Bound-edge detail */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-5 left-5 w-px bg-foreground/8 sm:left-8"
-          />
-
           {note ? (
             <MessagePage
               masterToken={masterToken}
@@ -89,37 +90,32 @@ export default function CardBook({
             <CoverPage
               recipientName={recipientName}
               intro={intro}
-              messageCount={notes.length}
+              notes={notes}
             />
           )}
         </div>
       </div>
 
-      {/* Navigation */}
       <nav
         aria-label="Card pages"
-        className="mt-7 flex w-full items-center justify-between px-1"
+        className="mt-8 flex items-center justify-between gap-6"
       >
         <button
           type="button"
           onClick={() => goTo(index - 1)}
           disabled={index === 0}
-          className="rounded-full border border-foreground/15 bg-paper px-4 py-1.5 text-sm font-medium text-foreground/70 transition hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-0"
+          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass disabled:pointer-events-none disabled:opacity-0"
         >
-          &larr; Previous
+          Previous page
         </button>
-
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-foreground/45">
-          {index === 0 ? "Cover" : `Page ${index} of ${notes.length}`}
-        </p>
 
         <button
           type="button"
           onClick={() => goTo(index + 1)}
           disabled={index >= pageCount - 1}
-          className="rounded-full border border-foreground/15 bg-paper px-4 py-1.5 text-sm font-medium text-foreground/70 transition hover:border-accent hover:text-accent disabled:pointer-events-none disabled:opacity-0"
+          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass disabled:pointer-events-none disabled:opacity-0"
         >
-          Next &rarr;
+          {index === 0 ? "Read the messages" : "Next page"}
         </button>
       </nav>
     </div>
@@ -129,53 +125,56 @@ export default function CardBook({
 function CoverPage({
   recipientName,
   intro,
-  messageCount,
+  notes,
 }: {
   recipientName: string;
   intro: string | null;
-  messageCount: number;
+  notes: Note[];
 }) {
+  // One signature per person, in the order they signed.
+  const signers = Array.from(new Set(notes.map((note) => note.authorName)));
+
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center text-center">
-      <Confetti />
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col justify-center">
+        <p className="font-serif text-xl text-muted">Happy birthday,</p>
+        {/* Fluid so a long name shrinks instead of breaking the page. */}
+        <h1 className="mt-1 font-serif text-[clamp(2.5rem,9vw,5rem)] leading-[0.98] tracking-[-0.025em] break-words">
+          {recipientName}
+        </h1>
 
-      {/* Decorative inner frame, like a printed card */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -inset-x-4 -inset-y-6 rounded-lg border border-accent/15 sm:-inset-x-8"
-      />
+        {intro ? (
+          <p className="mt-8 max-w-[46ch] font-serif text-xl leading-[1.6] whitespace-pre-wrap">
+            {intro}
+          </p>
+        ) : null}
+      </div>
 
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
-        A birthday card
-      </p>
-      <h1 className="mt-6 font-serif text-4xl leading-[1.15] tracking-tight text-balance sm:text-5xl">
-        Happy Birthday,
-        <br />
-        <em className="text-accent">{recipientName}</em>
-      </h1>
-
-      <span
-        aria-hidden
-        className="mt-8 flex items-center gap-3 text-gold"
-      >
-        <span className="h-px w-12 bg-gold/40" />
-        &#10047;
-        <span className="h-px w-12 bg-gold/40" />
-      </span>
-
-      {intro ? (
-        <p className="mt-8 max-w-md font-serif text-lg italic leading-relaxed text-foreground/65 whitespace-pre-wrap">
-          {intro}
+      {signers.length > 0 ? (
+        <div className="mt-12">
+          <p className="text-[0.9375rem] text-muted">
+            {notes.length === 1
+              ? "One message inside, from"
+              : `${notes.length} messages inside, from`}
+          </p>
+          <ul className="mt-4 flex flex-wrap items-baseline gap-x-8 gap-y-4">
+            {signers.map((name) => (
+              <li
+                key={name}
+                className="font-hand text-[1.875rem] leading-none text-ink/85"
+                style={{ transform: `rotate(${tiltFor(name)}deg)` }}
+              >
+                {name}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-12 max-w-[48ch] leading-relaxed text-muted">
+          No messages yet. Share the signing link and each one will appear here
+          as a page of the card.
         </p>
-      ) : null}
-
-      <p className="mt-8 text-sm text-foreground/50">
-        {messageCount === 0
-          ? "No messages yet — share the contributor link and they'll appear here."
-          : messageCount === 1
-            ? "One message inside. Turn the page."
-            : `${messageCount} messages inside. Turn the page.`}
-      </p>
+      )}
     </div>
   );
 }
@@ -193,23 +192,26 @@ function MessagePage({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <p className="text-center font-serif text-sm italic text-gold/80">
-        {pageNumber} of {pageTotal}
+      <p className="text-center text-[0.8125rem] tabular-nums text-brass">
+        {pageNumber} / {pageTotal}
       </p>
 
-      <div className="flex flex-1 items-center py-8">
-        <p className="w-full font-serif text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap break-words sm:text-2xl">
+      <div className="flex flex-1 items-center py-10">
+        <p className="w-full max-w-[52ch] font-serif text-[1.375rem] leading-[1.65] whitespace-pre-wrap break-words sm:text-[1.5rem]">
           {note.body}
         </p>
       </div>
 
-      <footer className="flex items-end justify-between gap-4">
+      <footer className="flex items-end justify-between gap-6">
         <RemoveControl masterToken={masterToken} messageId={note.id} />
         <div className="text-right">
-          <p className="font-serif text-lg italic text-accent-deep">
-            &mdash; {note.authorName}
+          <p
+            className="font-hand text-[2rem] leading-none"
+            style={{ transform: `rotate(${tiltFor(note.authorName)}deg)` }}
+          >
+            {note.authorName}
           </p>
-          <p className="mt-1 text-xs text-foreground/40">{note.date}</p>
+          <p className="mt-2.5 text-[0.8125rem] text-muted">{note.date}</p>
         </div>
       </footer>
     </div>
@@ -241,15 +243,17 @@ function RemoveControl({
 
   if (confirming) {
     return (
-      <div className="flex items-center gap-2 text-xs text-foreground/60">
-        <span>{error ?? (isPending ? "Removing…" : "Remove this page?")}</span>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted">
+        <span>
+          {error ?? (isPending ? "Removing…" : "Remove this page for good?")}
+        </span>
         <button
           type="button"
           onClick={confirmDelete}
           disabled={isPending}
-          className="font-medium underline decoration-foreground/30 underline-offset-2 hover:decoration-foreground disabled:opacity-50"
+          className="font-medium text-ink underline decoration-rule decoration-2 underline-offset-4 hover:decoration-brass disabled:opacity-50"
         >
-          Yes
+          Remove
         </button>
         <button
           type="button"
@@ -258,9 +262,9 @@ function RemoveControl({
             setError(null);
           }}
           disabled={isPending}
-          className="underline decoration-foreground/30 underline-offset-2 hover:decoration-foreground disabled:opacity-50"
+          className="underline decoration-rule decoration-2 underline-offset-4 hover:decoration-brass disabled:opacity-50"
         >
-          No
+          Keep it
         </button>
       </div>
     );
@@ -270,9 +274,9 @@ function RemoveControl({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="text-xs text-foreground/35 underline decoration-foreground/20 underline-offset-2 transition hover:text-foreground/70 hover:decoration-foreground/50"
+      className="text-[0.8125rem] text-muted underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-brass"
     >
-      Remove
+      Remove this page
     </button>
   );
 }
