@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
+import { parsePen } from "@/lib/pen";
 
 // Kept in sync with the limits enforced in the client form.
 const MAX_NAME_LENGTH = 80;
@@ -14,10 +15,12 @@ export async function addMessage(input: {
   contributeToken: string;
   authorName: string;
   body: string;
+  pen?: string;
 }): Promise<AddMessageResult> {
   const contributeToken = input.contributeToken?.trim() ?? "";
   const authorName = input.authorName?.trim() ?? "";
   const body = input.body?.trim() ?? "";
+  const pen = parsePen(input.pen);
 
   if (!contributeToken) {
     return { ok: false, error: "This signing link is not valid." };
@@ -57,6 +60,7 @@ export async function addMessage(input: {
     cardId: card.id,
     authorName,
     body,
+    pen,
   });
 
   return { ok: true };

@@ -1,9 +1,14 @@
 import { asc, eq } from "drizzle-orm";
+import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
+
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 import { findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
+import { parsePen, penFile, penPdfSize, type PenId } from "@/lib/pen";
 import { parseStock, stockRgb } from "@/lib/stock";
 
 // Palette lifted from globals.css so the PDF matches the site.
@@ -21,9 +26,6 @@ const BODY_LINE_HEIGHT = 19;
 // Vertical space reserved for the page header and the author footer.
 const CONTENT_TOP = PAGE_HEIGHT - 84;
 const CONTENT_BOTTOM = 112;
-const MAX_BODY_LINES_PER_PAGE = Math.floor(
-  (CONTENT_TOP - CONTENT_BOTTOM) / BODY_LINE_HEIGHT,
-);
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
@@ -60,6 +62,7 @@ export async function GET(
       authorName: note.authorName,
       body: note.body,
       date: dateFormatter.format(note.createdAt),
+      pen: parsePen(note.pen),
     })),
   });
 
@@ -79,7 +82,12 @@ export async function GET(
   });
 }
 
-type PdfNote = { authorName: string; body: string; date: string };
+type PdfNote = { authorName: string; body: string; date: string; pen: PenId };
+
+async function embedPenFont(doc: PDFDocument, pen: PenId) {
+  const dir = path.join(process.cwd(), "lib/fonts");
+  return doc.embedFont(await readFile(path.join(dir, penFile(pen))));
+}
 
 async function buildCardPdf(input: {
   recipientName: string;
@@ -90,25 +98,30 @@ async function buildCardPdf(input: {
 }) {
   const doc = await PDFDocument.create();
   doc.setTitle(`Happy Birthday, ${input.recipientName}`);
+  doc.registerFontkit(fontkit);
 
-  const serif = await doc.embedFont(StandardFonts.TimesRoman);
-  const serifItalic = await doc.embedFont(StandardFonts.TimesRomanItalic);
+  const coverHand = await embedPenFont(doc, "pencil");
+  const pens = new Map<PenId, PDFFont>();
+  for (const note of input.notes) {
+    if (!pens.has(note.pen)) {
+      pens.set(note.pen, await embedPenFont(doc, note.pen));
+    }
+  }
   const sans = await doc.embedFont(StandardFonts.Helvetica);
 
-  // The standard PDF fonts only cover Latin-1-ish characters; drop anything
-  // they can't encode (emoji etc.) instead of crashing.
-  const sanitize = makeSanitizer(serif);
+  const sanitizeCover = makeSanitizer(coverHand);
   const paper = (() => {
     const { r, g, b } = stockRgb(input.stock);
     return rgb(r, g, b);
   })();
 
   drawCoverPage(doc, {
-    serif,
-    serifItalic,
+    writing: coverHand,
+    writingItalic: coverHand,
     sans,
     paper,
-    recipientName: sanitize(input.recipientName),
+    titleSize: 28,
+    recipientName: sanitizeCover(input.recipientName),
     dedication: input.showCount
       ? null
       : "From your brothers and sisters in Christ",
@@ -116,9 +129,12 @@ async function buildCardPdf(input: {
   });
 
   input.notes.forEach((note, i) => {
+    const writing = pens.get(note.pen) ?? coverHand;
+    const sanitize = makeSanitizer(writing);
+    const bodySize = penPdfSize(note.pen);
     drawMessagePages(doc, {
-      serif,
-      serifItalic,
+      writing,
+      writingItalic: writing,
       sans,
       paper,
       body: sanitize(note.body),
@@ -126,6 +142,8 @@ async function buildCardPdf(input: {
       date: note.date,
       pageNumber: i + 1,
       pageTotal: input.notes.length,
+      bodySize,
+      bodyLineHeight: Math.round(bodySize * 1.55),
     });
   });
 
@@ -172,26 +190,30 @@ function addDecoratedPage(
 function drawCoverPage(
   doc: PDFDocument,
   input: {
-    serif: PDFFont;
-    serifItalic: PDFFont;
+    writing: PDFFont;
+    writingItalic: PDFFont;
     sans: PDFFont;
     paper: ReturnType<typeof rgb>;
     recipientName: string;
     dedication: string | null;
     messageCount: number | null;
+    titleSize: number;
   },
 ) {
   const page = addDecoratedPage(doc, input.paper);
 
   const titleLines = [
-    { text: "Happy Birthday,", font: input.serif },
-    ...wrapText(input.recipientName, input.serifItalic, 28, TEXT_WIDTH).map(
-      (text) => ({ text, font: input.serifItalic }),
-    ),
+    { text: "Happy Birthday,", font: input.writingItalic },
+    ...wrapText(
+      input.recipientName,
+      input.writingItalic,
+      input.titleSize,
+      TEXT_WIDTH,
+    ).map((text) => ({ text, font: input.writingItalic })),
   ];
 
   const introLines = input.dedication
-    ? wrapText(input.dedication, input.serifItalic, 12, TEXT_WIDTH - 24)
+    ? wrapText(input.dedication, input.writingItalic, 12, TEXT_WIDTH - 24)
     : [];
 
   const countText =
@@ -221,8 +243,13 @@ function drawCoverPage(
   y -= 8 + 28;
 
   for (const line of titleLines) {
-    y -= 28;
-    drawCentered(page, line.text, { font: line.font, size: 28, y, color: INK });
+    y -= input.titleSize;
+    drawCentered(page, line.text, {
+      font: line.font,
+      size: input.titleSize,
+      y,
+      color: INK,
+    });
     y -= 8;
   }
 
@@ -240,7 +267,7 @@ function drawCoverPage(
     for (const line of introLines) {
       y -= 14;
       drawCentered(page, line, {
-        font: input.serifItalic,
+        font: input.writingItalic,
         size: 12,
         y,
         color: INK,
@@ -266,8 +293,8 @@ function drawCoverPage(
 function drawMessagePages(
   doc: PDFDocument,
   input: {
-    serif: PDFFont;
-    serifItalic: PDFFont;
+    writing: PDFFont;
+    writingItalic: PDFFont;
     sans: PDFFont;
     paper: ReturnType<typeof rgb>;
     body: string;
@@ -275,14 +302,19 @@ function drawMessagePages(
     date: string;
     pageNumber: number;
     pageTotal: number;
+    bodySize?: number;
+    bodyLineHeight?: number;
   },
 ) {
-  const lines = wrapText(input.body, input.serif, BODY_SIZE, TEXT_WIDTH);
+  const bodySize = input.bodySize ?? BODY_SIZE;
+  const bodyLineHeight = input.bodyLineHeight ?? BODY_LINE_HEIGHT;
+  const maxLines = Math.floor((CONTENT_TOP - CONTENT_BOTTOM) / bodyLineHeight);
+  const lines = wrapText(input.body, input.writing, bodySize, TEXT_WIDTH);
 
   // Split very long messages across several PDF pages.
   const chunks: string[][] = [];
-  for (let i = 0; i < lines.length; i += MAX_BODY_LINES_PER_PAGE) {
-    chunks.push(lines.slice(i, i + MAX_BODY_LINES_PER_PAGE));
+  for (let i = 0; i < lines.length; i += maxLines) {
+    chunks.push(lines.slice(i, i + maxLines));
   }
   if (chunks.length === 0) chunks.push([]);
 
@@ -295,7 +327,7 @@ function drawMessagePages(
         ? `${input.pageNumber} of ${input.pageTotal}, continued`
         : `${input.pageNumber} of ${input.pageTotal}`;
     drawCentered(page, header, {
-      font: input.serifItalic,
+      font: input.sans,
       size: 10,
       y: PAGE_HEIGHT - 56,
       color: INK,
@@ -304,38 +336,38 @@ function drawMessagePages(
 
     // Single-page messages sit vertically centered, like on screen;
     // multi-page messages fill from the top.
-    const blockHeight = chunk.length * BODY_LINE_HEIGHT;
+    const blockHeight = chunk.length * bodyLineHeight;
     let y =
       chunks.length === 1
         ? CONTENT_BOTTOM +
           (CONTENT_TOP - CONTENT_BOTTOM + blockHeight) / 2 -
-          BODY_LINE_HEIGHT
-        : CONTENT_TOP - BODY_LINE_HEIGHT;
+          bodyLineHeight
+        : CONTENT_TOP - bodyLineHeight;
 
     for (const line of chunk) {
       if (line) {
         page.drawText(line, {
           x: MARGIN_X,
           y,
-          font: input.serif,
-          size: BODY_SIZE,
+          font: input.writing,
+          size: bodySize,
           color: INK,
           opacity: 0.9,
         });
       }
-      y -= BODY_LINE_HEIGHT;
+      y -= bodyLineHeight;
     }
 
     if (isLastChunk) {
-      const signature = `— ${input.authorName}`;
-      const signatureWidth = input.serifItalic.widthOfTextAtSize(
+      const signature = `- ${input.authorName}`;
+      const signatureWidth = input.writingItalic.widthOfTextAtSize(
         signature,
         12,
       );
       page.drawText(signature, {
         x: PAGE_WIDTH - MARGIN_X - signatureWidth,
         y: 74,
-        font: input.serifItalic,
+        font: input.writingItalic,
         size: 12,
         color: INK,
       });

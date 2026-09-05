@@ -2,6 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
+import { PenIcon } from "@/components/pen-icon";
+import {
+  DEFAULT_PEN,
+  PENS,
+  parsePen,
+  penBodyClass,
+  penClass,
+  penIsLively,
+  penVar,
+  type PenId,
+} from "@/lib/pen";
 import { stockHex } from "@/lib/stock";
 
 const MAX_NAME_LENGTH = 80;
@@ -26,8 +37,10 @@ export default function MessageForm({
 }) {
   const [authorName, setAuthorName] = useState("");
   const [body, setBody] = useState("");
+  const [pen, setPen] = useState<PenId>(DEFAULT_PEN);
   const [error, setError] = useState<string | null>(null);
   const [sentBy, setSentBy] = useState<string | null>(null);
+  const [sentPen, setSentPen] = useState<PenId>(DEFAULT_PEN);
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -35,6 +48,7 @@ export default function MessageForm({
 
     const name = authorName.trim();
     const message = body.trim();
+    const chosen = parsePen(pen);
 
     if (!name) {
       setError("Sign your name at the bottom so they know who wrote it.");
@@ -55,6 +69,7 @@ export default function MessageForm({
         contributeToken,
         authorName: name,
         body: message,
+        pen: chosen,
       });
 
       if (!result.ok) {
@@ -63,6 +78,7 @@ export default function MessageForm({
       }
 
       setSentBy(name);
+      setSentPen(chosen);
       setAuthorName("");
       setBody("");
     });
@@ -76,7 +92,10 @@ export default function MessageForm({
         </h2>
         <p className="mt-3 max-w-[52ch] leading-relaxed text-muted">
           It&rsquo;s in {recipientName}&rsquo;s card now, signed{" "}
-          <span className="font-hand text-xl text-ink">{sentBy}</span>. Nobody
+          <span className={`text-xl text-ink ${penClass(sentPen)}`}>
+            {sentBy}
+          </span>
+          . Nobody
           else signing the card can read it.
         </p>
         <button
@@ -92,10 +111,38 @@ export default function MessageForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-12">
+      <fieldset>
+        <legend className="text-[0.9375rem] font-medium">Your pen</legend>
+        <div className="mt-3 flex flex-wrap gap-3">
+          {PENS.map((option) => (
+            <label
+              key={option.id}
+              className="flex cursor-pointer flex-col items-center gap-1.5"
+            >
+              <input
+                type="radio"
+                name="pen"
+                value={option.id}
+                checked={pen === option.id}
+                onChange={() => setPen(option.id)}
+                className="peer sr-only"
+              />
+              <span className="flex size-12 items-center justify-center border border-rule bg-raised text-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink peer-checked:outline peer-checked:outline-2 peer-checked:outline-offset-2 peer-checked:outline-ink">
+                <PenIcon id={option.id} />
+              </span>
+              <span className="text-[0.75rem] text-muted">{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       {/* The page they're writing: message above, signature on the line. */}
       <div
-        className="paper-lift border border-rule px-6 py-7 sm:px-9 sm:py-9"
-        style={{ backgroundColor: stockHex(stock) }}
+        className="paper-lift mt-8 border border-rule px-6 py-7 sm:px-9 sm:py-9"
+        style={{
+          backgroundColor: stockHex(stock),
+          ["--card-face" as string]: penVar(pen),
+        }}
       >
         <label htmlFor="body" className="sr-only">
           Your message for {recipientName}
@@ -113,7 +160,7 @@ export default function MessageForm({
             fitToContent(event.target);
           }}
           disabled={pending}
-          className="min-h-44 w-full resize-none border-0 bg-transparent font-serif text-xl leading-[1.6] outline-none placeholder:text-muted/45"
+          className={`min-h-44 w-full resize-none border-0 bg-transparent leading-[1.6] outline-none placeholder:text-muted/45 font-card ${penBodyClass(pen)}`}
         />
 
         <div className="mt-8 flex items-end justify-between gap-6">
@@ -138,7 +185,9 @@ export default function MessageForm({
               value={authorName}
               onChange={(event) => setAuthorName(event.target.value)}
               disabled={pending}
-              className="field text-right font-hand text-[1.75rem] leading-tight placeholder:text-muted/70"
+              className={`field text-right font-card leading-tight placeholder:text-muted/70 ${
+                penIsLively(pen) ? "text-[1.75rem]" : "text-[1.25rem]"
+              }`}
             />
           </div>
         </div>
