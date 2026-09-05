@@ -142,12 +142,22 @@ select:focus-visible {
   transition: none;
 }
 
-/* Closed — front or back — is the same 5×7 on the table, not a left-hand leaf.
-   Closing uses the same shift so the fold and the recenter stay one motion. */
-.card-frame[data-spread="true"] .card-stage[data-closed="true"],
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] {
+/* Closed — front or back — is the same 5×7 on the table, not a left-hand leaf. */
+.card-frame[data-spread="true"] .card-stage[data-closed="true"] {
   transform: translateX(-25%);
   perspective-origin: 75% 50%;
+}
+
+/* Close is a page turn: the right leaf folds left. Recenter onto that
+   landing (spine on the right) so the fold and the 5×7 stay one motion. */
+.card-frame[data-spread="true"] .card-stage[data-closing="true"] {
+  transform: translateX(25%);
+  perspective-origin: 25% 50%;
+}
+
+/* Settling onto the deck would otherwise tween +25% → −25% and slide the card. */
+.card-frame[data-spread="true"] .card-stage[data-closed="true"][data-shut="back"]:not([data-flipping="true"]) {
+  transition: none;
 }
 
 .card-panel {
@@ -206,16 +216,10 @@ select:focus-visible {
   opacity: 1;
 }
 
-.card-stage[data-closing="true"] .card-panel[data-half="left"] {
+/* On a bifold, the right backing drops away as its leaf folds over the writing. */
+.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="right"] {
   opacity: 0;
-  transition: opacity 200ms linear;
-}
-
-/* As the card folds shut, the left notes clear so they don't reappear
-   behind the swinging panel. */
-.card-stage[data-closing="true"] .card-leaf .card-face[data-face="back"] {
-  opacity: 0;
-  transition: opacity 160ms linear;
+  transition: opacity 180ms linear;
 }
 
 .card-leaf {
@@ -227,7 +231,8 @@ select:focus-visible {
   transition: transform var(--card-turn) var(--card-ease);
 }
 
-.card-leaf[data-cover="true"] {
+.card-leaf[data-cover="true"],
+.card-leaf[data-folding="true"] {
   transition-duration: var(--card-cover-turn);
   transition-timing-function: var(--card-ease-cover);
 }
@@ -274,7 +279,7 @@ select:focus-visible {
   pointer-events: none;
 }
 
-/* The open half folding shut over the last writing. Lands as the blank back. */
+/* Empty right panel folding shut the same way a page turns. */
 .card-shutter {
   position: absolute;
   inset-block: 0;
@@ -300,11 +305,11 @@ select:focus-visible {
 
 @keyframes card-fold-shut {
   from {
-    transform: rotateY(-180deg);
+    transform: rotateY(0deg);
   }
 
   to {
-    transform: rotateY(0deg);
+    transform: rotateY(-180deg);
   }
 }
 
@@ -524,7 +529,7 @@ select:focus-visible {
   }
 
   .card-shutter[data-swing="true"] {
-    transform: rotateY(0deg);
+    transform: rotateY(-180deg);
   }
 
   .animate-insert-in,

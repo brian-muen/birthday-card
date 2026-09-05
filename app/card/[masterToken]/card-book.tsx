@@ -309,8 +309,13 @@ export default function CardBook({
     );
   }
 
-  function settleClose(event: React.AnimationEvent<HTMLDivElement>) {
+  function settleClose(
+    event:
+      | React.AnimationEvent<HTMLDivElement>
+      | React.TransitionEvent<HTMLDivElement>,
+  ) {
     if (event.target !== event.currentTarget) return;
+    if ("propertyName" in event && event.propertyName !== "transform") return;
     setPlace({
       place: 0,
       moving: null,
@@ -405,12 +410,13 @@ export default function CardBook({
             </div>
           ) : (
             leaves.map((leaf, index) => {
-              const turned = index < place;
+              const foldingShut = closing && index === place;
+              const turned = index < place || foldingShut;
               const facingFront = closed
                 ? index === 0
                 : index === place;
               const facingBack = place > 0 && index === place - 1;
-              const inMotion = moving === index;
+              const inMotion = moving === index || foldingShut;
               const painted =
                 inMotion ||
                 index === place ||
@@ -422,9 +428,10 @@ export default function CardBook({
                   key={index}
                   className="card-leaf"
                   data-cover={index === 0}
+                  data-folding={foldingShut}
                   data-turned={turned}
                   data-moving={inMotion}
-                  onTransitionEnd={settle}
+                  onTransitionEnd={foldingShut ? settleClose : settle}
                   style={{
                     visibility: painted ? "visible" : "hidden",
                     zIndex: inMotion
@@ -447,7 +454,7 @@ export default function CardBook({
                     onOpen={index === 0 ? () => turn(1) : undefined}
                   />
                   <LeafFace
-                    face={leaf.back}
+                    face={foldingShut ? { kind: "empty" } : leaf.back}
                     side="left"
                     facing={facingBack}
                     turning={inMotion}
@@ -462,7 +469,7 @@ export default function CardBook({
             })
           )}
 
-          {closing ? (
+          {closing && !leaves[place] ? (
             <div
               className="card-shutter"
               data-swing="true"
@@ -478,6 +485,7 @@ export default function CardBook({
                 <span className="card-body" />
               </div>
               <div className="card-face" data-face="back" aria-hidden>
+                <span className="card-crease" data-side="left" aria-hidden />
                 <span className="card-body" />
               </div>
             </div>
