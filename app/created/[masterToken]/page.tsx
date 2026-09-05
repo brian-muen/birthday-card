@@ -23,62 +23,58 @@ export default async function CardCreated({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-5 py-16 sm:py-24">
-      <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
-          Card created
-        </p>
-        <h1 className="mt-5 font-serif text-3xl leading-tight tracking-tight text-balance sm:text-4xl">
-          {card.recipientName}&rsquo;s birthday card is ready.
-        </h1>
-        <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-foreground/60">
-          Two links, two jobs. Share the first one, guard the second.
-        </p>
-      </header>
+    <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16 sm:py-24">
+      <h1 className="font-serif text-[2.25rem] leading-[1.15] tracking-[-0.01em] sm:text-[2.75rem]">
+        {card.recipientName}&rsquo;s card is ready.
+      </h1>
+      <p className="mt-5 max-w-[56ch] text-[1.0625rem] leading-relaxed text-muted">
+        There are two links. Send the first one around; keep the second to
+        yourself until the birthday.
+      </p>
 
-      <section className="shadow-card mt-12 rounded-2xl border border-accent/20 bg-paper p-6 sm:p-8">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          Contributor link
+      <section className="mt-14">
+        <h2 className="font-serif text-[1.5rem] leading-tight">
+          Share this with everyone signing
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-          Send this to friends so they can add a message. They&rsquo;ll only
-          see their own note, never anyone else&rsquo;s.
+        <p className="mt-2 max-w-[56ch] leading-relaxed text-muted">
+          Each person writes their own page and can&rsquo;t read anyone
+          else&rsquo;s.
         </p>
-        <div className="mt-4">
+        <div className="mt-5">
           <CopyLink path={`/sign/${card.contributeToken}`} />
         </div>
       </section>
 
-      <section className="shadow-card mt-5 rounded-2xl border border-gold/30 bg-paper p-6 sm:p-8">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
-          Master link &mdash; keep private
+      <section className="mt-20">
+        <h2 className="font-serif text-[1.5rem] leading-tight">
+          Keep this one for yourself
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-foreground/60">
-          This opens the full card. Keep it to yourself while messages come
-          in, then send it to {card.recipientName} when you&rsquo;re ready.
+        <p className="mt-2 max-w-[56ch] leading-relaxed text-muted">
+          It opens the finished card, so it&rsquo;s also what you send to{" "}
+          {card.recipientName} on the day.
         </p>
-        <div className="mt-4">
+        <div className="mt-5">
           <CopyLink path={`/card/${card.masterToken}`} />
         </div>
-        <p className="mt-5 rounded-r-lg border-l-2 border-gold/60 bg-gold/[0.06] py-2.5 pl-3 pr-3 text-sm leading-relaxed text-foreground/70">
-          Save this link somewhere safe now &mdash; email it to yourself or
-          bookmark it. There are no accounts, so a lost link means a lost
-          card.
+        <p className="mt-5 max-w-[60ch] border-l-2 border-brass pl-4 text-[0.9375rem] leading-relaxed">
+          Save it somewhere you&rsquo;ll find it again — email it to yourself
+          or bookmark it now. There are no accounts here, so a lost link
+          can&rsquo;t be recovered.
         </p>
       </section>
 
-      <div className="mt-8 flex flex-col gap-2.5 sm:flex-row">
+      <div className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-4">
         <Link
           href={`/card/${card.masterToken}`}
-          className="flex-1 rounded-lg bg-accent px-6 py-3 text-center text-base font-medium text-white shadow-sm transition hover:bg-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="bg-ink px-7 py-3 text-[0.9375rem] font-medium text-paper transition-colors hover:bg-[#121a31]"
         >
           Open the card
         </Link>
         <Link
           href={`/sign/${card.contributeToken}`}
-          className="flex-1 rounded-lg border border-foreground/20 bg-paper px-6 py-3 text-center text-base font-medium transition hover:border-accent hover:text-accent"
+          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
         >
-          Preview the signing page
+          See what signers see
         </Link>
       </div>
     </main>

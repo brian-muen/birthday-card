@@ -10,7 +10,7 @@ type CopyState = "idle" | "copied" | "failed";
 
 export function CopyButton({
   value,
-  label = "Copy",
+  label = "Copy link",
 }: {
   value: string;
   label?: string;
@@ -37,20 +37,25 @@ export function CopyButton({
       type="button"
       onClick={copy}
       aria-live="polite"
-      className={`shrink-0 rounded-lg border px-4 py-2.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+      className={`shrink-0 border px-4 py-2 text-sm font-medium transition-colors ${
         state === "copied"
-          ? "border-accent/40 bg-accent/10 text-accent-deep"
-          : "border-foreground/20 bg-paper text-foreground hover:border-accent hover:text-accent"
+          ? "border-brass text-brass"
+          : "border-ink/25 hover:border-ink"
       }`}
     >
-      {state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : label}
+      {state === "copied"
+        ? "Link copied"
+        : state === "failed"
+          ? "Press ⌘C to copy"
+          : label}
     </button>
   );
 }
 
 /**
- * Shows the full shareable URL (origin resolved in the browser) alongside a
- * copy button. Renders the path alone until mounted so hydration stays stable.
+ * Shows the full shareable URL (origin resolved in the browser) on a ruled
+ * line with its copy action. Renders the path alone until mounted so
+ * hydration stays stable.
  */
 export function CopyLink({ path }: { path: string }) {
   const origin = useSyncExternalStore(
@@ -62,8 +67,8 @@ export function CopyLink({ path }: { path: string }) {
   const url = `${origin}${path}`;
 
   return (
-    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
-      <code className="min-w-0 flex-1 overflow-x-auto rounded-lg border border-foreground/12 bg-background/70 px-3.5 py-2.5 font-mono text-[13px] break-all text-foreground/75">
+    <div className="flex flex-col gap-3 border-b border-rule pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <code className="min-w-0 overflow-x-auto font-mono text-[0.8125rem] text-muted">
         {url}
       </code>
       <CopyButton value={url} />

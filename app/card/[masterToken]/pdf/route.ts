@@ -5,9 +5,9 @@ import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
 
 // Palette lifted from globals.css so the PDF matches the site.
-const PAPER = rgb(1, 0.992, 0.976); // --paper #fffdf9
-const INK = rgb(0.176, 0.129, 0.094); // --foreground #2d2118
-const GOLD = rgb(0.725, 0.541, 0.184); // --gold #b98a2f
+const PAPER = rgb(1, 1, 1); // --raised #ffffff
+const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
+const BRASS = rgb(0.659, 0.475, 0.173); // --brass #a8792c
 
 // A5 portrait — a nice keepsake-card size.
 const PAGE_WIDTH = 420;
@@ -211,7 +211,7 @@ function drawCoverPage(
   page.drawLine({
     start: { x: PAGE_WIDTH / 2 - 32, y },
     end: { x: PAGE_WIDTH / 2 + 32, y },
-    color: GOLD,
+    color: BRASS,
     opacity: 0.6,
     thickness: 0.75,
   });
