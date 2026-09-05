@@ -258,7 +258,7 @@ export default function CardBook({
         data-animate={touched}
         style={{ ["--card-stock" as string]: stockHex(stock) }}
       >
-        <div className="card-stage" data-closed={closed}>
+        <div className="card-stage" data-closed={closed} data-shut={showingBack ? "back" : "front"}>
           <div aria-hidden className="card-panel" data-half="right">
             <span className="card-crease" data-side="right" />
           </div>
@@ -270,9 +270,10 @@ export default function CardBook({
           ) : null}
 
           {showingBack ? (
-            <div className="card-leaf" data-cover="true">
+            <div className="card-leaf" data-back="true">
               <div className="card-face" data-face="front" data-stock="cover">
-                <KeepFace pdfHref={pdfHref} onOpen={openFromBack} />
+                <span className="card-crease" data-side="left" aria-hidden />
+                <KeepFace pdfHref={pdfHref} />
               </div>
             </div>
           ) : (
@@ -348,7 +349,17 @@ export default function CardBook({
       </p>
 
       <nav aria-label="Card" className="mt-9 min-h-11">
-        {closed ? null : (
+        {showingBack ? (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={openFromBack}
+              className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+            >
+              Open the card
+            </button>
+          </div>
+        ) : closed ? null : (
           <div className="flex items-center justify-between gap-6">
             <button
               type="button"
@@ -481,7 +492,7 @@ function FaceContents({
       return (
         <CoverFace
           recipientName={recipientName}
-          intro={intro}
+          showDedication={!canManage}
           noteCount={notes.length}
           showCount={canManage}
         />
@@ -504,12 +515,12 @@ function FaceContents({
 
 function CoverFace({
   recipientName,
-  intro,
+  showDedication,
   noteCount,
   showCount,
 }: {
   recipientName: string;
-  intro: string | null;
+  showDedication: boolean;
   noteCount: number;
   showCount: boolean;
 }) {
@@ -525,9 +536,9 @@ function CoverFace({
           {recipientName}
         </span>
         <span className="mt-7 h-px w-10 bg-brass/80" />
-        {intro ? (
-          <span className="mt-8 max-w-[28ch] font-serif text-[0.9375rem] leading-[1.55] text-ink/80 whitespace-pre-wrap">
-            {intro}
+        {showDedication ? (
+          <span className="mt-8 max-w-[22ch] font-serif text-[0.9375rem] italic leading-[1.55] text-ink/80">
+            From your brothers and sisters in Christ
           </span>
         ) : null}
       </span>
@@ -550,15 +561,9 @@ function CoverFace({
   );
 }
 
-function KeepFace({
-  pdfHref,
-  onOpen,
-}: {
-  pdfHref: string;
-  onOpen?: () => void;
-}) {
+function KeepFace({ pdfHref }: { pdfHref: string }) {
   return (
-    <div className="card-body items-center px-8 pt-8 pb-14 text-center sm:px-12 sm:pt-10 sm:pb-16">
+    <div className="card-body items-center px-8 py-10 text-center sm:px-12 sm:py-12">
       <div className="my-auto flex flex-col items-center">
         <a
           href={pdfHref}
@@ -577,15 +582,6 @@ function KeepFace({
           Manna loves you!
         </p>
       </div>
-      {onOpen ? (
-        <button
-          type="button"
-          onClick={onOpen}
-          className="text-[0.8125rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
-        >
-          Open the card
-        </button>
-      ) : null}
     </div>
   );
 }
