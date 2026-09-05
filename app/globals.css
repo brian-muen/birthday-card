@@ -92,13 +92,16 @@ select:focus-visible {
   --card-stock: #e0b3a8;
   --card-turn: 640ms;
   --card-cover-turn: 880ms;
+  --card-flip: 1080ms;
   --card-ease: cubic-bezier(0.55, 0.05, 0.35, 1);
   --card-ease-cover: cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-
-.card-frame[data-spread="false"] {
   overflow-x: clip;
   overflow-y: visible;
+}
+
+.card-frame[data-flipping="true"],
+.card-frame:has([data-flipping="true"]) {
+  overflow-x: visible;
 }
 
 .card-stage {
@@ -124,15 +127,10 @@ select:focus-visible {
   transition: none;
 }
 
-/* Closed, the cover sits centred. The back sits the other way, fold on the far edge. */
+/* Closed — front or back — is the same 5×7 on the table, not a left-hand leaf. */
 .card-frame[data-spread="true"] .card-stage[data-closed="true"] {
   transform: translateX(-25%);
   perspective-origin: 75% 50%;
-}
-
-.card-frame[data-spread="true"] .card-stage[data-closed="true"][data-shut="back"] {
-  transform: translateX(25%);
-  perspective-origin: 25% 50%;
 }
 
 .card-panel {
@@ -215,9 +213,46 @@ select:focus-visible {
   width: 100%;
 }
 
-.card-frame[data-spread="true"] .card-leaf[data-back="true"] {
-  left: 0;
+/* The closed card as a two-sided object: back and front share one silhouette. */
+.card-deck {
+  position: absolute;
+  inset-block: 0;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  z-index: 12;
+  transform: rotateY(0deg);
+}
+
+.card-frame[data-spread="true"] .card-deck {
+  left: 50%;
   width: 50%;
+}
+
+.card-frame[data-spread="false"] .card-deck {
+  left: 0;
+  width: 100%;
+}
+
+.card-deck[data-shut="back"] {
+  transform: rotateY(180deg);
+}
+
+.card-deck[data-flip="true"] {
+  animation: card-turn-over var(--card-flip) var(--card-ease-cover) both;
+}
+
+.card-deck[data-flip="true"] .card-face {
+  pointer-events: none;
+}
+
+@keyframes card-turn-over {
+  from {
+    transform: rotateY(180deg);
+  }
+
+  to {
+    transform: rotateY(0deg);
+  }
 }
 
 .card-leaf[data-turned="true"] {
@@ -340,8 +375,21 @@ select:focus-visible {
   );
 }
 
-.card-stage[data-closed="true"]:not([data-shut="back"]) .card-crease {
+.card-stage[data-closed="true"] .card-panel .card-crease,
+.card-stage[data-closed="true"] .card-leaf .card-crease,
+.card-deck .card-face[data-face="front"] .card-crease {
   opacity: 0;
+}
+
+.card-stage[data-closed="true"] .card-deck .card-face {
+  box-shadow:
+    0 1px 1px rgb(27 36 64 / 0.04),
+    0 2px 5px -2px rgb(27 36 64 / 0.08),
+    inset 0 0 0 1px rgb(27 36 64 / 0.08);
+}
+
+.card-stage[data-flipping="true"] .card-panel {
+  visibility: hidden;
 }
 
 .card-body {
@@ -398,6 +446,10 @@ select:focus-visible {
   .card-panel[data-half="left"],
   .card-face[data-stock="cover"] {
     transition: none;
+  }
+
+  .card-deck[data-flip="true"] {
+    animation: none;
   }
 
   .animate-insert-in,

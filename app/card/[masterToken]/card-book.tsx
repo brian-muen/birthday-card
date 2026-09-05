@@ -165,16 +165,26 @@ export default function CardBook({
 
   // 0 is the closed card. Each step after that turns one more leaf.
   // After the last note, closing lands on the back — not another inside page.
-  const [{ place: rawPlace, moving, touched, shut }, setPlace] = useState<{
-    place: number;
-    moving: number | null;
-    touched: boolean;
-    shut: "front" | "back";
-  }>({ place: 0, moving: null, touched: false, shut: "front" });
+  // From there the closed card flips over (Y-axis) to the front again.
+  const [{ place: rawPlace, moving, touched, shut, flipping }, setPlace] =
+    useState<{
+      place: number;
+      moving: number | null;
+      touched: boolean;
+      shut: "front" | "back";
+      flipping: boolean;
+    }>({
+      place: 0,
+      moving: null,
+      touched: false,
+      shut: "front",
+      flipping: false,
+    });
 
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
-  const showingBack = closed && shut === "back";
+  const showingBack = closed && shut === "back" && !flipping;
+  const showingDeck = closed && (shut === "back" || flipping);
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -187,6 +197,7 @@ export default function CardBook({
           moving: reducedMotion ? null : delta === 1 ? from : next,
           touched: true,
           shut: next === 0 ? "front" : previous.shut,
+          flipping: false,
         };
       });
     },
@@ -199,36 +210,69 @@ export default function CardBook({
       moving: null,
       touched: true,
       shut: "back",
+      flipping: false,
     });
   }, []);
 
   const turnOver = useCallback(() => {
-    setPlace({
-      place: 0,
-      moving: null,
-      touched: true,
-      shut: "front",
+    setPlace((previous) => {
+      if (previous.shut !== "back" || previous.flipping) return previous;
+      if (reducedMotion) {
+        return {
+          place: 0,
+          moving: null,
+          touched: true,
+          shut: "front",
+          flipping: false,
+        };
+      }
+      return {
+        ...previous,
+        place: 0,
+        moving: null,
+        touched: true,
+        flipping: true,
+      };
     });
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (event.key === "ArrowRight") turn(1);
-      else if (event.key === "ArrowLeft") turn(-1);
-      else return;
+      if (flipping) {
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        if (showingBack) turnOver();
+        else if (place >= last && notes.length > 0) closeToBack();
+        else turn(1);
+      } else if (event.key === "ArrowLeft") {
+        if (showingBack) return;
+        if (place === 1 && last === 1 && notes.length > 0) closeToBack();
+        else turn(-1);
+      } else return;
       event.preventDefault();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [turn]);
+  }, [turn, turnOver, closeToBack, showingBack, place, last, notes.length, flipping]);
 
   function settle(event: React.TransitionEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     if (event.propertyName !== "transform") return;
     setPlace((previous) =>
       previous.moving === null ? previous : { ...previous, moving: null },
+    );
+  }
+
+  function settleFlip(event: React.AnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    setPlace((previous) =>
+      previous.flipping
+        ? { ...previous, shut: "front", flipping: false }
+        : previous,
     );
   }
 
@@ -239,14 +283,16 @@ export default function CardBook({
       : leaves[0]?.front
     : leaves[place]?.front;
 
-  const announcement = showingBack
-    ? "The back of the card"
-    : closed
-      ? `Birthday card for ${recipientName}, closed`
-      : [describeFace(leftFace), describeFace(rightFace)]
-          .filter(Boolean)
-          .filter((item, index, all) => all.indexOf(item) === index)
-          .join(". ") || `Inside ${recipientName}'s card`;
+  const announcement = flipping
+    ? "Turning the card over"
+    : showingBack
+      ? "The back of the card"
+      : closed
+        ? `Birthday card for ${recipientName}, closed`
+        : [describeFace(leftFace), describeFace(rightFace)]
+            .filter(Boolean)
+            .filter((item, index, all) => all.indexOf(item) === index)
+            .join(". ") || `Inside ${recipientName}'s card`;
 
   return (
     <div>
@@ -254,9 +300,15 @@ export default function CardBook({
         className="card-frame"
         data-spread={spread}
         data-animate={touched}
+        data-flipping={flipping}
         style={{ ["--card-stock" as string]: stockHex(stock) }}
       >
-        <div className="card-stage" data-closed={closed} data-shut={showingBack ? "back" : "front"}>
+        <div
+          className="card-stage"
+          data-closed={closed}
+          data-shut={showingDeck ? "back" : "front"}
+          data-flipping={flipping}
+        >
           <div aria-hidden className="card-panel" data-half="right">
             <span className="card-crease" data-side="right" />
           </div>
@@ -267,19 +319,39 @@ export default function CardBook({
             </div>
           ) : null}
 
-          {showingBack ? (
-            <div className="card-leaf" data-back="true">
+          {showingDeck ? (
+            <div
+              className="card-deck"
+              data-shut={flipping ? "front" : "back"}
+              data-flip={flipping}
+              onAnimationEnd={settleFlip}
+            >
               <button
                 type="button"
                 onClick={turnOver}
                 className="card-face cursor-pointer"
-                data-face="front"
+                data-face="back"
                 data-stock="cover"
                 aria-label="Turn the card over"
+                tabIndex={showingBack ? 0 : -1}
               >
                 <span className="card-crease" data-side="left" aria-hidden />
                 <span className="card-body" />
               </button>
+              <div
+                className="card-face"
+                data-face="front"
+                data-stock="cover"
+                aria-hidden
+              >
+                <span className="card-crease" data-side="right" aria-hidden />
+                <CoverFace
+                  recipientName={recipientName}
+                  showDedication={!canManage}
+                  noteCount={notes.length}
+                  showCount={canManage}
+                />
+              </div>
             </div>
           ) : (
             leaves.map((leaf, index) => {
@@ -364,7 +436,7 @@ export default function CardBook({
               Turn it over
             </button>
           </div>
-        ) : closed ? null : (
+        ) : closed || flipping ? null : (
           <div className="flex items-center justify-between gap-6">
             <button
               type="button"
