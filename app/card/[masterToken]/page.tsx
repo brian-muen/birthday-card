@@ -50,7 +50,11 @@ export default async function CardPage({ params }: PageParams) {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-14 sm:py-20">
+    <main className="mx-auto flex w-full max-w-[52rem] flex-1 flex-col justify-center px-6 py-14 sm:py-20">
+      {/* The cover is set as a printed object, not a heading, so the document
+          still needs a title for anyone reading it with a screen reader. */}
+      <h1 className="sr-only">Happy birthday, {card.recipientName}</h1>
+
       <CardBook
         masterToken={masterToken}
         recipientName={card.recipientName}

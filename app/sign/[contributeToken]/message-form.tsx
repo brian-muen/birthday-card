@@ -34,7 +34,7 @@ export default function MessageForm({
     const message = body.trim();
 
     if (!name) {
-      setError("Sign your name at the bottom of the page so they know who wrote it.");
+      setError("Sign your name at the bottom so they know who wrote it.");
       return;
     }
     if (!message) {
@@ -72,7 +72,7 @@ export default function MessageForm({
           Message added.
         </h2>
         <p className="mt-3 max-w-[52ch] leading-relaxed text-muted">
-          It&rsquo;s a page in {recipientName}&rsquo;s card now, signed{" "}
+          It&rsquo;s in {recipientName}&rsquo;s card now, signed{" "}
           <span className="font-hand text-xl text-ink">{sentBy}</span>. Nobody
           else signing the card can read it.
         </p>
@@ -90,7 +90,7 @@ export default function MessageForm({
   return (
     <form onSubmit={handleSubmit} className="mt-12">
       {/* The page they're writing: message above, signature on the line. */}
-      <div className="paper-lift border border-rule bg-raised px-6 py-7 transition-colors focus-within:border-ink sm:px-9 sm:py-9">
+      <div className="paper-lift border border-rule bg-raised px-6 py-7 sm:px-9 sm:py-9">
         <label htmlFor="body" className="sr-only">
           Your message for {recipientName}
         </label>

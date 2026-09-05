@@ -24,7 +24,7 @@ const flow = [
   },
   {
     title: "Hand it over",
-    body: "Send the card on the day. They read the messages one page at a time.",
+    body: "Send the card on the day. They open it and read every note.",
   },
 ];
 
@@ -47,8 +47,8 @@ export default async function Home({
           </h1>
           <p className="mt-6 max-w-[54ch] text-[1.0625rem] leading-relaxed text-muted">
             Start a card and share one link. Every message stays hidden until
-            the day you hand it over, then they read them all — one page at a
-            time.
+            the day you hand it over, then they open the card and read every
+            note.
           </p>
 
           <form action={createCard} className="mt-12 max-w-md">

@@ -6,7 +6,7 @@
   --ink: #1b2440;
   --muted: #59617a;
   --rule: #dedcd4;
-  --brass: #a8792c;
+  --brass: #7c5416;
 }
 
 @theme inline {
@@ -33,9 +33,18 @@ body {
   background: rgb(168 121 44 / 0.2);
 }
 
-:focus-visible {
-  outline: 2px solid var(--brass);
-  outline-offset: 2px;
+/* Fields already have their own focus (a ruled line, or the paper sheet).
+   Keep a visible ring only on things you click — not on the writing surface. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+textarea:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 
 /* Fill-in-the-blank inputs: a ruled line to write on, not a boxed widget. */
@@ -71,32 +80,267 @@ body {
     0 14px 34px -20px rgb(27 36 64 / 0.28);
 }
 
-/* Page turns answer a click, so the motion shows which way the page went. */
-@keyframes page-in {
+/* ---------------------------------------------------------------------------
+   A folded greeting card.
+
+   Closed, one 5×7 panel. Opening swings the cover on the crease. After that
+   it is still a card — a note on the left, a note on the right — and further
+   leaves turn to the next pair. No folio, no book block, no title-page close.
+   --------------------------------------------------------------------------- */
+
+.card-frame {
+  --card-turn: 640ms;
+  --card-cover-turn: 880ms;
+  --card-ease: cubic-bezier(0.55, 0.05, 0.35, 1);
+  --card-ease-cover: cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.card-frame[data-spread="false"] {
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.card-stage {
+  position: relative;
+  width: 100%;
+  perspective: 2250px;
+  transition:
+    transform var(--card-cover-turn) var(--card-ease-cover),
+    perspective-origin var(--card-cover-turn) var(--card-ease-cover);
+}
+
+.card-frame[data-spread="false"] .card-stage {
+  aspect-ratio: 5 / 7;
+}
+
+.card-frame[data-spread="true"] .card-stage {
+  aspect-ratio: 10 / 7;
+  perspective: 2600px;
+}
+
+.card-frame[data-animate="false"] .card-stage,
+.card-frame[data-animate="false"] .card-panel[data-half="left"] {
+  transition: none;
+}
+
+/* Closed, the cover sits centred. Opening slides the bifold into place. */
+.card-frame[data-spread="true"] .card-stage[data-closed="true"] {
+  transform: translateX(-25%);
+  perspective-origin: 75% 50%;
+}
+
+.card-panel {
+  position: absolute;
+  inset-block: 0;
+  border: 1px solid var(--rule);
+  background: var(--raised);
+}
+
+.card-frame[data-spread="true"] .card-panel[data-half="right"] {
+  left: 50%;
+  width: 50%;
+}
+
+.card-frame[data-spread="false"] .card-panel[data-half="right"] {
+  left: 0;
+  width: 100%;
+}
+
+.card-panel[data-half="left"] {
+  left: 0;
+  width: 50%;
+  opacity: 0;
+  transition: opacity 280ms linear 420ms;
+}
+
+.card-stage[data-closed="false"] .card-panel[data-half="left"] {
+  opacity: 1;
+}
+
+.card-leaf {
+  position: absolute;
+  inset-block: 0;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  z-index: 8;
+  transition: transform var(--card-turn) var(--card-ease);
+}
+
+.card-leaf[data-cover="true"] {
+  transition-duration: var(--card-cover-turn);
+  transition-timing-function: var(--card-ease-cover);
+}
+
+.card-frame[data-spread="true"] .card-leaf {
+  left: 50%;
+  width: 50%;
+}
+
+.card-frame[data-spread="false"] .card-leaf {
+  left: 0;
+  width: 100%;
+}
+
+.card-leaf[data-turned="true"] {
+  transform: rotateY(-180deg);
+}
+
+.card-leaf[data-moving="true"] {
+  z-index: 20;
+}
+
+.card-leaf[data-moving="true"] .card-face {
+  box-shadow: 0 16px 38px -22px rgb(27 36 64 / 0.4);
+}
+
+.card-face,
+.card-insert {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--raised);
+  text-align: inherit;
+}
+
+.card-face {
+  backface-visibility: hidden;
+}
+
+.card-face[data-face="front"] {
+  transform: translate3d(0, 0, 0.02px);
+}
+
+.card-face[data-face="back"] {
+  transform: rotateY(180deg);
+}
+
+.card-face[data-stock="cover"] {
+  background: color-mix(in oklab, #eadfc8 42%, var(--raised));
+  transition: transform 200ms ease-out;
+}
+
+.card-face[data-stock="cover"]:not([inert]):hover {
+  transform: translate3d(0, -2px, 0.02px);
+}
+
+.card-face[data-stock="liner"] {
+  background: color-mix(in oklab, #eadfc8 22%, var(--raised));
+}
+
+/* Notes sit on the writing panel. They never travel across the crease. */
+.card-insert {
+  left: 0;
+  width: 100%;
+  z-index: 6;
+  background: var(--raised);
+}
+
+.card-frame[data-spread="true"] .card-insert {
+  left: 50%;
+  width: 50%;
+}
+
+.card-face::after,
+.card-insert::after,
+.card-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* A scored crease, not a bound spine. */
+.card-crease {
+  position: absolute;
+  inset-block: 0;
+  width: 12px;
+  pointer-events: none;
+}
+
+.card-crease[data-side="right"] {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgb(27 36 64 / 0.07),
+    rgb(27 36 64 / 0) 88%
+  );
+  box-shadow: inset 1px 0 0 rgb(27 36 64 / 0.06);
+}
+
+.card-crease[data-side="left"] {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgb(27 36 64 / 0.05),
+    rgb(27 36 64 / 0) 88%
+  );
+  box-shadow: inset -1px 0 0 rgb(27 36 64 / 0.05);
+}
+
+.card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.card-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 1rem,
+    #000 calc(100% - 1rem),
+    transparent 100%
+  );
+}
+
+@keyframes insert-in {
   from {
     opacity: 0;
-    transform: translateX(14px);
+    transform: translateX(8px);
   }
 }
 
-@keyframes page-in-back {
+@keyframes insert-in-back {
   from {
     opacity: 0;
-    transform: translateX(-14px);
+    transform: translateX(-8px);
   }
 }
 
-.animate-page-in {
-  animation: page-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.animate-insert-in {
+  animation: insert-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.animate-page-in-back {
-  animation: page-in-back 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.animate-insert-in-back {
+  animation: insert-in-back 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.card-frame[data-animate="false"] .animate-insert-in,
+.card-frame[data-animate="false"] .animate-insert-in-back {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-page-in,
-  .animate-page-in-back {
+  .card-stage,
+  .card-leaf,
+  .card-panel[data-half="left"],
+  .card-face[data-stock="cover"] {
+    transition: none;
+  }
+
+  .animate-insert-in,
+  .animate-insert-in-back {
     animation: none;
   }
 }

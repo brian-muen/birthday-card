@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Caveat, EB_Garamond, Karla } from "next/font/google";
 import "./globals.css";
 
-// Garamond sets the messages and headlines; the card is a bookish object.
+// Garamond sets the messages and headlines.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],

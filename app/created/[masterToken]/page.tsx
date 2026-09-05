@@ -37,7 +37,7 @@ export default async function CardCreated({
           Share this with everyone signing
         </h2>
         <p className="mt-2 max-w-[56ch] leading-relaxed text-muted">
-          Each person writes their own page and can&rsquo;t read anyone
+          Each person writes their own note and can&rsquo;t read anyone
           else&rsquo;s.
         </p>
         <div className="mt-5">

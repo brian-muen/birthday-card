@@ -27,7 +27,7 @@ export default async function SignPage({
       </h1>
       <p className="mt-5 max-w-[58ch] text-[1.0625rem] leading-relaxed text-muted">
         Friends are signing a birthday card for {card.recipientName} together.
-        Yours becomes one page of it.
+        Yours becomes a note inside it.
       </p>
 
       {card.intro && (
