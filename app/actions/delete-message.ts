@@ -37,6 +37,9 @@ export async function deleteMessage(
     .where(and(eq(messages.id, messageId), eq(messages.cardId, card.id)));
 
   revalidatePath(`/card/${masterToken}`);
+  if (card.giftToken) {
+    revalidatePath(`/card/${card.giftToken}`);
+  }
 
   return { ok: true };
 }

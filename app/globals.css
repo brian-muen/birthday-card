@@ -240,6 +240,12 @@ select:focus-visible {
   width: 50%;
 }
 
+.card-insert[data-span="card"] {
+  left: 0;
+  width: 100%;
+  z-index: 80;
+}
+
 .card-face::after,
 .card-insert::after,
 .card-panel::after {

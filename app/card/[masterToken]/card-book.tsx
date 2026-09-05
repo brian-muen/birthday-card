@@ -106,7 +106,7 @@ function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
   return leaves;
 }
 
-function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
+function lastNotePlace(leaves: Leaf[], spread: boolean, noteCount: number) {
   if (!spread) return Math.max(1, noteCount);
   let max = 1;
   for (let i = 1; i < leaves.length; i += 1) {
@@ -115,6 +115,11 @@ function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
     if (revealsLeft || revealsRight) max = i + 1;
   }
   return max;
+}
+
+function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
+  const notesEnd = lastNotePlace(leaves, spread, noteCount);
+  return noteCount > 0 ? notesEnd + 1 : notesEnd;
 }
 
 function describeFace(face: Face | undefined) {
@@ -127,16 +132,20 @@ function describeFace(face: Face | undefined) {
 
 export default function CardBook({
   masterToken,
+  canManage,
   recipientName,
   intro,
   notes,
   stock,
+  pdfHref,
 }: {
   masterToken: string;
+  canManage: boolean;
   recipientName: string;
   intro: string | null;
   notes: Note[];
   stock: string;
+  pdfHref: string;
 }) {
   const spread = useSyncExternalStore(
     subscribeToSpread,
@@ -161,6 +170,7 @@ export default function CardBook({
 
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
+  const atKeep = notes.length > 0 && place === last && !closed;
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -216,12 +226,14 @@ export default function CardBook({
         ? { kind: "note" as const, note: phoneNote }
         : { kind: "inside" as const };
 
-  const announcement = closed
-    ? `Birthday card for ${recipientName}, closed`
-    : [describeFace(leftFace), describeFace(rightFace)]
-        .filter(Boolean)
-        .filter((item, index, all) => all.indexOf(item) === index)
-        .join(". ") || `Inside ${recipientName}'s card`;
+  const announcement = atKeep
+    ? "Manna loves you. Make sure to save the PDF."
+    : closed
+      ? `Birthday card for ${recipientName}, closed`
+      : [describeFace(leftFace), describeFace(rightFace)]
+          .filter(Boolean)
+          .filter((item, index, all) => all.indexOf(item) === index)
+          .join(". ") || `Inside ${recipientName}'s card`;
 
   return (
     <div>
@@ -274,6 +286,7 @@ export default function CardBook({
                   side="right"
                   visible={Boolean(frontVisible)}
                   masterToken={masterToken}
+                  canManage={canManage}
                   recipientName={recipientName}
                   intro={intro}
                   notes={notes}
@@ -284,6 +297,7 @@ export default function CardBook({
                   side="left"
                   visible={Boolean(backVisible)}
                   masterToken={masterToken}
+                  canManage={canManage}
                   recipientName={recipientName}
                   intro={intro}
                   notes={notes}
@@ -292,23 +306,27 @@ export default function CardBook({
             );
           })}
 
-          {!spread && !closed ? (
+          {!closed && (atKeep || !spread) ? (
             <div
-              key={phoneNote?.id ?? "inside"}
+              key={atKeep ? "keep" : (phoneNote?.id ?? "inside")}
               className={
                 "card-insert " +
                 (place > 1 ? "animate-insert-in" : "")
               }
+              data-span={atKeep && spread ? "card" : undefined}
             >
               <span className="card-crease" data-side="right" aria-hidden />
-              {phoneNote ? (
+              {atKeep ? (
+                <KeepFace pdfHref={pdfHref} />
+              ) : phoneNote ? (
                 <NoteFace
                   masterToken={masterToken}
+                  canManage={canManage}
                   note={phoneNote}
                   side="right"
                 />
               ) : (
-                <InsideFace recipientName={recipientName} />
+                <InsideFace recipientName={recipientName} canManage={canManage} />
               )}
             </div>
           ) : null}
@@ -350,6 +368,7 @@ function LeafFace({
   side,
   visible,
   masterToken,
+  canManage,
   recipientName,
   intro,
   notes,
@@ -359,6 +378,7 @@ function LeafFace({
   side: "left" | "right";
   visible: boolean;
   masterToken: string;
+  canManage: boolean;
   recipientName: string;
   intro: string | null;
   notes: Note[];
@@ -377,6 +397,7 @@ function LeafFace({
         face={face}
         side={side}
         masterToken={masterToken}
+        canManage={canManage}
         recipientName={recipientName}
         intro={intro}
         notes={notes}
@@ -417,6 +438,7 @@ function FaceContents({
   face,
   side,
   masterToken,
+  canManage,
   recipientName,
   intro,
   notes,
@@ -424,6 +446,7 @@ function FaceContents({
   face: Face;
   side: "left" | "right";
   masterToken: string;
+  canManage: boolean;
   recipientName: string;
   intro: string | null;
   notes: Note[];
@@ -435,13 +458,19 @@ function FaceContents({
           recipientName={recipientName}
           intro={intro}
           noteCount={notes.length}
+          showCount={canManage}
         />
       );
     case "inside":
-      return <InsideFace recipientName={recipientName} />;
+      return <InsideFace recipientName={recipientName} canManage={canManage} />;
     case "note":
       return (
-        <NoteFace masterToken={masterToken} note={face.note} side={side} />
+        <NoteFace
+          masterToken={masterToken}
+          canManage={canManage}
+          note={face.note}
+          side={side}
+        />
       );
     case "empty":
       return <div className="card-body" />;
@@ -452,10 +481,12 @@ function CoverFace({
   recipientName,
   intro,
   noteCount,
+  showCount,
 }: {
   recipientName: string;
   intro: string | null;
   noteCount: number;
+  showCount: boolean;
 }) {
   return (
     <span className="card-body items-center px-7 pt-8 pb-14 text-center sm:px-9 sm:pt-9 sm:pb-16">
@@ -477,14 +508,16 @@ function CoverFace({
       </span>
 
       <span className="flex flex-col items-center text-[0.8125rem]">
-        <span className="text-muted">
-          {noteCount === 0
-            ? "Nothing inside yet"
-            : noteCount === 1
-              ? "One note inside"
-              : `${noteCount} notes inside`}
-        </span>
-        <span className="mt-2.5 font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass">
+        {showCount ? (
+          <span className="text-muted">
+            {noteCount === 0
+              ? "Nothing inside yet"
+              : noteCount === 1
+                ? "One note inside"
+                : `${noteCount} notes inside`}
+          </span>
+        ) : null}
+        <span className={`font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass ${showCount ? "mt-2.5" : ""}`}>
           Open the card
         </span>
       </span>
@@ -492,7 +525,42 @@ function CoverFace({
   );
 }
 
-function InsideFace({ recipientName }: { recipientName: string }) {
+function KeepFace({ pdfHref }: { pdfHref: string }) {
+  return (
+    <div className="card-body items-center px-8 py-10 text-center sm:px-12 sm:py-12">
+      <div className="my-auto flex flex-col items-center">
+        <a
+          href={pdfHref}
+          download
+          className="font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+        >
+          Make sure to save the PDF!!
+        </a>
+        <p
+          className="mt-10 font-hand leading-none text-ink/90"
+          style={{
+            fontSize: "2.15rem",
+            transform: "rotate(-1.4deg) skewX(-2deg)",
+          }}
+        >
+          Manna loves you!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function InsideFace({
+  recipientName,
+  canManage,
+}: {
+  recipientName: string;
+  canManage: boolean;
+}) {
+  if (!canManage) {
+    return <div className="card-body px-7 py-8 sm:px-10 sm:py-10" />;
+  }
+
   return (
     <div className="card-body px-7 py-8 sm:px-10 sm:py-10">
       <p className="my-auto leading-relaxed text-muted">
@@ -505,10 +573,12 @@ function InsideFace({ recipientName }: { recipientName: string }) {
 
 function NoteFace({
   masterToken,
+  canManage,
   note,
   side,
 }: {
   masterToken: string;
+  canManage: boolean;
   note: Note;
   side: "left" | "right";
 }) {
@@ -529,7 +599,11 @@ function NoteFace({
       </div>
 
       <div className="mt-8 flex items-end justify-between gap-6">
-        <RemoveControl masterToken={masterToken} messageId={note.id} />
+        {canManage ? (
+          <RemoveControl masterToken={masterToken} messageId={note.id} />
+        ) : (
+          <span />
+        )}
         <div className="text-right">
           <Signature name={note.authorName} />
           <p className="mt-2 text-[0.75rem] text-muted">{note.date}</p>
