@@ -6,6 +6,7 @@ import {
   EB_Garamond,
   Great_Vibes,
   Karla,
+  Satisfy,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
@@ -22,7 +23,7 @@ const karla = Karla({
   subsets: ["latin"],
 });
 
-// Card writing — one of these is chosen when the card is created.
+// Cover stays Caveat. Signers pick a pen; each note uses that hand.
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
@@ -52,6 +53,12 @@ const caveatBrush = Caveat_Brush({
   subsets: ["latin"],
 });
 
+const satisfy = Satisfy({
+  weight: "400",
+  variable: "--font-satisfy",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Birthday Card",
   description:
@@ -66,7 +73,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${karla.variable} ${garamond.variable} ${caveat.variable} ${greatVibes.variable} ${cormorant.variable} ${sourceSans.variable} ${caveatBrush.variable} h-full`}
+      className={`${karla.variable} ${garamond.variable} ${caveat.variable} ${greatVibes.variable} ${cormorant.variable} ${sourceSans.variable} ${caveatBrush.variable} ${satisfy.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

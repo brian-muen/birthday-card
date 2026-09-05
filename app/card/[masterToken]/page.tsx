@@ -6,7 +6,7 @@ import { asc, eq } from "drizzle-orm";
 import { ensureGiftToken, findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
-import { parseFace } from "@/lib/face";
+import { parsePen } from "@/lib/pen";
 import { parseStock } from "@/lib/stock";
 import CardBook from "./card-book";
 
@@ -62,12 +62,12 @@ export default async function CardPage({ params }: PageParams) {
         recipientName={card.recipientName}
         intro={card.intro}
         stock={parseStock(card.stock)}
-        font={parseFace(card.font)}
         notes={notes.map((note) => ({
           id: note.id,
           authorName: note.authorName,
           body: note.body,
           date: dateFormatter.format(note.createdAt),
+          pen: parsePen(note.pen),
         }))}
       />
 

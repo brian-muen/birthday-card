@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
-import { parseFace } from "@/lib/face";
 import { parseStock } from "@/lib/stock";
 import { generateToken } from "@/lib/tokens";
 
@@ -16,7 +15,6 @@ export async function createCard(formData: FormData) {
   const recipientName = String(formData.get("recipientName") ?? "").trim();
   const intro = String(formData.get("intro") ?? "").trim();
   const stock = parseStock(formData.get("stock"));
-  const font = parseFace(formData.get("font"));
 
   // Validation failures bounce back to the landing page with a message and the
   // name refilled, so the form keeps working without client-side JS.
@@ -26,7 +24,6 @@ export async function createCard(formData: FormData) {
       params.set("recipientName", recipientName.slice(0, RECIPIENT_NAME_MAX));
     }
     params.set("stock", stock);
-    params.set("font", font);
     redirect(`/?${params.toString()}`);
   };
 
@@ -50,7 +47,6 @@ export async function createCard(formData: FormData) {
     occasion: "Birthday",
     intro: intro || null,
     stock,
-    font,
     contributeToken,
     masterToken,
     giftToken,

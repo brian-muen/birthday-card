@@ -26,6 +26,7 @@ export const messages = pgTable("messages", {
     .references(() => cards.id, { onDelete: "cascade" }),
   authorName: text("author_name").notNull(),
   body: text("body").notNull(),
+  pen: text("pen").notNull().default("pencil"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

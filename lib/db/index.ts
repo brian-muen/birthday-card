@@ -5,7 +5,7 @@ import * as schema from "./schema";
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 const globalForDb = globalThis as unknown as {
-  __cardDbFont?: Promise<Db>;
+  __cardDbPen?: Promise<Db>;
 };
 
 const ENSURE_TABLES = [
@@ -26,6 +26,7 @@ const ENSURE_TABLES = [
     card_id integer NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
     author_name text NOT NULL,
     body text NOT NULL,
+    pen text NOT NULL DEFAULT 'pencil',
     created_at timestamp NOT NULL DEFAULT now()
   )`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS stock text NOT NULL DEFAULT 'red'`,
@@ -33,6 +34,7 @@ const ENSURE_TABLES = [
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS gift_token text`,
   `CREATE UNIQUE INDEX IF NOT EXISTS cards_gift_token_unique ON cards (gift_token)`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS font text NOT NULL DEFAULT 'hand'`,
+  `ALTER TABLE messages ADD COLUMN IF NOT EXISTS pen text NOT NULL DEFAULT 'pencil'`,
 ];
 
 async function createDb(): Promise<Db> {
@@ -58,8 +60,8 @@ async function createDb(): Promise<Db> {
 
 /** Get the shared database instance (creates tables on first use). */
 export function getDb(): Promise<Db> {
-  if (!globalForDb.__cardDbFont) {
-    globalForDb.__cardDbFont = createDb();
+  if (!globalForDb.__cardDbPen) {
+    globalForDb.__cardDbPen = createDb();
   }
-  return globalForDb.__cardDbFont;
+  return globalForDb.__cardDbPen;
 }

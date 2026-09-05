@@ -1,5 +1,4 @@
 import { createCard } from "@/app/actions/create-card";
-import { DEFAULT_FACE, FACES, faceClass, parseFace } from "@/lib/face";
 import { DEFAULT_STOCK, STOCKS, parseStock } from "@/lib/stock";
 
 // Sample pages for the hero: the product is a card full of other people's
@@ -37,12 +36,10 @@ export default async function Home({
     error?: string;
     recipientName?: string;
     stock?: string;
-    font?: string;
   }>;
 }) {
-  const { error, recipientName, stock, font } = await searchParams;
+  const { error, recipientName, stock } = await searchParams;
   const selectedStock = parseStock(stock || DEFAULT_STOCK);
-  const selectedFace = parseFace(font || DEFAULT_FACE);
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-16 sm:py-24">
@@ -108,36 +105,6 @@ export default async function Home({
                         className="block size-10 border border-rule peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink peer-checked:outline peer-checked:outline-2 peer-checked:outline-offset-2 peer-checked:outline-ink"
                         style={{ backgroundColor: option.hex }}
                       />
-                      <span className="text-[0.75rem] text-muted">
-                        {option.label}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend className="text-[0.9375rem] font-medium">
-                  Writing
-                </legend>
-                <div className="mt-3 flex flex-wrap gap-3">
-                  {FACES.map((option) => (
-                    <label
-                      key={option.id}
-                      className="flex cursor-pointer flex-col items-center gap-1.5"
-                    >
-                      <input
-                        type="radio"
-                        name="font"
-                        value={option.id}
-                        defaultChecked={option.id === selectedFace}
-                        className="peer sr-only"
-                      />
-                      <span
-                        className={`flex h-12 w-14 items-center justify-center border border-rule bg-raised text-[1.65rem] leading-none text-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink peer-checked:outline peer-checked:outline-2 peer-checked:outline-offset-2 peer-checked:outline-ink ${faceClass(option.id)}`}
-                      >
-                        {option.sample}
-                      </span>
                       <span className="text-[0.75rem] text-muted">
                         {option.label}
                       </span>

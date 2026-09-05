@@ -8,16 +8,8 @@ import path from "node:path";
 import { findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
-import { parseFace, type FaceId } from "@/lib/face";
+import { parsePen, penFile, penPdfSize, type PenId } from "@/lib/pen";
 import { parseStock, stockRgb } from "@/lib/stock";
-
-const FACE_FILES: Record<FaceId, { regular: string; italic?: string }> = {
-  hand: { regular: "caveat.ttf" },
-  script: { regular: "great-vibes.ttf" },
-  serif: { regular: "cormorant.ttf", italic: "cormorant-italic.ttf" },
-  print: { regular: "source-sans.ttf" },
-  marker: { regular: "caveat-brush.ttf" },
-};
 
 // Palette lifted from globals.css so the PDF matches the site.
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
@@ -34,9 +26,6 @@ const BODY_LINE_HEIGHT = 19;
 // Vertical space reserved for the page header and the author footer.
 const CONTENT_TOP = PAGE_HEIGHT - 84;
 const CONTENT_BOTTOM = 112;
-const MAX_BODY_LINES_PER_PAGE = Math.floor(
-  (CONTENT_TOP - CONTENT_BOTTOM) / BODY_LINE_HEIGHT,
-);
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
@@ -68,12 +57,12 @@ export async function GET(
     recipientName: card.recipientName,
     intro: card.intro,
     stock: parseStock(card.stock),
-    font: parseFace(card.font),
     showCount,
     notes: notes.map((note) => ({
       authorName: note.authorName,
       body: note.body,
       date: dateFormatter.format(note.createdAt),
+      pen: parsePen(note.pen),
     })),
   });
 
@@ -93,51 +82,46 @@ export async function GET(
   });
 }
 
-type PdfNote = { authorName: string; body: string; date: string };
+type PdfNote = { authorName: string; body: string; date: string; pen: PenId };
 
-async function embedFace(doc: PDFDocument, face: FaceId) {
-  doc.registerFontkit(fontkit);
-  const files = FACE_FILES[face];
+async function embedPenFont(doc: PDFDocument, pen: PenId) {
   const dir = path.join(process.cwd(), "lib/fonts");
-  const regular = await doc.embedFont(
-    await readFile(path.join(dir, files.regular)),
-  );
-  const italic = files.italic
-    ? await doc.embedFont(await readFile(path.join(dir, files.italic)))
-    : regular;
-  return { writing: regular, writingItalic: italic };
+  return doc.embedFont(await readFile(path.join(dir, penFile(pen))));
 }
 
 async function buildCardPdf(input: {
   recipientName: string;
   intro: string | null;
   stock: string;
-  font: FaceId;
   showCount: boolean;
   notes: PdfNote[];
 }) {
   const doc = await PDFDocument.create();
   doc.setTitle(`Happy Birthday, ${input.recipientName}`);
+  doc.registerFontkit(fontkit);
 
-  const { writing, writingItalic } = await embedFace(doc, input.font);
+  const coverHand = await embedPenFont(doc, "pencil");
+  const pens = new Map<PenId, PDFFont>();
+  for (const note of input.notes) {
+    if (!pens.has(note.pen)) {
+      pens.set(note.pen, await embedPenFont(doc, note.pen));
+    }
+  }
   const sans = await doc.embedFont(StandardFonts.Helvetica);
 
-  // Drop anything the embedded face can't encode (emoji etc.).
-  const sanitize = makeSanitizer(writing);
+  const sanitizeCover = makeSanitizer(coverHand);
   const paper = (() => {
     const { r, g, b } = stockRgb(input.stock);
     return rgb(r, g, b);
   })();
 
-  const titleSize = input.font === "script" ? 26 : 28;
-
   drawCoverPage(doc, {
-    writing,
-    writingItalic,
+    writing: coverHand,
+    writingItalic: coverHand,
     sans,
     paper,
-    titleSize,
-    recipientName: sanitize(input.recipientName),
+    titleSize: 28,
+    recipientName: sanitizeCover(input.recipientName),
     dedication: input.showCount
       ? null
       : "From your brothers and sisters in Christ",
@@ -145,9 +129,12 @@ async function buildCardPdf(input: {
   });
 
   input.notes.forEach((note, i) => {
+    const writing = pens.get(note.pen) ?? coverHand;
+    const sanitize = makeSanitizer(writing);
+    const bodySize = penPdfSize(note.pen);
     drawMessagePages(doc, {
       writing,
-      writingItalic,
+      writingItalic: writing,
       sans,
       paper,
       body: sanitize(note.body),
@@ -155,6 +142,8 @@ async function buildCardPdf(input: {
       date: note.date,
       pageNumber: i + 1,
       pageTotal: input.notes.length,
+      bodySize,
+      bodyLineHeight: Math.round(bodySize * 1.55),
     });
   });
 
@@ -313,14 +302,19 @@ function drawMessagePages(
     date: string;
     pageNumber: number;
     pageTotal: number;
+    bodySize?: number;
+    bodyLineHeight?: number;
   },
 ) {
-  const lines = wrapText(input.body, input.writing, BODY_SIZE, TEXT_WIDTH);
+  const bodySize = input.bodySize ?? BODY_SIZE;
+  const bodyLineHeight = input.bodyLineHeight ?? BODY_LINE_HEIGHT;
+  const maxLines = Math.floor((CONTENT_TOP - CONTENT_BOTTOM) / bodyLineHeight);
+  const lines = wrapText(input.body, input.writing, bodySize, TEXT_WIDTH);
 
   // Split very long messages across several PDF pages.
   const chunks: string[][] = [];
-  for (let i = 0; i < lines.length; i += MAX_BODY_LINES_PER_PAGE) {
-    chunks.push(lines.slice(i, i + MAX_BODY_LINES_PER_PAGE));
+  for (let i = 0; i < lines.length; i += maxLines) {
+    chunks.push(lines.slice(i, i + maxLines));
   }
   if (chunks.length === 0) chunks.push([]);
 
@@ -342,13 +336,13 @@ function drawMessagePages(
 
     // Single-page messages sit vertically centered, like on screen;
     // multi-page messages fill from the top.
-    const blockHeight = chunk.length * BODY_LINE_HEIGHT;
+    const blockHeight = chunk.length * bodyLineHeight;
     let y =
       chunks.length === 1
         ? CONTENT_BOTTOM +
           (CONTENT_TOP - CONTENT_BOTTOM + blockHeight) / 2 -
-          BODY_LINE_HEIGHT
-        : CONTENT_TOP - BODY_LINE_HEIGHT;
+          bodyLineHeight
+        : CONTENT_TOP - bodyLineHeight;
 
     for (const line of chunk) {
       if (line) {
@@ -356,12 +350,12 @@ function drawMessagePages(
           x: MARGIN_X,
           y,
           font: input.writing,
-          size: BODY_SIZE,
+          size: bodySize,
           color: INK,
           opacity: 0.9,
         });
       }
-      y -= BODY_LINE_HEIGHT;
+      y -= bodyLineHeight;
     }
 
     if (isLastChunk) {

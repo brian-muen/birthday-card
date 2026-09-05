@@ -9,13 +9,7 @@ import {
   useTransition,
 } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
-import {
-  faceGreetingItalic,
-  faceIsLively,
-  faceVar,
-  parseFace,
-  type FaceId,
-} from "@/lib/face";
+import { penIsLively, penNoteClass, penVar, type PenId } from "@/lib/pen";
 import { stockHex } from "@/lib/stock";
 
 type Note = {
@@ -23,6 +17,7 @@ type Note = {
   authorName: string;
   body: string;
   date: string;
+  pen: PenId;
 };
 
 type Face =
@@ -75,12 +70,7 @@ function inkFor(text: string) {
   return 0.8 + (hashOf(text) % 16) / 100;
 }
 
-function coverTypeSize(name: string, face: FaceId) {
-  if (face === "script") {
-    if (name.length > 24) return "text-[1.5rem] sm:text-[1.75rem]";
-    if (name.length > 13) return "text-[1.875rem] sm:text-[2.25rem]";
-    return "text-[2.25rem] sm:text-[2.75rem]";
-  }
+function coverTypeSize(name: string) {
   if (name.length > 24) return "text-[1.625rem] sm:text-[1.875rem]";
   if (name.length > 13) return "text-[2rem] sm:text-[2.375rem]";
   return "text-[2.375rem] sm:text-[2.875rem]";
@@ -153,7 +143,6 @@ export default function CardBook({
   intro,
   notes,
   stock,
-  font,
 }: {
   masterToken: string;
   canManage: boolean;
@@ -161,9 +150,7 @@ export default function CardBook({
   intro: string | null;
   notes: Note[];
   stock: string;
-  font: string;
 }) {
-  const face = parseFace(font);
   const spread = useSyncExternalStore(
     subscribeToSpread,
     getSpread,
@@ -361,10 +348,8 @@ export default function CardBook({
         data-spread={spread}
         data-animate={touched}
         data-flipping={flipping}
-        data-face={face}
         style={{
           ["--card-stock" as string]: stockHex(stock),
-          ["--card-face" as string]: faceVar(face),
         }}
       >
         <div
@@ -415,7 +400,6 @@ export default function CardBook({
                   showDedication={!canManage}
                   noteCount={notes.length}
                   showCount={canManage}
-                  font={face}
                 />
               </div>
             </div>
@@ -461,7 +445,6 @@ export default function CardBook({
                     intro={intro}
                     notes={notes}
                     onOpen={index === 0 ? () => turn(1) : undefined}
-                    font={face}
                   />
                   <LeafFace
                     face={leaf.back}
@@ -473,7 +456,6 @@ export default function CardBook({
                     recipientName={recipientName}
                     intro={intro}
                     notes={notes}
-                    font={face}
                   />
                 </div>
               );
@@ -575,7 +557,6 @@ function LeafFace({
   intro,
   notes,
   onOpen,
-  font,
 }: {
   face: Face;
   side: "left" | "right";
@@ -587,7 +568,6 @@ function LeafFace({
   intro: string | null;
   notes: Note[];
   onOpen?: () => void;
-  font: FaceId;
 }) {
   const towardReader = facing || turning;
   const stock =
@@ -606,7 +586,6 @@ function LeafFace({
         recipientName={recipientName}
         intro={intro}
         notes={notes}
-        font={font}
       />
     </>
   );
@@ -647,7 +626,6 @@ function FaceContents({
   recipientName,
   intro,
   notes,
-  font,
 }: {
   face: Face;
   side: "left" | "right";
@@ -656,7 +634,6 @@ function FaceContents({
   recipientName: string;
   intro: string | null;
   notes: Note[];
-  font: FaceId;
 }) {
   switch (face.kind) {
     case "cover":
@@ -666,7 +643,6 @@ function FaceContents({
           showDedication={!canManage}
           noteCount={notes.length}
           showCount={canManage}
-          font={font}
         />
       );
     case "inside":
@@ -678,7 +654,6 @@ function FaceContents({
           canManage={canManage}
           note={face.note}
           side={side}
-          font={font}
         />
       );
     case "empty":
@@ -691,33 +666,26 @@ function CoverFace({
   showDedication,
   noteCount,
   showCount,
-  font,
 }: {
   recipientName: string;
   showDedication: boolean;
   noteCount: number;
   showCount: boolean;
-  font: FaceId;
 }) {
-  const greetingItalic = faceGreetingItalic(font);
   return (
     <span className="card-body items-center px-7 pt-8 pb-14 text-center sm:px-9 sm:pt-9 sm:pb-16">
       <span className="my-auto flex flex-col items-center">
-        <span
-          className={`font-card text-[1.0625rem] text-muted ${greetingItalic ? "italic" : ""}`}
-        >
+        <span className="font-hand text-[1.0625rem] text-muted">
           Happy birthday,
         </span>
         <span
-          className={`mt-2 font-card leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName, font)}`}
+          className={`mt-2 font-hand leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName)}`}
         >
           {recipientName}
         </span>
         <span className="mt-7 h-px w-10 bg-brass/80" />
         {showDedication ? (
-          <span
-            className={`mt-8 max-w-[22ch] font-card text-[0.9375rem] leading-[1.55] text-ink/80 ${greetingItalic ? "italic" : ""}`}
-          >
+          <span className="mt-8 max-w-[22ch] font-hand text-[0.9375rem] leading-[1.55] text-ink/80">
             From your brothers and sisters in Christ
           </span>
         ) : null}
@@ -767,13 +735,11 @@ function NoteFace({
   canManage,
   note,
   side,
-  font,
 }: {
   masterToken: string;
   canManage: boolean;
   note: Note;
   side: "left" | "right";
-  font: FaceId;
 }) {
   const pad =
     side === "left"
@@ -781,16 +747,13 @@ function NoteFace({
       : "pl-9 pr-7 py-8 sm:pl-11 sm:pr-8 sm:py-10";
 
   return (
-    <div className={`card-body ${pad}`}>
+    <div
+      className={`card-body ${pad}`}
+      style={{ ["--card-face" as string]: penVar(note.pen) }}
+    >
       <div className="card-scroll flex flex-col" tabIndex={0}>
         <p
-          className={`my-auto font-card whitespace-pre-wrap break-words ${
-            font === "script"
-              ? "text-[1.5rem] leading-[1.7] sm:text-[1.625rem]"
-              : font === "marker"
-                ? "text-[1.25rem] leading-[1.5] sm:text-[1.375rem]"
-                : "text-[1.1875rem] leading-[1.62] sm:text-[1.25rem]"
-          }`}
+          className={`my-auto font-card whitespace-pre-wrap break-words ${penNoteClass(note.pen)}`}
           style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}
         >
           {note.body}
@@ -804,7 +767,7 @@ function NoteFace({
           <span />
         )}
         <div className="text-right">
-          <Signature name={note.authorName} font={font} />
+          <Signature name={note.authorName} pen={note.pen} />
           <p className="mt-2 text-[0.75rem] text-muted">{note.date}</p>
         </div>
       </div>
@@ -812,9 +775,9 @@ function NoteFace({
   );
 }
 
-function Signature({ name, font }: { name: string; font: FaceId }) {
+function Signature({ name, pen }: { name: string; pen: PenId }) {
   const hand = handFor(name);
-  const lively = faceIsLively(font);
+  const lively = penIsLively(pen);
   return (
     <p
       className="font-card leading-none text-ink/90"

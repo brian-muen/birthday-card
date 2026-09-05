@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
-import { faceVar, parseFace } from "@/lib/face";
 import { parseStock } from "@/lib/stock";
 import MessageForm from "./message-form";
 
@@ -33,10 +32,7 @@ export default async function SignPage({
       </p>
 
       {card.intro && (
-        <blockquote
-          className="mt-10 border-l border-rule pl-5 font-card text-xl leading-[1.6] whitespace-pre-wrap"
-          style={{ ["--card-face" as string]: faceVar(card.font) }}
-        >
+        <blockquote className="mt-10 border-l border-rule pl-5 font-hand text-xl leading-[1.6] whitespace-pre-wrap">
           {card.intro}
         </blockquote>
       )}
@@ -45,7 +41,6 @@ export default async function SignPage({
         contributeToken={card.contributeToken}
         recipientName={card.recipientName}
         stock={parseStock(card.stock)}
-        font={parseFace(card.font)}
       />
     </main>
   );

@@ -24,6 +24,10 @@
   --font-face-serif: var(--font-cormorant);
   --font-face-print: var(--font-source-sans);
   --font-face-marker: var(--font-caveat-brush);
+  --font-face-pencil: var(--font-caveat);
+  --font-face-fountain: var(--font-great-vibes);
+  --font-face-ballpoint: var(--font-source-sans);
+  --font-face-brush: var(--font-satisfy);
 }
 
 body {
