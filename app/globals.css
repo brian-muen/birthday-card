@@ -142,22 +142,16 @@ select:focus-visible {
   transition: none;
 }
 
-/* Closed — front or back — is the same 5×7 on the table, not a left-hand leaf. */
-.card-frame[data-spread="true"] .card-stage[data-closed="true"] {
+/* Closed front, last fold, and closed back share one 5×7 seat (the
+   right-hand leaf). Never recenter onto the left landing — that swap
+   is what made the back pop larger. */
+.card-frame[data-spread="true"] .card-stage[data-closed="true"],
+.card-frame[data-spread="true"] .card-stage[data-closing="true"] {
   transform: translateX(-25%);
   perspective-origin: 75% 50%;
-}
-
-/* Close is a page turn: the right leaf folds left. Recenter onto that
-   landing (spine on the right) so the fold and the 5×7 stay one motion. */
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] {
-  transform: translateX(25%);
-  perspective-origin: 25% 50%;
-}
-
-/* Settling onto the deck would otherwise tween +25% → −25% and slide the card. */
-.card-frame[data-spread="true"] .card-stage[data-closed="true"][data-shut="back"]:not([data-flipping="true"]) {
-  transition: none;
+  /* Keep only the right-hand 5×7. The left half of the 10×7 stage
+     would otherwise sit beside the back and read as a size jump. */
+  clip-path: inset(0 0 0 50%);
 }
 
 .card-panel {
@@ -216,10 +210,12 @@ select:focus-visible {
   opacity: 1;
 }
 
-/* On a bifold, the right backing drops away as its leaf folds over the writing. */
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="right"] {
+/* The left half slides out of the closed seat; don't leave it painted
+   beside the back after the fold (the open fade-in is delayed 420ms). */
+.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="left"],
+.card-stage[data-shut="back"] .card-panel[data-half="left"] {
   opacity: 0;
-  transition: opacity 180ms linear;
+  transition: opacity 160ms linear;
 }
 
 .card-leaf {
@@ -456,15 +452,22 @@ select:focus-visible {
     inset 0 0 0 1px rgb(27 36 64 / 0.08);
 }
 
-.card-stage[data-closed="true"] .card-deck .card-face {
+.card-stage[data-closed="true"] .card-deck .card-face,
+.card-stage[data-closing="true"] .card-deck .card-face {
   box-shadow:
     0 1px 1px rgb(27 36 64 / 0.04),
     0 2px 5px -2px rgb(27 36 64 / 0.08),
     inset 0 0 0 1px rgb(27 36 64 / 0.08);
 }
 
-.card-stage[data-flipping="true"] .card-panel {
+.card-stage[data-flipping="true"] .card-panel,
+.card-stage[data-shut="back"] .card-panel,
+.card-stage[data-closing="true"] .card-panel {
   visibility: hidden;
+}
+
+.card-stage[data-closing="true"] .card-deck {
+  pointer-events: none;
 }
 
 .card-body {

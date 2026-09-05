@@ -188,7 +188,7 @@ export default function CardBook({
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
   const showingBack = closed && shut === "back" && !flipping;
-  const showingDeck = closed && (shut === "back" || flipping);
+  const showingDeck = closing || (closed && (shut === "back" || flipping));
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -408,66 +408,68 @@ export default function CardBook({
                 />
               </div>
             </div>
-          ) : (
-            leaves.map((leaf, index) => {
-              const foldingShut = closing && index === place;
-              const turned = index < place || foldingShut;
-              const facingFront = closed
-                ? index === 0
-                : index === place;
-              const facingBack = place > 0 && index === place - 1;
-              const inMotion = moving === index || foldingShut;
-              const painted =
-                inMotion ||
-                index === place ||
-                index === place - 1 ||
-                (closed && index === 0);
+          ) : null}
 
-              return (
-                <div
-                  key={index}
-                  className="card-leaf"
-                  data-cover={index === 0}
-                  data-folding={foldingShut}
-                  data-turned={turned}
-                  data-moving={inMotion}
-                  onTransitionEnd={foldingShut ? settleClose : settle}
-                  style={{
-                    visibility: painted ? "visible" : "hidden",
-                    zIndex: inMotion
-                      ? leaves.length + 20
-                      : turned
-                        ? index + 1
-                        : leaves.length - index,
-                  }}
-                >
-                  <LeafFace
-                    face={leaf.front}
-                    side="right"
-                    facing={facingFront}
-                    turning={inMotion}
-                    masterToken={masterToken}
-                    canManage={canManage}
-                    recipientName={recipientName}
-                    intro={intro}
-                    notes={notes}
-                    onOpen={index === 0 ? () => turn(1) : undefined}
-                  />
-                  <LeafFace
-                    face={foldingShut ? { kind: "empty" } : leaf.back}
-                    side="left"
-                    facing={facingBack}
-                    turning={inMotion}
-                    masterToken={masterToken}
-                    canManage={canManage}
-                    recipientName={recipientName}
-                    intro={intro}
-                    notes={notes}
-                  />
-                </div>
-              );
-            })
-          )}
+          {!showingDeck || closing
+            ? leaves.map((leaf, index) => {
+                const foldingShut = closing && index === place;
+                const turned = index < place || foldingShut;
+                const facingFront = closed
+                  ? index === 0
+                  : index === place;
+                const facingBack = place > 0 && index === place - 1;
+                const inMotion = moving === index || foldingShut;
+                const painted =
+                  inMotion ||
+                  index === place ||
+                  index === place - 1 ||
+                  (closed && index === 0);
+
+                return (
+                  <div
+                    key={index}
+                    className="card-leaf"
+                    data-cover={index === 0}
+                    data-folding={foldingShut}
+                    data-turned={turned}
+                    data-moving={inMotion}
+                    onTransitionEnd={foldingShut ? settleClose : settle}
+                    style={{
+                      visibility: painted ? "visible" : "hidden",
+                      zIndex: inMotion
+                        ? leaves.length + 20
+                        : turned
+                          ? index + 1
+                          : leaves.length - index,
+                    }}
+                  >
+                    <LeafFace
+                      face={leaf.front}
+                      side="right"
+                      facing={facingFront}
+                      turning={inMotion}
+                      masterToken={masterToken}
+                      canManage={canManage}
+                      recipientName={recipientName}
+                      intro={intro}
+                      notes={notes}
+                      onOpen={index === 0 ? () => turn(1) : undefined}
+                    />
+                    <LeafFace
+                      face={foldingShut ? { kind: "empty" } : leaf.back}
+                      side="left"
+                      facing={facingBack}
+                      turning={inMotion}
+                      masterToken={masterToken}
+                      canManage={canManage}
+                      recipientName={recipientName}
+                      intro={intro}
+                      notes={notes}
+                    />
+                  </div>
+                );
+              })
+            : null}
 
           {closing && !leaves[place] ? (
             <div
