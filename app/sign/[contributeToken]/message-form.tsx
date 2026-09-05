@@ -103,7 +103,6 @@ export default function MessageForm({
             required
             maxLength={MAX_NAME_LENGTH}
             autoComplete="name"
-            placeholder="Jamie"
             value={authorName}
             onChange={(event) => setAuthorName(event.target.value)}
             disabled={pending}

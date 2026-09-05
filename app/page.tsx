@@ -71,7 +71,6 @@ export default async function Home({
               maxLength={80}
               defaultValue={recipientName}
               autoComplete="off"
-              placeholder="Priya"
               className={inputClass}
             />
           </div>
