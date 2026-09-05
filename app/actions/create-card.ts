@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
+import { parseStock } from "@/lib/stock";
 import { generateToken } from "@/lib/tokens";
 
 // Kept in sync with the maxLength attributes on the form in app/page.tsx.
@@ -13,6 +14,7 @@ const INTRO_MAX = 500;
 export async function createCard(formData: FormData) {
   const recipientName = String(formData.get("recipientName") ?? "").trim();
   const intro = String(formData.get("intro") ?? "").trim();
+  const stock = parseStock(formData.get("stock"));
 
   // Validation failures bounce back to the landing page with a message and the
   // name refilled, so the form keeps working without client-side JS.
@@ -21,6 +23,7 @@ export async function createCard(formData: FormData) {
     if (recipientName) {
       params.set("recipientName", recipientName.slice(0, RECIPIENT_NAME_MAX));
     }
+    params.set("stock", stock);
     redirect(`/?${params.toString()}`);
   };
 
@@ -41,7 +44,8 @@ export async function createCard(formData: FormData) {
   await db.insert(cards).values({
     recipientName,
     occasion: "Birthday",
-    intro: intro || null,
+        intro: intro || null,
+    stock,
     contributeToken,
     masterToken,
   });

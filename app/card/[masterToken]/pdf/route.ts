@@ -3,9 +3,9 @@ import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
+import { parseStock, stockRgb } from "@/lib/stock";
 
 // Palette lifted from globals.css so the PDF matches the site.
-const PAPER = rgb(1, 1, 1); // --raised #ffffff
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
 const BRASS = rgb(0.659, 0.475, 0.173); // --brass #a8792c
 
@@ -53,6 +53,7 @@ export async function GET(
   const pdfBytes = await buildCardPdf({
     recipientName: card.recipientName,
     intro: card.intro,
+    stock: parseStock(card.stock),
     notes: notes.map((note) => ({
       authorName: note.authorName,
       body: note.body,
@@ -81,6 +82,7 @@ type PdfNote = { authorName: string; body: string; date: string };
 async function buildCardPdf(input: {
   recipientName: string;
   intro: string | null;
+  stock: string;
   notes: PdfNote[];
 }) {
   const doc = await PDFDocument.create();
@@ -93,11 +95,16 @@ async function buildCardPdf(input: {
   // The standard PDF fonts only cover Latin-1-ish characters; drop anything
   // they can't encode (emoji etc.) instead of crashing.
   const sanitize = makeSanitizer(serif);
+  const paper = (() => {
+    const { r, g, b } = stockRgb(input.stock);
+    return rgb(r, g, b);
+  })();
 
   drawCoverPage(doc, {
     serif,
     serifItalic,
     sans,
+    paper,
     recipientName: sanitize(input.recipientName),
     intro: input.intro ? sanitize(input.intro) : null,
     messageCount: input.notes.length,
@@ -108,6 +115,7 @@ async function buildCardPdf(input: {
       serif,
       serifItalic,
       sans,
+      paper,
       body: sanitize(note.body),
       authorName: sanitize(note.authorName),
       date: note.date,
@@ -119,7 +127,10 @@ async function buildCardPdf(input: {
   return doc.save();
 }
 
-function addDecoratedPage(doc: PDFDocument): PDFPage {
+function addDecoratedPage(
+  doc: PDFDocument,
+  paper: ReturnType<typeof rgb>,
+): PDFPage {
   const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
 
   page.drawRectangle({
@@ -127,7 +138,7 @@ function addDecoratedPage(doc: PDFDocument): PDFPage {
     y: 0,
     width: PAGE_WIDTH,
     height: PAGE_HEIGHT,
-    color: PAPER,
+    color: paper,
   });
 
   // Thin frame, like the card's border on screen.
@@ -159,12 +170,13 @@ function drawCoverPage(
     serif: PDFFont;
     serifItalic: PDFFont;
     sans: PDFFont;
+    paper: ReturnType<typeof rgb>;
     recipientName: string;
     intro: string | null;
     messageCount: number;
   },
 ) {
-  const page = addDecoratedPage(doc);
+  const page = addDecoratedPage(doc, input.paper);
 
   const titleLines = [
     { text: "Happy Birthday,", font: input.serif },
@@ -248,6 +260,7 @@ function drawMessagePages(
     serif: PDFFont;
     serifItalic: PDFFont;
     sans: PDFFont;
+    paper: ReturnType<typeof rgb>;
     body: string;
     authorName: string;
     date: string;
@@ -265,7 +278,7 @@ function drawMessagePages(
   if (chunks.length === 0) chunks.push([]);
 
   chunks.forEach((chunk, chunkIndex) => {
-    const page = addDecoratedPage(doc);
+    const page = addDecoratedPage(doc, input.paper);
     const isLastChunk = chunkIndex === chunks.length - 1;
 
     const header =

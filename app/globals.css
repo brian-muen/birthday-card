@@ -89,6 +89,7 @@ select:focus-visible {
    --------------------------------------------------------------------------- */
 
 .card-frame {
+  --card-stock: #e0b3a8;
   --card-turn: 640ms;
   --card-cover-turn: 880ms;
   --card-ease: cubic-bezier(0.55, 0.05, 0.35, 1);
@@ -133,7 +134,7 @@ select:focus-visible {
   position: absolute;
   inset-block: 0;
   border: 1px solid var(--rule);
-  background: var(--raised);
+  background: var(--card-stock);
 }
 
 .card-frame[data-spread="true"] .card-panel[data-half="right"] {
@@ -201,7 +202,7 @@ select:focus-visible {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--rule);
-  background: var(--raised);
+  background: var(--card-stock);
   text-align: inherit;
 }
 
@@ -218,7 +219,7 @@ select:focus-visible {
 }
 
 .card-face[data-stock="cover"] {
-  background: color-mix(in oklab, #eadfc8 42%, var(--raised));
+  background: var(--card-stock);
   transition: transform 200ms ease-out;
 }
 
@@ -226,16 +227,12 @@ select:focus-visible {
   transform: translate3d(0, -2px, 0.02px);
 }
 
-.card-face[data-stock="liner"] {
-  background: color-mix(in oklab, #eadfc8 22%, var(--raised));
-}
-
 /* Notes sit on the writing panel. They never travel across the crease. */
 .card-insert {
   left: 0;
   width: 100%;
   z-index: 6;
-  background: var(--raised);
+  background: var(--card-stock);
 }
 
 .card-frame[data-spread="true"] .card-insert {

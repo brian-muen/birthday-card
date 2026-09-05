@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
+import { stockHex } from "@/lib/stock";
 
 const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
@@ -17,9 +18,11 @@ function fitToContent(element: HTMLTextAreaElement) {
 export default function MessageForm({
   contributeToken,
   recipientName,
+  stock,
 }: {
   contributeToken: string;
   recipientName: string;
+  stock: string;
 }) {
   const [authorName, setAuthorName] = useState("");
   const [body, setBody] = useState("");
@@ -90,7 +93,10 @@ export default function MessageForm({
   return (
     <form onSubmit={handleSubmit} className="mt-12">
       {/* The page they're writing: message above, signature on the line. */}
-      <div className="paper-lift border border-rule bg-raised px-6 py-7 sm:px-9 sm:py-9">
+      <div
+        className="paper-lift border border-rule px-6 py-7 sm:px-9 sm:py-9"
+        style={{ backgroundColor: stockHex(stock) }}
+      >
         <label htmlFor="body" className="sr-only">
           Your message for {recipientName}
         </label>

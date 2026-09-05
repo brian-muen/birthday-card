@@ -5,6 +5,7 @@ import { asc, eq } from "drizzle-orm";
 
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
+import { parseStock } from "@/lib/stock";
 import CardBook from "./card-book";
 
 type PageParams = { params: Promise<{ masterToken: string }> };
@@ -59,6 +60,7 @@ export default async function CardPage({ params }: PageParams) {
         masterToken={masterToken}
         recipientName={card.recipientName}
         intro={card.intro}
+        stock={parseStock(card.stock)}
         notes={notes.map((note) => ({
           id: note.id,
           authorName: note.authorName,
