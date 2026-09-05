@@ -141,7 +141,6 @@ export default function CardBook({
   intro,
   notes,
   stock,
-  pdfHref,
 }: {
   masterToken: string;
   canManage: boolean;
@@ -149,7 +148,6 @@ export default function CardBook({
   intro: string | null;
   notes: Note[];
   stock: string;
-  pdfHref: string;
 }) {
   const spread = useSyncExternalStore(
     subscribeToSpread,
@@ -204,14 +202,14 @@ export default function CardBook({
     });
   }, []);
 
-  const openFromBack = useCallback(() => {
+  const turnOver = useCallback(() => {
     setPlace({
-      place: last,
+      place: 0,
       moving: null,
       touched: true,
       shut: "front",
     });
-  }, [last]);
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -242,7 +240,7 @@ export default function CardBook({
     : leaves[place]?.front;
 
   const announcement = showingBack
-    ? "Manna loves you. Make sure to save the PDF."
+    ? "The back of the card"
     : closed
       ? `Birthday card for ${recipientName}, closed`
       : [describeFace(leftFace), describeFace(rightFace)]
@@ -271,10 +269,17 @@ export default function CardBook({
 
           {showingBack ? (
             <div className="card-leaf" data-back="true">
-              <div className="card-face" data-face="front" data-stock="cover">
+              <button
+                type="button"
+                onClick={turnOver}
+                className="card-face cursor-pointer"
+                data-face="front"
+                data-stock="cover"
+                aria-label="Turn the card over"
+              >
                 <span className="card-crease" data-side="left" aria-hidden />
-                <KeepFace pdfHref={pdfHref} />
-              </div>
+                <span className="card-body" />
+              </button>
             </div>
           ) : (
             leaves.map((leaf, index) => {
@@ -353,10 +358,10 @@ export default function CardBook({
           <div className="flex justify-center">
             <button
               type="button"
-              onClick={openFromBack}
+              onClick={turnOver}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
             >
-              Open the card
+              Turn it over
             </button>
           </div>
         ) : closed ? null : (
@@ -558,31 +563,6 @@ function CoverFace({
         </span>
       </span>
     </span>
-  );
-}
-
-function KeepFace({ pdfHref }: { pdfHref: string }) {
-  return (
-    <div className="card-body items-center px-8 py-10 text-center sm:px-12 sm:py-12">
-      <div className="my-auto flex flex-col items-center">
-        <a
-          href={pdfHref}
-          download
-          className="font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
-        >
-          Make sure to save the PDF!!
-        </a>
-        <p
-          className="mt-10 font-hand leading-none text-ink/90"
-          style={{
-            fontSize: "2.15rem",
-            transform: "rotate(-1.4deg) skewX(-2deg)",
-          }}
-        >
-          Manna loves you!
-        </p>
-      </div>
-    </div>
   );
 }
 

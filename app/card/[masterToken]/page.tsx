@@ -61,7 +61,6 @@ export default async function CardPage({ params }: PageParams) {
         recipientName={card.recipientName}
         intro={card.intro}
         stock={parseStock(card.stock)}
-        pdfHref={`/card/${token}/pdf`}
         notes={notes.map((note) => ({
           id: note.id,
           authorName: note.authorName,
