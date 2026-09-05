@@ -123,8 +123,7 @@ function lastNotePlace(leaves: Leaf[], spread: boolean, noteCount: number) {
 }
 
 function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
-  const notesEnd = lastNotePlace(leaves, spread, noteCount);
-  return noteCount > 0 ? notesEnd + 1 : notesEnd;
+  return lastNotePlace(leaves, spread, noteCount);
 }
 
 function describeFace(face: Face | undefined) {
@@ -164,20 +163,20 @@ export default function CardBook({
   );
 
   const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
-  const notesEnd = lastNotePlace(leaves, spread, notes.length);
   const last = lastPlace(leaves, spread, notes.length);
 
-  // 0 is the closed cover. Each step after that turns one more leaf.
-  const [{ place: rawPlace, moving, touched }, setPlace] = useState<{
+  // 0 is the closed card. Each step after that turns one more leaf.
+  // After the last note, closing lands on the back — not another inside page.
+  const [{ place: rawPlace, moving, touched, shut }, setPlace] = useState<{
     place: number;
     moving: number | null;
     touched: boolean;
-  }>({ place: 0, moving: null, touched: false });
+    shut: "front" | "back";
+  }>({ place: 0, moving: null, touched: false, shut: "front" });
 
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
-  const atKeep = notes.length > 0 && place === last && !closed;
-  const showPlace = atKeep ? notesEnd : place;
+  const showingBack = closed && shut === "back";
 
   const turn = useCallback(
     (delta: 1 | -1) => {
@@ -185,22 +184,34 @@ export default function CardBook({
         const from = Math.min(previous.place, last);
         const next = from + delta;
         if (next < 0 || next > last) return previous;
-        const keepMove =
-          (from === last && next === last - 1) ||
-          (from === last - 1 && next === last && notes.length > 0);
         return {
           place: next,
-          moving: reducedMotion || keepMove
-            ? null
-            : delta === 1
-              ? from
-              : next,
+          moving: reducedMotion ? null : delta === 1 ? from : next,
           touched: true,
+          shut: next === 0 ? "front" : previous.shut,
         };
       });
     },
-    [last, notes.length, reducedMotion],
+    [last, reducedMotion],
   );
+
+  const closeToBack = useCallback(() => {
+    setPlace({
+      place: 0,
+      moving: null,
+      touched: true,
+      shut: "back",
+    });
+  }, []);
+
+  const openFromBack = useCallback(() => {
+    setPlace({
+      place: last,
+      moving: null,
+      touched: true,
+      shut: "front",
+    });
+  }, [last]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -223,14 +234,14 @@ export default function CardBook({
     );
   }
 
-  const leftFace = spread && showPlace > 0 ? leaves[showPlace - 1]?.back : undefined;
+  const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
   const rightFace = closed
-    ? leaves[0]?.front
-    : spread
-      ? leaves[showPlace]?.front
-      : leaves[showPlace]?.front;
+    ? showingBack
+      ? undefined
+      : leaves[0]?.front
+    : leaves[place]?.front;
 
-  const announcement = atKeep
+  const announcement = showingBack
     ? "Manna loves you. Make sure to save the PDF."
     : closed
       ? `Birthday card for ${recipientName}, closed`
@@ -258,72 +269,75 @@ export default function CardBook({
             </div>
           ) : null}
 
-          {leaves.map((leaf, index) => {
-            const turned = index < showPlace;
-            const facingFront = closed
-              ? index === 0
-              : index === showPlace;
-            const facingBack = showPlace > 0 && index === showPlace - 1;
-            const inMotion = moving === index;
-
-            return (
-              <div
-                key={index}
-                className="card-leaf"
-                data-cover={index === 0}
-                data-turned={turned}
-                data-moving={inMotion}
-                onTransitionEnd={settle}
-                style={{
-                  zIndex: inMotion
-                    ? leaves.length + 20
-                    : turned
-                      ? index + 1
-                      : leaves.length - index,
-                }}
-              >
-                <LeafFace
-                  face={leaf.front}
-                  side="right"
-                  facing={facingFront}
-                  turning={inMotion}
-                  masterToken={masterToken}
-                  canManage={canManage}
-                  recipientName={recipientName}
-                  intro={intro}
-                  notes={notes}
-                  onOpen={index === 0 ? () => turn(1) : undefined}
-                />
-                <LeafFace
-                  face={leaf.back}
-                  side="left"
-                  facing={facingBack}
-                  turning={inMotion}
-                  masterToken={masterToken}
-                  canManage={canManage}
-                  recipientName={recipientName}
-                  intro={intro}
-                  notes={notes}
-                />
+          {showingBack ? (
+            <div className="card-leaf" data-cover="true">
+              <div className="card-face" data-face="front" data-stock="cover">
+                <KeepFace pdfHref={pdfHref} onOpen={openFromBack} />
               </div>
-            );
-          })}
+            </div>
+          ) : (
+            leaves.map((leaf, index) => {
+              const turned = index < place;
+              const facingFront = closed
+                ? index === 0
+                : index === place;
+              const facingBack = place > 0 && index === place - 1;
+              const inMotion = moving === index;
+              const painted =
+                inMotion ||
+                index === place ||
+                index === place - 1 ||
+                (closed && index === 0);
 
-          {!closed && (atKeep || (!spread && notes.length === 0)) ? (
-            <div
-              key={atKeep ? "keep" : "inside"}
-              className={
-                "card-insert " +
-                (showPlace > 1 ? "animate-insert-in" : "")
-              }
-              data-span={atKeep && spread ? "card" : undefined}
-            >
+              return (
+                <div
+                  key={index}
+                  className="card-leaf"
+                  data-cover={index === 0}
+                  data-turned={turned}
+                  data-moving={inMotion}
+                  onTransitionEnd={settle}
+                  style={{
+                    visibility: painted ? "visible" : "hidden",
+                    zIndex: inMotion
+                      ? leaves.length + 20
+                      : turned
+                        ? index + 1
+                        : leaves.length - index,
+                  }}
+                >
+                  <LeafFace
+                    face={leaf.front}
+                    side="right"
+                    facing={facingFront}
+                    turning={inMotion}
+                    masterToken={masterToken}
+                    canManage={canManage}
+                    recipientName={recipientName}
+                    intro={intro}
+                    notes={notes}
+                    onOpen={index === 0 ? () => turn(1) : undefined}
+                  />
+                  <LeafFace
+                    face={leaf.back}
+                    side="left"
+                    facing={facingBack}
+                    turning={inMotion}
+                    masterToken={masterToken}
+                    canManage={canManage}
+                    recipientName={recipientName}
+                    intro={intro}
+                    notes={notes}
+                  />
+                </div>
+              );
+            })
+          )}
+
+          {!closed && !spread && notes.length === 0 ? (
+            <div className="card-insert">
               <span className="card-crease" data-side="right" aria-hidden />
-              {atKeep ? (
-                <KeepFace pdfHref={pdfHref} />
-              ) : (
-                <InsideFace recipientName={recipientName} canManage={canManage} />
-              )}
+              <InsideFace recipientName={recipientName} canManage={canManage} />
             </div>
           ) : null}
         </div>
@@ -338,7 +352,13 @@ export default function CardBook({
           <div className="flex items-center justify-between gap-6">
             <button
               type="button"
-              onClick={() => turn(-1)}
+              onClick={() => {
+                if (place === 1 && last === 1 && notes.length > 0) {
+                  closeToBack();
+                  return;
+                }
+                turn(-1);
+              }}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
             >
               {place === 1 ? "Close the card" : "Previous"}
@@ -346,11 +366,19 @@ export default function CardBook({
 
             <button
               type="button"
-              onClick={() => turn(1)}
-              disabled={place >= last}
+              onClick={() => {
+                if (place >= last && notes.length > 0 && last > 1) {
+                  closeToBack();
+                  return;
+                }
+                turn(1);
+              }}
+              disabled={place >= last && !(notes.length > 0 && last > 1)}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass disabled:pointer-events-none disabled:opacity-0"
             >
-              Next
+              {place >= last && notes.length > 0 && last > 1
+                ? "Close the card"
+                : "Next"}
             </button>
           </div>
         )}
@@ -522,9 +550,15 @@ function CoverFace({
   );
 }
 
-function KeepFace({ pdfHref }: { pdfHref: string }) {
+function KeepFace({
+  pdfHref,
+  onOpen,
+}: {
+  pdfHref: string;
+  onOpen?: () => void;
+}) {
   return (
-    <div className="card-body items-center px-8 py-10 text-center sm:px-12 sm:py-12">
+    <div className="card-body items-center px-8 pt-8 pb-14 text-center sm:px-12 sm:pt-10 sm:pb-16">
       <div className="my-auto flex flex-col items-center">
         <a
           href={pdfHref}
@@ -543,6 +577,15 @@ function KeepFace({ pdfHref }: { pdfHref: string }) {
           Manna loves you!
         </p>
       </div>
+      {onOpen ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="text-[0.8125rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+        >
+          Open the card
+        </button>
+      ) : null}
     </div>
   );
 }
