@@ -1,4 +1,5 @@
 import { createCard } from "@/app/actions/create-card";
+import { DEFAULT_STOCK, STOCKS, parseStock } from "@/lib/stock";
 
 // Sample pages for the hero: the product is a card full of other people's
 // handwriting, so the clearest thing to show is the card itself.
@@ -34,9 +35,11 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
+    stock?: string;
   }>;
 }) {
-  const { error, recipientName } = await searchParams;
+  const { error, recipientName, stock } = await searchParams;
+  const selectedStock = parseStock(stock || DEFAULT_STOCK);
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-16 sm:py-24">
@@ -80,6 +83,35 @@ export default async function Home({
                   className="field mt-2.5 font-serif text-xl"
                 />
               </div>
+
+              <fieldset>
+                <legend className="text-[0.9375rem] font-medium">
+                  Paper
+                </legend>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  {STOCKS.map((option) => (
+                    <label
+                      key={option.id}
+                      className="flex cursor-pointer flex-col items-center gap-1.5"
+                    >
+                      <input
+                        type="radio"
+                        name="stock"
+                        value={option.id}
+                        defaultChecked={option.id === selectedStock}
+                        className="peer sr-only"
+                      />
+                      <span
+                        className="block size-10 border border-rule peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink peer-checked:outline peer-checked:outline-2 peer-checked:outline-offset-2 peer-checked:outline-ink"
+                        style={{ backgroundColor: option.hex }}
+                      />
+                      <span className="text-[0.75rem] text-muted">
+                        {option.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
 
               <div>
                 <label

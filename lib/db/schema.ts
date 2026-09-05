@@ -11,6 +11,7 @@ export const cards = pgTable("cards", {
   recipientName: text("recipient_name").notNull(),
   occasion: text("occasion").notNull(),
   intro: text("intro"),
+  stock: text("stock").notNull().default("red"),
   contributeToken: text("contribute_token").notNull().unique(),
   masterToken: text("master_token").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

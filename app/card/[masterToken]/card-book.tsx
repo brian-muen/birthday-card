@@ -9,6 +9,7 @@ import {
   useTransition,
 } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
+import { stockHex } from "@/lib/stock";
 
 type Note = {
   id: number;
@@ -129,11 +130,13 @@ export default function CardBook({
   recipientName,
   intro,
   notes,
+  stock,
 }: {
   masterToken: string;
   recipientName: string;
   intro: string | null;
   notes: Note[];
+  stock: string;
 }) {
   const spread = useSyncExternalStore(
     subscribeToSpread,
@@ -222,7 +225,12 @@ export default function CardBook({
 
   return (
     <div>
-      <div className="card-frame" data-spread={spread} data-animate={touched}>
+      <div
+        className="card-frame"
+        data-spread={spread}
+        data-animate={touched}
+        style={{ ["--card-stock" as string]: stockHex(stock) }}
+      >
         <div className="card-stage" data-closed={closed}>
           <div aria-hidden className="card-panel paper-lift" data-half="right">
             <span className="card-crease" data-side="right" />

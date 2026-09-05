@@ -4,7 +4,9 @@ import * as schema from "./schema";
 
 export type Db = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-const globalForDb = globalThis as unknown as { __cardDb?: Promise<Db> };
+const globalForDb = globalThis as unknown as {
+  __cardDbStock?: Promise<Db>;
+};
 
 const ENSURE_TABLES = [
   `CREATE TABLE IF NOT EXISTS cards (
@@ -12,6 +14,7 @@ const ENSURE_TABLES = [
     recipient_name text NOT NULL,
     occasion text NOT NULL,
     intro text,
+    stock text NOT NULL DEFAULT 'red',
     contribute_token text NOT NULL UNIQUE,
     master_token text NOT NULL UNIQUE,
     created_at timestamp NOT NULL DEFAULT now()
@@ -23,6 +26,8 @@ const ENSURE_TABLES = [
     body text NOT NULL,
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE cards ADD COLUMN IF NOT EXISTS stock text NOT NULL DEFAULT 'red'`,
+  `ALTER TABLE cards ALTER COLUMN stock SET DEFAULT 'red'`,
 ];
 
 async function createDb(): Promise<Db> {
@@ -48,8 +53,8 @@ async function createDb(): Promise<Db> {
 
 /** Get the shared database instance (creates tables on first use). */
 export function getDb(): Promise<Db> {
-  if (!globalForDb.__cardDb) {
-    globalForDb.__cardDb = createDb();
+  if (!globalForDb.__cardDbStock) {
+    globalForDb.__cardDbStock = createDb();
   }
-  return globalForDb.__cardDb;
+  return globalForDb.__cardDbStock;
 }

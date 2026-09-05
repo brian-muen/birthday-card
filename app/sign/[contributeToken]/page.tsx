@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
+import { parseStock } from "@/lib/stock";
 import MessageForm from "./message-form";
 
 export default async function SignPage({
@@ -39,6 +40,7 @@ export default async function SignPage({
       <MessageForm
         contributeToken={card.contributeToken}
         recipientName={card.recipientName}
+        stock={parseStock(card.stock)}
       />
     </main>
   );
