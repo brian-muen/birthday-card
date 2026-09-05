@@ -378,6 +378,9 @@ function PageFace({
     <div
       className="card-face"
       data-face={face}
+      // The panel inside the fold is the back of the cover, not a leaf, so it
+      // takes the cover's tone.
+      data-stock={page?.kind === "inside-front" ? "liner" : undefined}
       aria-hidden={hidden}
       inert={hidden}
     >
@@ -404,12 +407,16 @@ function PageContents({
   // Books give the gutter side a wider margin than the outer edge. Pages set
   // centred — the cover and the closing panel — get even margins instead.
   const centred = page.kind === "cover" || page.kind === "closing";
-  const padding = centred
+  // Type centred between equal margins reads as sitting too low, so print gives
+  // the foot a deeper margin than the head and lets the focal line ride up to
+  // the optical centre, about a third of the way down.
+  const vertical = centred ? "pt-8 pb-14 sm:pt-9 sm:pb-16" : "py-8 sm:py-10";
+  const horizontal = centred
     ? "px-7 sm:px-9"
     : side === "recto"
       ? "pl-9 pr-6 sm:pl-11 sm:pr-8"
       : "pl-6 pr-9 sm:pl-8 sm:pr-11";
-  const body = `card-body py-8 sm:py-10 ${padding}`;
+  const body = `card-body ${vertical} ${horizontal}`;
 
   switch (page.kind) {
     case "cover":
@@ -420,23 +427,27 @@ function PageContents({
             <span className="font-serif text-[1.0625rem] italic text-muted">
               Happy birthday,
             </span>
+            {/* A name is never hyphenated; it breaks at a hyphen it already
+                has, or not at all. */}
             <span
-              className={`mt-2 font-serif leading-[1.02] tracking-[-0.02em] break-words hyphens-auto ${coverTypeSize(recipientName)}`}
+              className={`mt-2 font-serif leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName)}`}
             >
               {recipientName}
             </span>
             <span className="mt-7 h-px w-10 bg-brass/70" />
           </span>
 
-          <span className="flex flex-col items-center">
-            <span className="text-[0.8125rem] text-muted">
+          {/* Three type sizes on a cover is enough, so the two lines at the
+              foot share one and differ by weight instead. */}
+          <span className="flex flex-col items-center text-[0.8125rem]">
+            <span className="text-muted">
               {notes.length === 0
                 ? "Nothing inside yet"
                 : notes.length === 1
                   ? "One message inside"
                   : `${notes.length} messages inside`}
             </span>
-            <span className="mt-2.5 text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass">
+            <span className="mt-2.5 font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors group-hover:decoration-brass">
               Open the card
             </span>
           </span>

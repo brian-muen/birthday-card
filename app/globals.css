@@ -91,10 +91,12 @@ select:focus-visible {
 
 .card-frame {
   /* Cover board is heavier stock than the pages, so it moves slower. */
-  --card-turn: 660ms;
+  --card-turn: 520ms;
   --card-cover-turn: 900ms;
-  /* Slow to lift, then settles: paper has to be picked up before it falls. */
-  --card-ease: cubic-bezier(0.34, 0.04, 0.2, 1);
+  /* A page accelerates away and drops onto the stack under its own weight. */
+  --card-ease: ease-in;
+  /* A cover is placed, not dropped, so it eases at both ends. */
+  --card-ease-cover: cubic-bezier(0.645, 0.045, 0.355, 1);
 }
 
 /* On a phone only the right-hand panel is in frame, so a leaf swinging past
@@ -110,13 +112,17 @@ select:focus-visible {
   padding-inline: 0.625rem;
 }
 
+/* A long lens. Roughly 4.75x the stage height puts the vertical field of view
+   near 12 degrees — the near-orthographic look of a real product photograph,
+   rather than the 2x (~28 degree) wide angle that makes flipbook demos read as
+   a gimmick. */
 .card-stage {
   position: relative;
   width: 100%;
-  perspective: 2200px;
+  perspective: 2250px;
   transition:
-    transform var(--card-cover-turn) var(--card-ease),
-    perspective-origin var(--card-cover-turn) var(--card-ease);
+    transform var(--card-cover-turn) var(--card-ease-cover),
+    perspective-origin var(--card-cover-turn) var(--card-ease-cover);
 }
 
 .card-frame[data-spread="false"] .card-stage {
@@ -124,7 +130,10 @@ select:focus-visible {
 }
 
 .card-frame[data-spread="true"] .card-stage {
+  /* Half as tall for a given width as the single panel, so the lens has to
+     lengthen to keep the same field of view. */
   aspect-ratio: 2 / 1.42;
+  perspective: 2600px;
 }
 
 /* Nothing moves on the way in. The spread resolves once on load — after that
@@ -193,6 +202,7 @@ select:focus-visible {
 
 .card-leaf[data-cover="true"] {
   transition-duration: var(--card-cover-turn);
+  transition-timing-function: var(--card-ease-cover);
 }
 
 .card-leaf[data-turned="true"] {
@@ -216,6 +226,12 @@ select:focus-visible {
   text-align: inherit;
 }
 
+/* The two faces of a leaf are coplanar, which can fight for the same pixels at
+   exactly 90 degrees. A hair of separation settles it. */
+.card-face[data-face="front"] {
+  transform: translate3d(0, 0, 0.02px);
+}
+
 .card-face[data-face="back"] {
   transform: rotateY(180deg);
 }
@@ -223,6 +239,19 @@ select:focus-visible {
 /* Cover stock, a shade warmer and heavier than the writing paper inside. */
 .card-face[data-stock="cover"] {
   background: color-mix(in oklab, var(--paper) 60%, var(--raised));
+  transition: transform 200ms ease-out;
+}
+
+/* A card you could pick up, rather than a button you could click. */
+.card-face[data-stock="cover"]:not([inert]):hover {
+  transform: translate3d(0, -2px, 0.02px);
+}
+
+/* The inside of the cover, a tonal step deeper than the leaves bound to it —
+   the same job an envelope liner does, and it sells the fold better than any
+   extra shadow would. */
+.card-face[data-stock="liner"] {
+  background: color-mix(in oklab, var(--paper) 45%, var(--raised));
 }
 
 /* The fold. Paper curves into the gutter, so the inner edge of every panel
@@ -303,7 +332,8 @@ select:focus-visible {
   .card-leaf,
   .card-leaf[data-cover="true"],
   .card-edges,
-  .card-panel[data-half="left"] {
+  .card-panel[data-half="left"],
+  .card-face[data-stock="cover"] {
     transition: none;
   }
 }
