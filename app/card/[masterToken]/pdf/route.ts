@@ -1,8 +1,9 @@
 import { asc, eq } from "drizzle-orm";
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 
+import { findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
-import { cards, messages } from "@/lib/db/schema";
+import { messages } from "@/lib/db/schema";
 import { parseStock, stockRgb } from "@/lib/stock";
 
 // Palette lifted from globals.css so the PDF matches the site.
@@ -34,16 +35,16 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ masterToken: string }> },
 ) {
-  const { masterToken } = await params;
+  const { masterToken: token } = await params;
 
-  const db = await getDb();
-  const card = await db.query.cards.findFirst({
-    where: eq(cards.masterToken, masterToken),
-  });
+  const card = await findCardByToken(token);
 
   if (!card) {
     return new Response("Card not found", { status: 404 });
   }
+
+  const db = await getDb();
+  const showCount = isMasterLink(card, token);
 
   const notes = await db.query.messages.findMany({
     where: eq(messages.cardId, card.id),
@@ -54,6 +55,7 @@ export async function GET(
     recipientName: card.recipientName,
     intro: card.intro,
     stock: parseStock(card.stock),
+    showCount,
     notes: notes.map((note) => ({
       authorName: note.authorName,
       body: note.body,
@@ -83,6 +85,7 @@ async function buildCardPdf(input: {
   recipientName: string;
   intro: string | null;
   stock: string;
+  showCount: boolean;
   notes: PdfNote[];
 }) {
   const doc = await PDFDocument.create();
@@ -107,7 +110,7 @@ async function buildCardPdf(input: {
     paper,
     recipientName: sanitize(input.recipientName),
     intro: input.intro ? sanitize(input.intro) : null,
-    messageCount: input.notes.length,
+    messageCount: input.showCount ? input.notes.length : null,
   });
 
   input.notes.forEach((note, i) => {
@@ -173,7 +176,7 @@ function drawCoverPage(
     paper: ReturnType<typeof rgb>;
     recipientName: string;
     intro: string | null;
-    messageCount: number;
+    messageCount: number | null;
   },
 ) {
   const page = addDecoratedPage(doc, input.paper);
@@ -190,11 +193,13 @@ function drawCoverPage(
     : [];
 
   const countText =
-    input.messageCount === 0
-      ? "No messages inside yet."
-      : input.messageCount === 1
-        ? "One message inside. Turn the page."
-        : `${input.messageCount} messages inside. Turn the page.`;
+    input.messageCount === null
+      ? null
+      : input.messageCount === 0
+        ? "No messages inside yet."
+        : input.messageCount === 1
+          ? "One message inside. Turn the page."
+          : `${input.messageCount} messages inside. Turn the page.`;
 
   // Measure the whole block so we can center it vertically.
   const titleHeight = titleLines.length * 36;
@@ -244,14 +249,16 @@ function drawCoverPage(
     y -= 24;
   }
 
-  y -= 10;
-  drawCentered(page, countText, {
-    font: input.sans,
-    size: 9,
-    y,
-    color: INK,
-    opacity: 0.5,
-  });
+  if (countText) {
+    y -= 10;
+    drawCentered(page, countText, {
+      font: input.sans,
+      size: 9,
+      y,
+      color: INK,
+      opacity: 0.5,
+    });
+  }
 }
 
 function drawMessagePages(

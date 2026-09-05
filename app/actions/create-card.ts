@@ -39,15 +39,17 @@ export async function createCard(formData: FormData) {
 
   const contributeToken = generateToken();
   const masterToken = generateToken();
+  const giftToken = generateToken();
 
   const db = await getDb();
   await db.insert(cards).values({
     recipientName,
     occasion: "Birthday",
-        intro: intro || null,
+    intro: intro || null,
     stock,
     contributeToken,
     masterToken,
+    giftToken,
   });
 
   redirect(`/created/${masterToken}`);

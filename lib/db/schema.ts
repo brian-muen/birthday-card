@@ -14,6 +14,7 @@ export const cards = pgTable("cards", {
   stock: text("stock").notNull().default("red"),
   contributeToken: text("contribute_token").notNull().unique(),
   masterToken: text("master_token").notNull().unique(),
+  giftToken: text("gift_token").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
