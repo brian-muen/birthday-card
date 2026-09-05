@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
+import { faceClass, faceIsLively, faceVar, type FaceId } from "@/lib/face";
 import { stockHex } from "@/lib/stock";
 
 const MAX_NAME_LENGTH = 80;
@@ -19,10 +20,12 @@ export default function MessageForm({
   contributeToken,
   recipientName,
   stock,
+  font,
 }: {
   contributeToken: string;
   recipientName: string;
   stock: string;
+  font: FaceId;
 }) {
   const [authorName, setAuthorName] = useState("");
   const [body, setBody] = useState("");
@@ -76,7 +79,12 @@ export default function MessageForm({
         </h2>
         <p className="mt-3 max-w-[52ch] leading-relaxed text-muted">
           It&rsquo;s in {recipientName}&rsquo;s card now, signed{" "}
-          <span className="font-hand text-xl text-ink">{sentBy}</span>. Nobody
+          <span
+            className={`text-xl text-ink ${faceClass(font)}`}
+          >
+            {sentBy}
+          </span>
+          . Nobody
           else signing the card can read it.
         </p>
         <button
@@ -95,7 +103,10 @@ export default function MessageForm({
       {/* The page they're writing: message above, signature on the line. */}
       <div
         className="paper-lift border border-rule px-6 py-7 sm:px-9 sm:py-9"
-        style={{ backgroundColor: stockHex(stock) }}
+        style={{
+          backgroundColor: stockHex(stock),
+          ["--card-face" as string]: faceVar(font),
+        }}
       >
         <label htmlFor="body" className="sr-only">
           Your message for {recipientName}
@@ -113,7 +124,13 @@ export default function MessageForm({
             fitToContent(event.target);
           }}
           disabled={pending}
-          className="min-h-44 w-full resize-none border-0 bg-transparent font-serif text-xl leading-[1.6] outline-none placeholder:text-muted/45"
+          className={`min-h-44 w-full resize-none border-0 bg-transparent text-xl leading-[1.6] outline-none placeholder:text-muted/45 font-card ${
+            font === "script"
+              ? "text-[1.5rem] leading-[1.7]"
+              : font === "marker"
+                ? "text-[1.35rem] leading-[1.5]"
+                : ""
+          }`}
         />
 
         <div className="mt-8 flex items-end justify-between gap-6">
@@ -138,7 +155,9 @@ export default function MessageForm({
               value={authorName}
               onChange={(event) => setAuthorName(event.target.value)}
               disabled={pending}
-              className="field text-right font-hand text-[1.75rem] leading-tight placeholder:text-muted/70"
+              className={`field text-right font-card leading-tight placeholder:text-muted/70 ${
+                faceIsLively(font) ? "text-[1.75rem]" : "text-[1.25rem]"
+              }`}
             />
           </div>
         </div>

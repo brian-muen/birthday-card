@@ -1,10 +1,23 @@
 import { asc, eq } from "drizzle-orm";
+import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
+
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 import { findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
+import { parseFace, type FaceId } from "@/lib/face";
 import { parseStock, stockRgb } from "@/lib/stock";
+
+const FACE_FILES: Record<FaceId, { regular: string; italic?: string }> = {
+  hand: { regular: "caveat.ttf" },
+  script: { regular: "great-vibes.ttf" },
+  serif: { regular: "cormorant.ttf", italic: "cormorant-italic.ttf" },
+  print: { regular: "source-sans.ttf" },
+  marker: { regular: "caveat-brush.ttf" },
+};
 
 // Palette lifted from globals.css so the PDF matches the site.
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
@@ -55,6 +68,7 @@ export async function GET(
     recipientName: card.recipientName,
     intro: card.intro,
     stock: parseStock(card.stock),
+    font: parseFace(card.font),
     showCount,
     notes: notes.map((note) => ({
       authorName: note.authorName,
@@ -81,33 +95,48 @@ export async function GET(
 
 type PdfNote = { authorName: string; body: string; date: string };
 
+async function embedFace(doc: PDFDocument, face: FaceId) {
+  doc.registerFontkit(fontkit);
+  const files = FACE_FILES[face];
+  const dir = path.join(process.cwd(), "lib/fonts");
+  const regular = await doc.embedFont(
+    await readFile(path.join(dir, files.regular)),
+  );
+  const italic = files.italic
+    ? await doc.embedFont(await readFile(path.join(dir, files.italic)))
+    : regular;
+  return { writing: regular, writingItalic: italic };
+}
+
 async function buildCardPdf(input: {
   recipientName: string;
   intro: string | null;
   stock: string;
+  font: FaceId;
   showCount: boolean;
   notes: PdfNote[];
 }) {
   const doc = await PDFDocument.create();
   doc.setTitle(`Happy Birthday, ${input.recipientName}`);
 
-  const serif = await doc.embedFont(StandardFonts.TimesRoman);
-  const serifItalic = await doc.embedFont(StandardFonts.TimesRomanItalic);
+  const { writing, writingItalic } = await embedFace(doc, input.font);
   const sans = await doc.embedFont(StandardFonts.Helvetica);
 
-  // The standard PDF fonts only cover Latin-1-ish characters; drop anything
-  // they can't encode (emoji etc.) instead of crashing.
-  const sanitize = makeSanitizer(serif);
+  // Drop anything the embedded face can't encode (emoji etc.).
+  const sanitize = makeSanitizer(writing);
   const paper = (() => {
     const { r, g, b } = stockRgb(input.stock);
     return rgb(r, g, b);
   })();
 
+  const titleSize = input.font === "script" ? 26 : 28;
+
   drawCoverPage(doc, {
-    serif,
-    serifItalic,
+    writing,
+    writingItalic,
     sans,
     paper,
+    titleSize,
     recipientName: sanitize(input.recipientName),
     dedication: input.showCount
       ? null
@@ -117,8 +146,8 @@ async function buildCardPdf(input: {
 
   input.notes.forEach((note, i) => {
     drawMessagePages(doc, {
-      serif,
-      serifItalic,
+      writing,
+      writingItalic,
       sans,
       paper,
       body: sanitize(note.body),
@@ -172,26 +201,30 @@ function addDecoratedPage(
 function drawCoverPage(
   doc: PDFDocument,
   input: {
-    serif: PDFFont;
-    serifItalic: PDFFont;
+    writing: PDFFont;
+    writingItalic: PDFFont;
     sans: PDFFont;
     paper: ReturnType<typeof rgb>;
     recipientName: string;
     dedication: string | null;
     messageCount: number | null;
+    titleSize: number;
   },
 ) {
   const page = addDecoratedPage(doc, input.paper);
 
   const titleLines = [
-    { text: "Happy Birthday,", font: input.serif },
-    ...wrapText(input.recipientName, input.serifItalic, 28, TEXT_WIDTH).map(
-      (text) => ({ text, font: input.serifItalic }),
-    ),
+    { text: "Happy Birthday,", font: input.writingItalic },
+    ...wrapText(
+      input.recipientName,
+      input.writingItalic,
+      input.titleSize,
+      TEXT_WIDTH,
+    ).map((text) => ({ text, font: input.writingItalic })),
   ];
 
   const introLines = input.dedication
-    ? wrapText(input.dedication, input.serifItalic, 12, TEXT_WIDTH - 24)
+    ? wrapText(input.dedication, input.writingItalic, 12, TEXT_WIDTH - 24)
     : [];
 
   const countText =
@@ -221,8 +254,13 @@ function drawCoverPage(
   y -= 8 + 28;
 
   for (const line of titleLines) {
-    y -= 28;
-    drawCentered(page, line.text, { font: line.font, size: 28, y, color: INK });
+    y -= input.titleSize;
+    drawCentered(page, line.text, {
+      font: line.font,
+      size: input.titleSize,
+      y,
+      color: INK,
+    });
     y -= 8;
   }
 
@@ -240,7 +278,7 @@ function drawCoverPage(
     for (const line of introLines) {
       y -= 14;
       drawCentered(page, line, {
-        font: input.serifItalic,
+        font: input.writingItalic,
         size: 12,
         y,
         color: INK,
@@ -266,8 +304,8 @@ function drawCoverPage(
 function drawMessagePages(
   doc: PDFDocument,
   input: {
-    serif: PDFFont;
-    serifItalic: PDFFont;
+    writing: PDFFont;
+    writingItalic: PDFFont;
     sans: PDFFont;
     paper: ReturnType<typeof rgb>;
     body: string;
@@ -277,7 +315,7 @@ function drawMessagePages(
     pageTotal: number;
   },
 ) {
-  const lines = wrapText(input.body, input.serif, BODY_SIZE, TEXT_WIDTH);
+  const lines = wrapText(input.body, input.writing, BODY_SIZE, TEXT_WIDTH);
 
   // Split very long messages across several PDF pages.
   const chunks: string[][] = [];
@@ -295,7 +333,7 @@ function drawMessagePages(
         ? `${input.pageNumber} of ${input.pageTotal}, continued`
         : `${input.pageNumber} of ${input.pageTotal}`;
     drawCentered(page, header, {
-      font: input.serifItalic,
+      font: input.sans,
       size: 10,
       y: PAGE_HEIGHT - 56,
       color: INK,
@@ -317,7 +355,7 @@ function drawMessagePages(
         page.drawText(line, {
           x: MARGIN_X,
           y,
-          font: input.serif,
+          font: input.writing,
           size: BODY_SIZE,
           color: INK,
           opacity: 0.9,
@@ -327,15 +365,15 @@ function drawMessagePages(
     }
 
     if (isLastChunk) {
-      const signature = `— ${input.authorName}`;
-      const signatureWidth = input.serifItalic.widthOfTextAtSize(
+      const signature = `- ${input.authorName}`;
+      const signatureWidth = input.writingItalic.widthOfTextAtSize(
         signature,
         12,
       );
       page.drawText(signature, {
         x: PAGE_WIDTH - MARGIN_X - signatureWidth,
         y: 74,
-        font: input.serifItalic,
+        font: input.writingItalic,
         size: 12,
         color: INK,
       });

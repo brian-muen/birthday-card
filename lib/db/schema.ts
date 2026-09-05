@@ -12,6 +12,7 @@ export const cards = pgTable("cards", {
   occasion: text("occasion").notNull(),
   intro: text("intro"),
   stock: text("stock").notNull().default("red"),
+  font: text("font").notNull().default("hand"),
   contributeToken: text("contribute_token").notNull().unique(),
   masterToken: text("master_token").notNull().unique(),
   giftToken: text("gift_token").unique(),

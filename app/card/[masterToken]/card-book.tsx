@@ -9,6 +9,13 @@ import {
   useTransition,
 } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
+import {
+  faceGreetingItalic,
+  faceIsLively,
+  faceVar,
+  parseFace,
+  type FaceId,
+} from "@/lib/face";
 import { stockHex } from "@/lib/stock";
 
 type Note = {
@@ -68,7 +75,12 @@ function inkFor(text: string) {
   return 0.8 + (hashOf(text) % 16) / 100;
 }
 
-function coverTypeSize(name: string) {
+function coverTypeSize(name: string, face: FaceId) {
+  if (face === "script") {
+    if (name.length > 24) return "text-[1.5rem] sm:text-[1.75rem]";
+    if (name.length > 13) return "text-[1.875rem] sm:text-[2.25rem]";
+    return "text-[2.25rem] sm:text-[2.75rem]";
+  }
   if (name.length > 24) return "text-[1.625rem] sm:text-[1.875rem]";
   if (name.length > 13) return "text-[2rem] sm:text-[2.375rem]";
   return "text-[2.375rem] sm:text-[2.875rem]";
@@ -141,6 +153,7 @@ export default function CardBook({
   intro,
   notes,
   stock,
+  font,
 }: {
   masterToken: string;
   canManage: boolean;
@@ -148,7 +161,9 @@ export default function CardBook({
   intro: string | null;
   notes: Note[];
   stock: string;
+  font: string;
 }) {
+  const face = parseFace(font);
   const spread = useSyncExternalStore(
     subscribeToSpread,
     getSpread,
@@ -166,19 +181,21 @@ export default function CardBook({
   // 0 is the closed card. Each step after that turns one more leaf.
   // After the last note, closing lands on the back — not another inside page.
   // From there the closed card flips over (Y-axis) to the front again.
-  const [{ place: rawPlace, moving, touched, shut, flipping }, setPlace] =
+  const [{ place: rawPlace, moving, touched, shut, flipping, closing }, setPlace] =
     useState<{
       place: number;
       moving: number | null;
       touched: boolean;
       shut: "front" | "back";
       flipping: boolean;
+      closing: boolean;
     }>({
       place: 0,
       moving: null,
       touched: false,
       shut: "front",
       flipping: false,
+      closing: false,
     });
 
   const place = Math.min(rawPlace, last);
@@ -198,6 +215,7 @@ export default function CardBook({
           touched: true,
           shut: next === 0 ? "front" : previous.shut,
           flipping: false,
+          closing: false,
         };
       });
     },
@@ -205,14 +223,25 @@ export default function CardBook({
   );
 
   const closeToBack = useCallback(() => {
-    setPlace({
-      place: 0,
+    if (reducedMotion) {
+      setPlace({
+        place: 0,
+        moving: null,
+        touched: true,
+        shut: "back",
+        flipping: false,
+        closing: false,
+      });
+      return;
+    }
+    setPlace((previous) => ({
+      ...previous,
       moving: null,
       touched: true,
-      shut: "back",
       flipping: false,
-    });
-  }, []);
+      closing: true,
+    }));
+  }, [reducedMotion]);
 
   const turnOver = useCallback(() => {
     setPlace((previous) => {
@@ -224,6 +253,7 @@ export default function CardBook({
           touched: true,
           shut: "front",
           flipping: false,
+          closing: false,
         };
       }
       return {
@@ -232,15 +262,31 @@ export default function CardBook({
         moving: null,
         touched: true,
         flipping: true,
+        closing: false,
       };
     });
   }, [reducedMotion]);
 
   useEffect(() => {
+    if (!closing) return;
+    const timeout = window.setTimeout(() => {
+      setPlace({
+        place: 0,
+        moving: null,
+        touched: true,
+        shut: "back",
+        flipping: false,
+        closing: false,
+      });
+    }, 1200);
+    return () => window.clearTimeout(timeout);
+  }, [closing]);
+
+  useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (flipping) {
+      if (flipping || closing) {
         event.preventDefault();
         return;
       }
@@ -257,7 +303,7 @@ export default function CardBook({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [turn, turnOver, closeToBack, showingBack, place, last, notes.length, flipping]);
+  }, [turn, turnOver, closeToBack, showingBack, place, last, notes.length, flipping, closing]);
 
   function settle(event: React.TransitionEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
@@ -276,6 +322,18 @@ export default function CardBook({
     );
   }
 
+  function settleClose(event: React.AnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    setPlace({
+      place: 0,
+      moving: null,
+      touched: true,
+      shut: "back",
+      flipping: false,
+      closing: false,
+    });
+  }
+
   const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
   const rightFace = closed
     ? showingBack
@@ -285,7 +343,9 @@ export default function CardBook({
 
   const announcement = flipping
     ? "Turning the card over"
-    : showingBack
+    : closing
+      ? "Closing the card"
+      : showingBack
       ? "The back of the card"
       : closed
         ? `Birthday card for ${recipientName}, closed`
@@ -301,11 +361,16 @@ export default function CardBook({
         data-spread={spread}
         data-animate={touched}
         data-flipping={flipping}
-        style={{ ["--card-stock" as string]: stockHex(stock) }}
+        data-face={face}
+        style={{
+          ["--card-stock" as string]: stockHex(stock),
+          ["--card-face" as string]: faceVar(face),
+        }}
       >
         <div
           className="card-stage"
           data-closed={closed}
+          data-closing={closing}
           data-shut={showingDeck ? "back" : "front"}
           data-flipping={flipping}
         >
@@ -350,6 +415,7 @@ export default function CardBook({
                   showDedication={!canManage}
                   noteCount={notes.length}
                   showCount={canManage}
+                  font={face}
                 />
               </div>
             </div>
@@ -395,6 +461,7 @@ export default function CardBook({
                     intro={intro}
                     notes={notes}
                     onOpen={index === 0 ? () => turn(1) : undefined}
+                    font={face}
                   />
                   <LeafFace
                     face={leaf.back}
@@ -406,11 +473,33 @@ export default function CardBook({
                     recipientName={recipientName}
                     intro={intro}
                     notes={notes}
+                    font={face}
                   />
                 </div>
               );
             })
           )}
+
+          {closing ? (
+            <div
+              className="card-shutter"
+              data-swing="true"
+              onAnimationEnd={settleClose}
+            >
+              <div
+                className="card-face"
+                data-face="front"
+                data-stock="cover"
+                aria-hidden
+              >
+                <span className="card-crease" data-side="right" aria-hidden />
+                <span className="card-body" />
+              </div>
+              <div className="card-face" data-face="back" aria-hidden>
+                <span className="card-body" />
+              </div>
+            </div>
+          ) : null}
 
           {!closed && !spread && notes.length === 0 ? (
             <div className="card-insert">
@@ -436,7 +525,7 @@ export default function CardBook({
               Turn it over
             </button>
           </div>
-        ) : closed || flipping ? null : (
+        ) : closed || flipping || closing ? null : (
           <div className="flex items-center justify-between gap-6">
             <button
               type="button"
@@ -486,6 +575,7 @@ function LeafFace({
   intro,
   notes,
   onOpen,
+  font,
 }: {
   face: Face;
   side: "left" | "right";
@@ -497,6 +587,7 @@ function LeafFace({
   intro: string | null;
   notes: Note[];
   onOpen?: () => void;
+  font: FaceId;
 }) {
   const towardReader = facing || turning;
   const stock =
@@ -515,6 +606,7 @@ function LeafFace({
         recipientName={recipientName}
         intro={intro}
         notes={notes}
+        font={font}
       />
     </>
   );
@@ -555,6 +647,7 @@ function FaceContents({
   recipientName,
   intro,
   notes,
+  font,
 }: {
   face: Face;
   side: "left" | "right";
@@ -563,6 +656,7 @@ function FaceContents({
   recipientName: string;
   intro: string | null;
   notes: Note[];
+  font: FaceId;
 }) {
   switch (face.kind) {
     case "cover":
@@ -572,6 +666,7 @@ function FaceContents({
           showDedication={!canManage}
           noteCount={notes.length}
           showCount={canManage}
+          font={font}
         />
       );
     case "inside":
@@ -583,6 +678,7 @@ function FaceContents({
           canManage={canManage}
           note={face.note}
           side={side}
+          font={font}
         />
       );
     case "empty":
@@ -595,26 +691,33 @@ function CoverFace({
   showDedication,
   noteCount,
   showCount,
+  font,
 }: {
   recipientName: string;
   showDedication: boolean;
   noteCount: number;
   showCount: boolean;
+  font: FaceId;
 }) {
+  const greetingItalic = faceGreetingItalic(font);
   return (
     <span className="card-body items-center px-7 pt-8 pb-14 text-center sm:px-9 sm:pt-9 sm:pb-16">
       <span className="my-auto flex flex-col items-center">
-        <span className="font-serif text-[1.0625rem] italic text-muted">
+        <span
+          className={`font-card text-[1.0625rem] text-muted ${greetingItalic ? "italic" : ""}`}
+        >
           Happy birthday,
         </span>
         <span
-          className={`mt-2 font-serif leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName)}`}
+          className={`mt-2 font-card leading-[1.02] tracking-[-0.02em] break-words ${coverTypeSize(recipientName, font)}`}
         >
           {recipientName}
         </span>
         <span className="mt-7 h-px w-10 bg-brass/80" />
         {showDedication ? (
-          <span className="mt-8 max-w-[22ch] font-serif text-[0.9375rem] italic leading-[1.55] text-ink/80">
+          <span
+            className={`mt-8 max-w-[22ch] font-card text-[0.9375rem] leading-[1.55] text-ink/80 ${greetingItalic ? "italic" : ""}`}
+          >
             From your brothers and sisters in Christ
           </span>
         ) : null}
@@ -664,11 +767,13 @@ function NoteFace({
   canManage,
   note,
   side,
+  font,
 }: {
   masterToken: string;
   canManage: boolean;
   note: Note;
   side: "left" | "right";
+  font: FaceId;
 }) {
   const pad =
     side === "left"
@@ -679,7 +784,13 @@ function NoteFace({
     <div className={`card-body ${pad}`}>
       <div className="card-scroll flex flex-col" tabIndex={0}>
         <p
-          className="my-auto font-serif text-[1.1875rem] leading-[1.62] whitespace-pre-wrap break-words sm:text-[1.25rem]"
+          className={`my-auto font-card whitespace-pre-wrap break-words ${
+            font === "script"
+              ? "text-[1.5rem] leading-[1.7] sm:text-[1.625rem]"
+              : font === "marker"
+                ? "text-[1.25rem] leading-[1.5] sm:text-[1.375rem]"
+                : "text-[1.1875rem] leading-[1.62] sm:text-[1.25rem]"
+          }`}
           style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}
         >
           {note.body}
@@ -693,7 +804,7 @@ function NoteFace({
           <span />
         )}
         <div className="text-right">
-          <Signature name={note.authorName} />
+          <Signature name={note.authorName} font={font} />
           <p className="mt-2 text-[0.75rem] text-muted">{note.date}</p>
         </div>
       </div>
@@ -701,14 +812,17 @@ function NoteFace({
   );
 }
 
-function Signature({ name }: { name: string }) {
+function Signature({ name, font }: { name: string; font: FaceId }) {
   const hand = handFor(name);
+  const lively = faceIsLively(font);
   return (
     <p
-      className="font-hand leading-none text-ink/90"
+      className="font-card leading-none text-ink/90"
       style={{
-        fontSize: `${hand.size}rem`,
-        transform: `rotate(${hand.rotate}deg) skewX(${hand.skew}deg)`,
+        fontSize: lively ? `${hand.size}rem` : "1.25rem",
+        transform: lively
+          ? `rotate(${hand.rotate}deg) skewX(${hand.skew}deg)`
+          : undefined,
       }}
     >
       {name}
