@@ -1,33 +1,49 @@
 const SLACK_API = "https://slack.com/api";
 
 type SlackOk = { ok: true } & Record<string, unknown>;
-type SlackErr = { ok: false; error: string };
+type SlackErr = {
+  ok: false;
+  error: string;
+  needed?: string;
+  provided?: string;
+};
 
 async function slack<T extends SlackOk>(
   method: string,
-  body: Record<string, unknown>,
+  body: Record<string, unknown> = {},
 ): Promise<T> {
   const token = process.env.SLACK_BOT_TOKEN;
   if (!token) {
     throw new Error("SLACK_BOT_TOKEN is not set.");
   }
 
-  const payloadBody = Object.fromEntries(
-    Object.entries(body).filter(([, value]) => value !== undefined && value !== ""),
-  );
+  const form = new URLSearchParams();
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined || value === "") {
+      continue;
+    }
+    form.set(key, typeof value === "string" ? value : String(value));
+  }
 
   const response = await fetch(`${SLACK_API}/${method}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json; charset=utf-8",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify(payloadBody),
+    body: form.toString(),
   });
 
   const payload = (await response.json()) as T | SlackErr;
   if (!payload.ok) {
-    throw new Error(payload.error || `Slack ${method} failed.`);
+    const extra = [payload.needed && `needed ${payload.needed}`, payload.provided && `had ${payload.provided}`]
+      .filter(Boolean)
+      .join(", ");
+    throw new Error(
+      extra
+        ? `Slack ${method}: ${payload.error} (${extra})`
+        : `Slack ${method}: ${payload.error || "failed"}`,
+    );
   }
   return payload;
 }
@@ -110,7 +126,10 @@ export async function resolveBirthdayPerson(
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
-      if (message !== "users_not_found") {
+      if (
+        !message.includes("users_not_found") &&
+        !message.includes("invalid_arguments")
+      ) {
         throw error;
       }
     }
@@ -178,14 +197,17 @@ export async function messageEveryoneExcept(options: {
 
   await mapPool(targets, 6, async (person) => {
     try {
-      const opened = await slack<SlackOk & { channel: { id: string } }>(
-        "conversations.open",
-        { users: person.id },
-      );
+      const opened = await slack<
+        SlackOk & { channel: string | { id: string } }
+      >("conversations.open", { users: person.id });
+      const channel =
+        typeof opened.channel === "string"
+          ? opened.channel
+          : opened.channel.id;
       await slack("chat.postMessage", {
-        channel: opened.channel.id,
+        channel,
         text: options.text,
-        unfurl_links: false,
+        unfurl_links: "false",
       });
     } catch (error) {
       const label =
