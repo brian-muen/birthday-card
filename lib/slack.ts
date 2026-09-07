@@ -76,6 +76,16 @@ function emailsMatch(left: string, right: string) {
   return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
 
+function memberLabel(person: SlackMember) {
+  return (
+    person.profile?.real_name ||
+    person.real_name ||
+    person.profile?.display_name ||
+    person.name ||
+    person.id
+  );
+}
+
 export async function listHumans(): Promise<SlackMember[]> {
   const people: SlackMember[] = [];
   let cursor: string | undefined;
@@ -179,10 +189,35 @@ export function signingUrl(contributeToken: string) {
   return `${raw.replace(/\/$/, "")}/sign/${contributeToken}`;
 }
 
-export function birthdayNudgeText(recipientName: string, url: string) {
+export function formatBirthdayDate(value: string) {
+  const match = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return "";
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return "";
+  }
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+  });
+}
+
+export function birthdayNudgeText(
+  recipientName: string,
+  url: string,
+  dateLabel: string,
+) {
   return [
-    `We're putting together a birthday card for ${recipientName}.`,
-    `Add a note here — they won't see this message, and they won't see anyone else's until the card is handed over.`,
+    `${dateLabel} is ${recipientName}'s birthday! Here’s the link to a digital card, feel free to write a message. Please fill this out, thank you!`,
     url,
   ].join("\n\n");
 }
@@ -190,12 +225,19 @@ export function birthdayNudgeText(recipientName: string, url: string) {
 export async function messageEveryoneExcept(options: {
   birthday: SlackMember;
   text: string;
-}): Promise<{ sent: number; skippedName: string; failed: string[] }> {
+}): Promise<{
+  sent: number;
+  sentNames: string[];
+  skippedName: string;
+  failed: string[];
+}> {
   const people = await listHumans();
   const targets = people.filter((person) => person.id !== options.birthday.id);
+  const sentNames: string[] = [];
   const failed: string[] = [];
 
   await mapPool(targets, 6, async (person) => {
+    const label = memberLabel(person);
     try {
       const opened = await slack<
         SlackOk & { channel: string | { id: string } }
@@ -209,24 +251,20 @@ export async function messageEveryoneExcept(options: {
         text: options.text,
         unfurl_links: "false",
       });
+      sentNames.push(label);
     } catch (error) {
-      const label =
-        person.profile?.display_name ||
-        person.real_name ||
-        person.name ||
-        person.id;
       failed.push(
         `${label}: ${error instanceof Error ? error.message : "failed"}`,
       );
     }
   });
 
+  sentNames.sort((a, b) => a.localeCompare(b));
+
   return {
-    sent: targets.length - failed.length,
-    skippedName:
-      options.birthday.profile?.real_name ||
-      options.birthday.real_name ||
-      options.birthday.name,
+    sent: sentNames.length,
+    sentNames,
+    skippedName: memberLabel(options.birthday),
     failed,
   };
 }

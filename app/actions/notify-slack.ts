@@ -8,6 +8,7 @@ import { cards } from "@/lib/db/schema";
 import { notifyPasswordAccepted } from "@/lib/notify-password";
 import {
   birthdayNudgeText,
+  formatBirthdayDate,
   messageEveryoneExcept,
   resolveBirthdayPerson,
   signingUrl,
@@ -17,6 +18,7 @@ export async function notifySlack(formData: FormData) {
   const masterToken = String(formData.get("masterToken") ?? "").trim();
   const exclude = String(formData.get("exclude") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const dateLabel = formatBirthdayDate(String(formData.get("birthday") ?? ""));
 
   const fail = (message: string) => {
     const params = new URLSearchParams({ slackError: message });
@@ -34,6 +36,8 @@ export async function notifySlack(formData: FormData) {
 
   if (!card) {
     fail("This card was not found.");
+  } else if (!dateLabel) {
+    fail("Pick the birthday date.");
   } else if (!notifyPasswordAccepted(password)) {
     fail("That password is wrong.");
   } else {
@@ -44,6 +48,7 @@ export async function notifySlack(formData: FormData) {
         text: birthdayNudgeText(
           card.recipientName,
           signingUrl(card.contributeToken),
+          dateLabel,
         ),
       });
 
@@ -51,8 +56,11 @@ export async function notifySlack(formData: FormData) {
         slackSent: String(result.sent),
         slackSkipped: result.skippedName,
       });
+      if (result.sentNames.length > 0) {
+        params.set("slackTo", result.sentNames.join("|"));
+      }
       if (result.failed.length > 0) {
-        params.set("slackFailed", String(result.failed.length));
+        params.set("slackFailed", result.failed.join("|"));
       }
       redirect(`/created/${masterToken}?${params.toString()}`);
     } catch (error) {

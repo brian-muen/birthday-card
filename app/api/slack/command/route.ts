@@ -4,6 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { notifyPasswordAccepted } from "@/lib/notify-password";
 import {
   birthdayNudgeText,
+  formatBirthdayDate,
   messageEveryoneExcept,
   resolveBirthdayPerson,
 } from "@/lib/slack";
@@ -39,13 +40,16 @@ function parseCommandText(text: string) {
     const rest = [...parts.slice(0, exceptAt), ...parts.slice(exceptAt + 2)];
     const url = rest.find((part) => part.startsWith("http"));
     const leftover = rest.filter((part) => part !== url);
-    const password = leftover.at(-1) || "";
-    const name = leftover.slice(0, -1).join(" ") || "them";
+    const dateRaw = leftover.find((part) => formatBirthdayDate(part));
+    const withoutDate = leftover.filter((part) => part !== dateRaw);
+    const password = withoutDate.at(-1) || "";
+    const name = withoutDate.slice(0, -1).join(" ") || "them";
     return {
       exclude: mention?.[1] || exclude,
       url,
       name,
       password,
+      dateRaw: dateRaw || "",
     };
   }
 
@@ -65,7 +69,8 @@ function parseCommandText(text: string) {
     exclude: mention?.[1] || email || "",
     url,
     name: "them",
-    password: leftover.at(-1) || "",
+    password: leftover.filter((part) => !formatBirthdayDate(part)).at(-1) || "",
+    dateRaw: leftover.find((part) => formatBirthdayDate(part)) || "",
   };
 }
 
@@ -78,10 +83,11 @@ export async function POST(request: Request) {
   const params = new URLSearchParams(rawBody);
   const parsed = parseCommandText(params.get("text") ?? "");
 
-  if (!parsed.exclude || !parsed.url || !parsed.password) {
+  const dateLabel = formatBirthdayDate(parsed.dateRaw);
+  if (!parsed.exclude || !parsed.url || !parsed.password || !dateLabel) {
     return NextResponse.json({
       response_type: "ephemeral",
-      text: "Try `/card except @birthday https://manna-birthday-card.vercel.app/sign/… PASSWORD`",
+      text: "Try `/card except @birthday 2026-09-15 https://manna-birthday-card.vercel.app/sign/… PASSWORD`",
     });
   }
 
@@ -96,15 +102,17 @@ export async function POST(request: Request) {
     const birthday = await resolveBirthdayPerson(parsed.exclude);
     const result = await messageEveryoneExcept({
       birthday,
-      text: birthdayNudgeText(parsed.name, parsed.url),
+      text: birthdayNudgeText(parsed.name, parsed.url, dateLabel),
     });
+    const named = result.sentNames.length
+      ? `\n${result.sentNames.map((name) => `• ${name}`).join("\n")}`
+      : "";
+    const failed = result.failed.length
+      ? `\nDid not go through:\n${result.failed.map((name) => `• ${name}`).join("\n")}`
+      : "";
     return NextResponse.json({
       response_type: "ephemeral",
-      text: `Messaged ${result.sent} ${result.sent === 1 ? "person" : "people"}. Skipped ${result.skippedName}.${
-        result.failed.length > 0
-          ? ` ${result.failed.length} did not go through.`
-          : ""
-      }`,
+      text: `Messaged ${result.sent} ${result.sent === 1 ? "person" : "people"}. Skipped ${result.skippedName}.${named}${failed}`,
     });
   } catch (error) {
     return NextResponse.json({

@@ -16,6 +16,7 @@ export default async function CardCreated({
   searchParams: Promise<{
     slackSent?: string;
     slackSkipped?: string;
+    slackTo?: string;
     slackFailed?: string;
     slackError?: string;
   }>;
@@ -74,17 +75,28 @@ export default async function CardCreated({
           </p>
         ) : null}
         {slack.slackSent ? (
-          <p
+          <div
             role="status"
             className="mt-5 max-w-[56ch] border-l-2 border-brass pl-4 text-[0.9375rem] leading-relaxed"
           >
-            Messaged {slack.slackSent}{" "}
-            {slack.slackSent === "1" ? "person" : "people"}
-            {slack.slackSkipped ? `. Skipped ${slack.slackSkipped}` : ""}.
-            {slack.slackFailed
-              ? ` ${slack.slackFailed} did not go through.`
-              : ""}
-          </p>
+            <p>
+              Messaged {slack.slackSent}{" "}
+              {slack.slackSent === "1" ? "person" : "people"}
+              {slack.slackSkipped ? `. Skipped ${slack.slackSkipped}` : ""}.
+            </p>
+            {slack.slackTo ? (
+              <ul className="mt-3 list-disc pl-5">
+                {slack.slackTo.split("|").map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            ) : null}
+            {slack.slackFailed ? (
+              <p className="mt-3">
+                Did not go through: {slack.slackFailed.split("|").join(", ")}
+              </p>
+            ) : null}
+          </div>
         ) : null}
         <form action={notifySlack} className="mt-6 max-w-md">
           <input type="hidden" name="masterToken" value={masterToken} />
@@ -102,6 +114,19 @@ export default async function CardCreated({
             autoComplete="off"
             spellCheck={false}
             placeholder="name@email.com or U01234567"
+            className="field mt-2.5"
+          />
+          <label
+            htmlFor="birthday"
+            className="mt-6 block text-[0.9375rem] font-medium"
+          >
+            Birthday
+          </label>
+          <input
+            id="birthday"
+            name="birthday"
+            type="date"
+            required
             className="field mt-2.5"
           />
           <label
