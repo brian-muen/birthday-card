@@ -86,7 +86,11 @@ type PdfNote = { authorName: string; body: string; date: string; pen: PenId };
 
 async function embedPenFont(doc: PDFDocument, pen: PenId) {
   const dir = path.join(process.cwd(), "lib/fonts");
-  return doc.embedFont(await readFile(path.join(dir, penFile(pen))));
+  // Subsetting these hand fonts through pdf-lib drops kerning and
+  // remaps glyphs, so words come out as "Happ y" / "Birt h day".
+  return doc.embedFont(await readFile(path.join(dir, penFile(pen))), {
+    subset: false,
+  });
 }
 
 async function buildCardPdf(input: {
@@ -143,7 +147,7 @@ async function buildCardPdf(input: {
       pageNumber: i + 1,
       pageTotal: input.notes.length,
       bodySize,
-      bodyLineHeight: Math.round(bodySize * 1.55),
+      bodyLineHeight: Math.round(bodySize * 1.75),
     });
   });
 
@@ -250,7 +254,7 @@ function drawCoverPage(
       y,
       color: INK,
     });
-    y -= 8;
+    y -= 16;
   }
 
   y -= 24;
@@ -416,7 +420,7 @@ function wrapText(
     let current = "";
     for (const word of words) {
       const candidate = current ? `${current} ${word}` : word;
-      if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      if (font.widthOfTextAtSize(candidate, size) <= maxWidth * 0.96) {
         current = candidate;
         continue;
       }
