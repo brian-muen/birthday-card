@@ -1,0 +1,26 @@
+display_information:
+  name: Birthday card
+  description: DMs everyone except the birthday person with the signing link.
+  background_color: "#1b2440"
+features:
+  bot_user:
+    display_name: Birthday card
+    always_online: true
+  slash_commands:
+    - command: /card
+      url: https://manna-birthday-card.vercel.app/api/slack/command
+      description: DM everyone except the birthday person
+      usage_hint: except @name https://…/sign/… PASSWORD
+      should_escape: true
+oauth_config:
+  scopes:
+    bot:
+      - chat:write
+      - im:write
+      - users:read
+      - users:read.email
+      - commands
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

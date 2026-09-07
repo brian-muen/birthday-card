@@ -40,6 +40,24 @@ const card = await db.query.cards.findFirst({
 });
 ```
 
+## Slack DMs
+
+After you create a card, the created page can DM everyone in the Slack
+workspace except the birthday person, with the signing link.
+
+1. Create an app from `slack-app-manifest.yaml` at [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**.
+2. Install it to the workspace.
+3. Set `SLACK_BOT_TOKEN` (`xoxb-…`), `SLACK_SIGNING_SECRET`, and
+   `SLACK_NOTIFY_PASSWORD` in `.env.local` and on Vercel.
+4. Optional: `APP_URL` if the signing links should use a host other than `https://manna-birthday-card.vercel.app`.
+
+Sending DMs requires that password (created page field, or the last word of
+`/card`). Sign and gift links stay public.
+
+From Slack:
+
+`/card except @name https://manna-birthday-card.vercel.app/sign/… PASSWORD`
+
 ## Development
 
 ```bash
