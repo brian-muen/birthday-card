@@ -32,7 +32,7 @@ export default async function SignPage({
       </p>
 
       {card.intro && (
-        <blockquote className="mt-10 border-l border-rule pl-5 font-serif text-xl leading-[1.6] whitespace-pre-wrap">
+        <blockquote className="mt-10 border-l border-rule pl-5 font-hand text-xl leading-[1.6] whitespace-pre-wrap">
           {card.intro}
         </blockquote>
       )}

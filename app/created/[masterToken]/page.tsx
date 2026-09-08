@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 
+import { notifySlack } from "@/app/actions/notify-slack";
 import { CopyLink } from "@/components/copy-button";
 import { ensureGiftToken } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
@@ -9,10 +10,19 @@ import { cards } from "@/lib/db/schema";
 
 export default async function CardCreated({
   params,
+  searchParams,
 }: {
   params: Promise<{ masterToken: string }>;
+  searchParams: Promise<{
+    slackSent?: string;
+    slackSkipped?: string;
+    slackTo?: string;
+    slackFailed?: string;
+    slackError?: string;
+  }>;
 }) {
   const { masterToken } = await params;
+  const slack = await searchParams;
 
   const db = await getDb();
   const found = await db.query.cards.findFirst({
@@ -35,6 +45,12 @@ export default async function CardCreated({
         you keep.
       </p>
 
+      <ol className="mt-10 grid gap-3 border-y border-rule py-5 text-sm text-muted sm:grid-cols-3">
+        <li><span className="font-serif text-brass">01</span> Share the signing link</li>
+        <li><span className="font-serif text-brass">02</span> Watch the notes arrive</li>
+        <li><span className="font-serif text-brass">03</span> Send the card when ready</li>
+      </ol>
+
       <section className="mt-14">
         <h2 className="font-serif text-[1.5rem] leading-tight">
           Share this with everyone signing
@@ -47,6 +63,103 @@ export default async function CardCreated({
           <CopyLink path={`/sign/${card.contributeToken}`} />
         </div>
       </section>
+
+      <details className="mt-20 border-t border-rule pt-8">
+        <summary className="cursor-pointer font-serif text-[1.5rem] leading-tight underline decoration-rule decoration-1 underline-offset-4">Invite people in Slack</summary>
+      <section className="mt-8">
+        <h2 className="font-serif text-[1.5rem] leading-tight">
+          Text everyone except {card.recipientName}
+        </h2>
+        <p className="mt-2 max-w-[56ch] leading-relaxed text-muted">
+          Slack DMs the signing link to the workspace. {card.recipientName}{" "}
+          is skipped, so the card stays a surprise.
+        </p>
+        {slack.slackError ? (
+          <p
+            role="alert"
+            className="mt-5 max-w-[56ch] border-l-2 border-brass pl-4 text-[0.9375rem] leading-relaxed"
+          >
+            {slack.slackError}
+          </p>
+        ) : null}
+        {slack.slackSent ? (
+          <div
+            role="status"
+            className="mt-5 max-w-[56ch] border-l-2 border-brass pl-4 text-[0.9375rem] leading-relaxed"
+          >
+            <p>
+              Messaged {slack.slackSent}{" "}
+              {slack.slackSent === "1" ? "person" : "people"}
+              {slack.slackSkipped ? `. Skipped ${slack.slackSkipped}` : ""}.
+            </p>
+            {slack.slackTo ? (
+              <ul className="mt-3 list-disc pl-5">
+                {slack.slackTo.split("|").map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            ) : null}
+            {slack.slackFailed ? (
+              <p className="mt-3">
+                Did not go through: {slack.slackFailed.split("|").join(", ")}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        <form action={notifySlack} className="mt-6 max-w-md">
+          <input type="hidden" name="masterToken" value={masterToken} />
+          <label
+            htmlFor="exclude"
+            className="block text-[0.9375rem] font-medium"
+          >
+            {card.recipientName}&rsquo;s Slack email or member ID
+          </label>
+          <input
+            id="exclude"
+            name="exclude"
+            type="text"
+            required
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="name@email.com or U01234567"
+            className="field mt-2.5"
+          />
+          <label
+            htmlFor="birthday"
+            className="mt-6 block text-[0.9375rem] font-medium"
+          >
+            Birthday
+          </label>
+          <input
+            id="birthday"
+            name="birthday"
+            type="date"
+            required
+            className="field mt-2.5"
+          />
+          <label
+            htmlFor="password"
+            className="mt-6 block text-[0.9375rem] font-medium"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            className="field mt-2.5"
+          />
+          <button
+            type="submit"
+            className="mt-6 bg-ink px-7 py-3 text-[0.9375rem] font-medium text-paper transition-colors hover:bg-[#121a31]"
+          >
+            Send the DMs
+          </button>
+        </form>
+      </section>
+      </details>
 
       <section className="mt-20">
         <h2 className="font-serif text-[1.5rem] leading-tight">
