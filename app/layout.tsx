@@ -10,9 +10,9 @@ import {
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
-import "./paper.css";
 
 // Garamond sets site headlines. Karla carries the interface.
+// paper.css loads after card-motion.css from globals.css.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
@@ -24,7 +24,7 @@ const karla = Karla({
   subsets: ["latin"],
 });
 
-// Cover stays Caveat. Signers pick a pen; each note uses that hand.
+// Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
