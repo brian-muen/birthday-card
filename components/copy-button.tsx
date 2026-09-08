@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-
-const subscribeToNothing = () => () => {};
-const getOrigin = () => window.location.origin;
-const getServerOrigin = () => "";
+import { useEffect, useState } from "react";
 
 type CopyState = "idle" | "copied" | "failed";
 
 export function CopyButton({
   value,
   label = "Copy link",
+  onFailed,
 }: {
   value: string;
   label?: string;
+  onFailed?: () => void;
 }) {
   const [state, setState] = useState<CopyState>("idle");
 
@@ -29,6 +27,7 @@ export function CopyButton({
       setState("copied");
     } catch {
       setState("failed");
+      onFailed?.();
     }
   }
 
@@ -46,32 +45,8 @@ export function CopyButton({
       {state === "copied"
         ? "Link copied"
         : state === "failed"
-          ? "Press ⌘C to copy"
+          ? "Couldn't copy"
           : label}
     </button>
-  );
-}
-
-/**
- * Shows the full shareable URL (origin resolved in the browser) on a ruled
- * line with its copy action. Renders the path alone until mounted so
- * hydration stays stable.
- */
-export function CopyLink({ path }: { path: string }) {
-  const origin = useSyncExternalStore(
-    subscribeToNothing,
-    getOrigin,
-    getServerOrigin,
-  );
-
-  const url = `${origin}${path}`;
-
-  return (
-    <div className="flex flex-col gap-3 border-b border-rule pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <code className="min-w-0 overflow-x-auto font-mono text-[0.8125rem] text-muted">
-        {url}
-      </code>
-      <CopyButton value={url} />
-    </div>
   );
 }
