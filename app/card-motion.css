@@ -1,7 +1,3 @@
-   it is still a card — a note on the left, a note on the right — and further
-   leaves turn to the next pair. No folio, no book block, no title-page close.
-   --------------------------------------------------------------------------- */
-
 .card-frame {
   --card-stock: #e0b3a8;
   --card-turn: 520ms;

@@ -95,6 +95,4 @@ select:focus-visible {
 }
 
 @import "./card-motion.css";
-
-/* ---------------------------------------------------------------------------
-   A folded greeting card.
+@import "./paper.css";

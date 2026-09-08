@@ -12,6 +12,7 @@ import {
 import { deleteMessage } from "@/app/actions/delete-message";
 import { penIsLively, penNoteClass, penVar, type PenId } from "@/lib/pen";
 import { stockHex } from "@/lib/stock";
+import MessageReader from "@/components/message-reader";
 
 type Note = {
   id: number;
@@ -653,12 +654,9 @@ function NoteFace({
       style={{ ["--card-face" as string]: penVar(note.pen) }}
     >
       <div className="card-scroll flex flex-col" tabIndex={0}>
-        <p
-          className={`my-auto font-card whitespace-pre-wrap break-words ${penNoteClass(note.pen)}`}
-          style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}
-        >
-          {note.body}
-        </p>
+        <div className="my-auto" style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}>
+          <MessageReader body={note.body} authorName={note.authorName} pen={note.pen} />
+        </div>
       </div>
 
       <div className="mt-8 flex items-end justify-between gap-6">
@@ -668,7 +666,7 @@ function NoteFace({
           <span />
         )}
         <div className="text-right">
-          <Signature name={note.authorName} pen={note.pen} />
+          <span aria-hidden="true" className="hidden"><Signature name={note.authorName} pen={note.pen} /></span>
           <p className="mt-2 text-[0.75rem] text-muted">{note.date}</p>
         </div>
       </div>

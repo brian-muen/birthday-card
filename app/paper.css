@@ -48,7 +48,7 @@
 .preview-card-star { position:absolute; bottom:1.5rem; color:var(--brass); font-size:1.2rem; }
 .preview-card-back { transform:rotateY(180deg); color:var(--muted); font-family:var(--font-garamond); font-size:1.1rem; font-style:italic; }
 .preview-mobile-wrap { display:none; }
-.preview-desktop-wrap { position:absolute; top:-11rem; right:-28rem; }
+.preview-desktop-wrap { position:absolute; top:-24rem; right:-30rem; z-index:0; width:22rem; }
 .preview-desktop-wrap .paper-preview { margin:0; }
 .paper-process { display:grid; grid-template-columns:repeat(3,1fr); gap:2rem; border-top:1px solid var(--rule); padding-top:1.5rem; }
 .paper-process > div { max-width:18rem; }
