@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { createCard } from "@/app/actions/create-card";
 import CardPreview from "@/components/card-preview";
 import CoverArt from "@/components/cover-art";
@@ -95,21 +96,32 @@ export default function CreateCardForm({
           <textarea
             id="intro"
             name="intro"
-            rows={3}
+            rows={1}
+            onChange={(event) => {
+              event.currentTarget.style.height = "auto";
+              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
+            }}
             maxLength={500}
             className="field"
             placeholder="A little context, if you like"
           />
           <p className="field-hint">They&apos;ll read this before they write.</p>
         </div>
-        <button type="submit" className="create-button">
-          Create the card
-        </button>
+        <CreateButton />
         <p className="privacy-note">
           Messages are private to the organizer and recipient. Other
           contributors can&apos;t read them.
         </p>
       </form>
     </div>
+  );
+}
+
+function CreateButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} aria-busy={pending} className="ui-button ui-button-primary create-button">
+      {pending ? "Creating your card…" : "Create the card"}
+    </button>
   );
 }

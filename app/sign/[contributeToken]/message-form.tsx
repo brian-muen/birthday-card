@@ -18,7 +18,7 @@ import { stockHex } from "@/lib/stock";
 const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
 const COUNTER_THRESHOLD = MAX_BODY_LENGTH * 0.75;
-const LINER = "var(--paper-liner, #fffdf8)";
+const LINER = "var(--paper-liner, #f0e4cf)";
 const WRITING_INK = "var(--ink-pen, #2a241c)";
 const GRAIN =
   "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='fiber'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23fiber)'/></svg>\")";
@@ -251,7 +251,7 @@ export default function MessageForm({
         <button
           type="button"
           onClick={writeAnother}
-          className="mt-6 text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+          className="ui-button mt-6"
         >
           Write another message
         </button>
@@ -392,7 +392,7 @@ export default function MessageForm({
           <p className="text-[0.8125rem] text-muted">
             How your note will look on the card
           </p>
-          <PaperSheet stock={stock} className="mt-3 px-6 py-6 pl-8 sm:px-7">
+          <PaperSheet stock={stock} className="note-preview mt-3 px-6 py-6 pl-8 sm:px-7">
             <div
               style={{
                 ["--card-face" as string]: penVar(pen),
@@ -429,7 +429,7 @@ export default function MessageForm({
         <button
           type="submit"
           disabled={pending}
-          className="bg-ink px-7 py-3 text-[0.9375rem] font-medium text-paper transition-colors hover:bg-[#121a31] disabled:cursor-not-allowed disabled:bg-muted"
+          className="ui-button ui-button-primary"
         >
           {pending ? "Adding your message…" : "Add my message"}
         </button>

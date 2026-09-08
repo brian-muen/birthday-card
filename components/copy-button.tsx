@@ -36,11 +36,8 @@ export function CopyButton({
       type="button"
       onClick={copy}
       aria-live="polite"
-      className={`shrink-0 border px-4 py-2 text-sm font-medium transition-colors ${
-        state === "copied"
-          ? "border-brass text-brass"
-          : "border-ink/25 hover:border-ink"
-      }`}
+      className="ui-button shrink-0"
+      data-copied={state === "copied"}
     >
       {state === "copied"
         ? "Link copied"

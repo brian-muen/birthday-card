@@ -21,7 +21,7 @@ import { DESIGN_ART, parseDesign } from "@/lib/design";
 
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
 const INK_PEN = rgb(0.165, 0.137, 0.11); // --ink-pen #2a231c
-const LINER = rgb(1, 253 / 255, 248 / 255); // --paper-liner #fffdf8
+const LINER = rgb(240 / 255, 228 / 255, 207 / 255); // --paper-liner #f0e4cf
 
 const PAGE_WIDTH = 420;
 const PAGE_HEIGHT = 595;

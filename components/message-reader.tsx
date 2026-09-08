@@ -1,64 +1,74 @@
+"use client";
+
+import { useLayoutEffect, useRef, useState } from "react";
 import { penNoteClass, penSignatureClass, type PenId } from "@/lib/pen";
+import { paginateNote } from "@/lib/paginate-note";
 
-const LONG_MESSAGE_LENGTH = 520;
-
-function splitNote(body: string, limit: number) {
-  if (body.length <= limit) {
-    return { opening: body, rest: "" };
-  }
-
-  const window = body.slice(0, limit);
-  const breakAt = Math.max(
-    window.lastIndexOf("\n"),
-    window.lastIndexOf(" "),
-    window.lastIndexOf("\u00a0"),
-  );
-  const index = breakAt >= Math.floor(limit * 0.55) ? breakAt : limit;
-  const opening = body.slice(0, index).trimEnd();
-  const rest = body.slice(index).trimStart();
-  return rest ? { opening, rest } : { opening: body, rest: "" };
-}
-
-/**
- * A small, motion-independent reading surface for handwritten notes.
- * Long notes keep the written opening on the card; native details discloses the rest.
- */
-export default function MessageReader({
-  body,
-  authorName,
-  pen,
-  expandAfter = LONG_MESSAGE_LENGTH,
-}: {
+/** Page at the actual font and available space; never shrink the handwriting. */
+export default function MessageReader({ body, authorName, pen }: {
   body: string;
   authorName: string;
   pen: PenId;
-  expandAfter?: number;
 }) {
-  const { opening, rest } = splitNote(body, expandAfter);
-  const noteClass = `whitespace-pre-wrap font-card ${penNoteClass(pen)}`;
+  const areaRef = useRef<HTMLDivElement>(null);
+  const probeRef = useRef<HTMLParagraphElement>(null);
+  const [layout, setLayout] = useState({ body, pen, pages: [body] });
+  const [position, setPosition] = useState({ body, pen, index: 0 });
+  const pages = layout.body === body && layout.pen === pen ? layout.pages : [body];
+  const index = position.body === body && position.pen === pen
+    ? Math.min(position.index, pages.length - 1) : 0;
+  const noteClass = `note-copy whitespace-pre-wrap font-card ${penNoteClass(pen)}`;
+
+  useLayoutEffect(() => {
+    const area = areaRef.current;
+    const probe = probeRef.current;
+    if (!area || !probe) return;
+    let cancelled = false;
+    function measure() {
+      if (cancelled || !area || !probe || !area.clientHeight) return;
+      probe.style.width = `${area.clientWidth}px`;
+      const next = paginateNote(body, (text) => {
+        probe.textContent = text;
+        return probe.getBoundingClientRect().height <= area.clientHeight - 4;
+      });
+      setLayout((previous) => previous.body === body && previous.pen === pen &&
+        JSON.stringify(previous.pages) === JSON.stringify(next)
+        ? previous : { body, pen, pages: next });
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(area);
+    void document.fonts.ready.then(measure);
+    document.fonts.addEventListener("loadingdone", measure);
+    measure();
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+      document.fonts.removeEventListener("loadingdone", measure);
+    };
+  }, [body, pen, authorName]);
 
   return (
-    <div className="has-[details[open]]:[&_.note-ellipsis]:hidden">
-      <p className={noteClass}>
-        {opening}
-        {rest ? (
-          <span className="note-ellipsis" aria-hidden="true">
-            …
-          </span>
+    <div className="note-reader">
+      <div ref={areaRef} className="note-page">
+        <p className={noteClass}>{pages[index]}</p>
+        <p ref={probeRef} aria-hidden="true" className={`note-probe ${noteClass}`} />
+      </div>
+      <div className="note-signature" style={{ visibility: index === pages.length - 1 ? "visible" : "hidden" }}>
+        <p className={`text-right font-card ${penSignatureClass(pen)}`}>{authorName}</p>
+      </div>
+      <div className="note-pagination">
+        {pages.length > 1 ? (
+          <>
+            <button type="button" className="ui-button" disabled={index === 0}
+              aria-label={`Previous page of ${authorName}'s note`}
+              onClick={() => setPosition({ body, pen, index: index - 1 })}>Back</button>
+            <span role="status" aria-live="polite">Note page {index + 1} of {pages.length}</span>
+            <button type="button" className="ui-button" disabled={index === pages.length - 1}
+              aria-label={`Next page of ${authorName}'s note`}
+              onClick={() => setPosition({ body, pen, index: index + 1 })}>Next</button>
+          </>
         ) : null}
-      </p>
-      {rest ? (
-        <details className="group mt-3">
-          <summary className="cursor-pointer list-none text-[0.8125rem] font-medium text-muted underline decoration-rule decoration-2 underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink [&::marker]:content-none [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">Continue this note</span>
-            <span className="hidden group-open:inline">Show less of this note</span>
-          </summary>
-          <p className={`mt-3 ${noteClass}`}>{rest}</p>
-        </details>
-      ) : null}
-      <p className={`mt-6 text-right font-card ${penSignatureClass(pen)}`}>
-        {authorName}
-      </p>
+      </div>
     </div>
   );
 }

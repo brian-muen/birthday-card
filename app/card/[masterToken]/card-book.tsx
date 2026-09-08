@@ -679,8 +679,8 @@ function NoteFace({
       className={`card-body ${pad}`}
       style={{ ["--card-face" as string]: penVar(note.pen) }}
     >
-      <div className="card-scroll flex flex-col" tabIndex={0}>
-        <div className="my-auto" style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}>
+      <div className="min-h-0 flex-1">
+        <div className="h-full" style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}>
           <MessageReader body={note.body} authorName={note.authorName} pen={note.pen} />
         </div>
       </div>
