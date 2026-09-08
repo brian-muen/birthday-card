@@ -45,6 +45,12 @@ export default async function CardCreated({
         you keep.
       </p>
 
+      <ol className="mt-10 grid gap-3 border-y border-rule py-5 text-sm text-muted sm:grid-cols-3">
+        <li><span className="font-serif text-brass">01</span> Share the signing link</li>
+        <li><span className="font-serif text-brass">02</span> Watch the notes arrive</li>
+        <li><span className="font-serif text-brass">03</span> Send the card when ready</li>
+      </ol>
+
       <section className="mt-14">
         <h2 className="font-serif text-[1.5rem] leading-tight">
           Share this with everyone signing
@@ -58,7 +64,9 @@ export default async function CardCreated({
         </div>
       </section>
 
-      <section className="mt-20">
+      <details className="mt-20 border-t border-rule pt-8">
+        <summary className="cursor-pointer font-serif text-[1.5rem] leading-tight underline decoration-rule decoration-1 underline-offset-4">Invite people in Slack</summary>
+      <section className="mt-8">
         <h2 className="font-serif text-[1.5rem] leading-tight">
           Text everyone except {card.recipientName}
         </h2>
@@ -151,6 +159,7 @@ export default async function CardCreated({
           </button>
         </form>
       </section>
+      </details>
 
       <section className="mt-20">
         <h2 className="font-serif text-[1.5rem] leading-tight">

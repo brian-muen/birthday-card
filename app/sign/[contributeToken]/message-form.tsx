@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
 import { PenIcon } from "@/components/pen-icon";
 import {
@@ -19,6 +19,10 @@ const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
 // The counter is noise until the limit is actually in reach.
 const COUNTER_THRESHOLD = MAX_BODY_LENGTH * 0.75;
+type Draft = { authorName: string; body: string; pen: PenId };
+function draftKey(contributeToken: string) {
+  return `birthday-card:draft:${contributeToken}`;
+}
 
 // The sheet grows as the message does, so nobody writes into a scrollbar.
 function fitToContent(element: HTMLTextAreaElement) {
@@ -42,6 +46,47 @@ export default function MessageForm({
   const [sentBy, setSentBy] = useState<string | null>(null);
   const [sentPen, setSentPen] = useState<PenId>(DEFAULT_PEN);
   const [pending, startTransition] = useTransition();
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const successRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    const restore = window.setTimeout(() => {
+      try {
+        const saved = window.localStorage.getItem(draftKey(contributeToken));
+        if (saved) {
+          const draft = JSON.parse(saved) as Partial<Draft>;
+          if (typeof draft.authorName === "string") setAuthorName(draft.authorName);
+          if (typeof draft.body === "string") setBody(draft.body);
+          if (typeof draft.pen === "string") setPen(parsePen(draft.pen));
+        }
+      } catch {
+        // Storage can be unavailable; the form still works.
+      }
+      setDraftLoaded(true);
+    }, 0);
+    return () => window.clearTimeout(restore);
+  }, [contributeToken]);
+
+  useEffect(() => {
+    if (!draftLoaded || sentBy) return;
+    try {
+      window.localStorage.setItem(draftKey(contributeToken), JSON.stringify({ authorName, body, pen }));
+    } catch { /* storage is optional */ }
+  }, [authorName, body, contributeToken, draftLoaded, pen, sentBy]);
+
+  useEffect(() => {
+    if (bodyRef.current) fitToContent(bodyRef.current);
+  }, [body]);
+
+  useEffect(() => {
+    if (sentBy) successRef.current?.focus();
+  }, [sentBy]);
+
+  function focusField(field: "name" | "body") {
+    (field === "name" ? nameRef : bodyRef).current?.focus();
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,10 +97,12 @@ export default function MessageForm({
 
     if (!name) {
       setError("Sign your name at the bottom so they know who wrote it.");
+      focusField("name");
       return;
     }
     if (!message) {
       setError("Write a message before adding it to the card.");
+      focusField("body");
       return;
     }
     if (message.length > MAX_BODY_LENGTH) {
@@ -81,13 +128,14 @@ export default function MessageForm({
       setSentPen(chosen);
       setAuthorName("");
       setBody("");
+      try { window.localStorage.removeItem(draftKey(contributeToken)); } catch { /* optional */ }
     });
   }
 
   if (sentBy) {
     return (
       <div className="mt-12 border-t border-rule pt-10">
-        <h2 className="font-serif text-[1.75rem] leading-tight">
+        <h2 ref={successRef} tabIndex={-1} className="font-serif text-[1.75rem] leading-tight outline-none">
           Message added.
         </h2>
         <p className="mt-3 max-w-[52ch] leading-relaxed text-muted">
@@ -96,7 +144,7 @@ export default function MessageForm({
             {sentBy}
           </span>
           . Nobody
-          else signing the card can read it.
+          else signing the card can read it. Only {recipientName} and the card organizer can read it; other contributors cannot see private notes.
         </p>
         <button
           type="button"
@@ -138,9 +186,10 @@ export default function MessageForm({
 
       {/* The page they're writing: message above, signature on the line. */}
       <div
-        className="paper-lift mt-8 border border-rule px-6 py-7 sm:px-9 sm:py-9"
+        className="paper-surface paper-lift mt-8 border border-rule px-6 py-7 sm:px-9 sm:py-9"
         style={{
-          backgroundColor: stockHex(stock),
+          backgroundColor: "var(--paper-liner, #fffdf8)",
+          ["--card-stock" as string]: stockHex(stock),
           ["--card-face" as string]: penVar(pen),
         }}
       >
@@ -148,6 +197,7 @@ export default function MessageForm({
           Your message for {recipientName}
         </label>
         <textarea
+          ref={bodyRef}
           id="body"
           name="body"
           required
@@ -175,6 +225,7 @@ export default function MessageForm({
               Your name
             </label>
             <input
+              ref={nameRef}
               id="authorName"
               name="authorName"
               type="text"
@@ -210,10 +261,22 @@ export default function MessageForm({
         >
           {pending ? "Adding your message…" : "Add my message"}
         </button>
-        <p className="text-sm leading-relaxed text-muted">
-          Only {recipientName} sees this, on their birthday.
+        <p className="max-w-[38ch] text-sm leading-relaxed text-muted">
+          The recipient and organizer can read this note. It will be ready as soon as the card is shared.
         </p>
       </div>
+
+      {(body.trim() || authorName.trim()) && (
+        <aside aria-label="Preview of your note" className="paper-surface mt-10 border border-rule bg-[var(--paper-liner,#fffdf8)] px-6 py-6 sm:px-9">
+          <p className="text-sm font-medium text-muted">Your note preview</p>
+          <p className={`mt-4 whitespace-pre-wrap text-xl leading-[1.6] text-ink font-card ${penBodyClass(pen)}`}>
+            {body || "Your message will appear here."}
+          </p>
+          <p className={`mt-5 text-right text-xl text-ink font-card ${penClass(pen)}`}>
+            {authorName || "Your name"}
+          </p>
+        </aside>
+      )}
     </form>
   );
 }
