@@ -16,4 +16,8 @@ Four feature branches target `codex/card-experience`, based on the existing `fro
 
 ## Verification results
 
-To be filled after integration. Screenshots and browser observations must be from the integrated worktree, not assumed from independent branch checks.
+- `npm run lint` passes.
+- `npx next build --webpack` passes with TypeScript and static generation.
+- Integrated browser fixture shows the empty cover, seven-note spread, page progress, queued rapid next actions, and the live homepage preview updating from the selected paper and recipient name.
+- The homepage preview was repositioned after visual review so it sits in the right column without covering the form.
+- Turbopack cannot build this symlinked worktree because Next 16 rejects a `node_modules` symlink outside the project root; the webpack build is the verified production build for this worktree.
