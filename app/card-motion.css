@@ -169,8 +169,6 @@
 }
 
 .card-stage[data-closing="true"] .card-leaf:not([data-cover="true"]) {
-  transition: none;
-  visibility: hidden;
   pointer-events: none;
 }
 
@@ -182,6 +180,8 @@
   overflow: hidden;
   border: 0;
   isolation: isolate;
+  -webkit-transform-style: flat;
+  transform-style: flat;
   background-color: var(--card-stock);
   color: inherit;
   font: inherit;
@@ -214,6 +214,18 @@
 
 .card-face[data-face="back"] {
   transform: rotateY(180deg);
+}
+
+.card-face,
+.card-face * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.card-stage:has(.card-leaf[data-moving="true"]) .card-face[data-photo="true"] .card-light,
+.card-stage[data-closing="true"] .card-face[data-photo="true"] .card-light {
+  animation: none;
+  opacity: 0;
 }
 
 .card-face[data-stock="cover"] {

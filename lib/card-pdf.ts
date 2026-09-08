@@ -21,7 +21,7 @@ import { DESIGN_ART, parseDesign } from "@/lib/design";
 
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
 const INK_PEN = rgb(0.165, 0.137, 0.11); // --ink-pen #2a231c
-const LINER = rgb(240 / 255, 228 / 255, 207 / 255); // --paper-liner #f0e4cf
+const LINER = rgb(1, 253 / 255, 248 / 255); // --paper-liner #fffdf8
 
 const PAGE_WIDTH = 420;
 const PAGE_HEIGHT = 595;
@@ -58,6 +58,7 @@ export type PdfNote = {
   body: string;
   date: string;
   pen: PenId;
+  image?: string | null;
 };
 
 export async function buildCardPdf(input: {
@@ -103,19 +104,20 @@ export async function buildCardPdf(input: {
     dedication: DEDICATION,
   });
 
-  input.notes.forEach((note, i) => {
+  for (const [i, note] of input.notes.entries()) {
     const pen = parsePen(note.pen);
     const writing = pens.get(pen);
-    if (!writing) return;
+    if (!writing) continue;
     const sanitize = makeSanitizer(writing.pdf);
     const bodySize = penPdfSize(pen);
-    drawMessagePages(doc, {
+    await drawMessagePages(doc, {
       writing,
       sans,
       paper: LINER,
       body: sanitize(note.body),
       authorName: sanitize(note.authorName),
       date: note.date,
+      image: note.image,
       pageNumber: i + 1,
       pageTotal: input.notes.length,
       showIndex: input.showCount,
@@ -123,7 +125,7 @@ export async function buildCardPdf(input: {
       bodyLineHeight: Math.round(bodySize * 1.75),
       wrapFactor: wrapFactorFor(pen),
     });
-  });
+  }
 
   return doc.save();
 }
@@ -290,7 +292,19 @@ function drawDedicationPage(
   }
 }
 
-function drawMessagePages(
+function decodeNoteImage(dataUrl: string): {
+  bytes: Uint8Array;
+  kind: "jpg" | "png";
+} | null {
+  const match = dataUrl.match(/^data:(image\/jpeg|image\/png);base64,([A-Za-z0-9+/]+=*)$/);
+  if (!match) return null;
+  return {
+    bytes: Uint8Array.from(Buffer.from(match[2], "base64")),
+    kind: match[1] === "image/png" ? "png" : "jpg",
+  };
+}
+
+async function drawMessagePages(
   doc: PDFDocument,
   input: {
     writing: Face;
@@ -299,6 +313,7 @@ function drawMessagePages(
     body: string;
     authorName: string;
     date: string;
+    image?: string | null;
     pageNumber: number;
     pageTotal: number;
     showIndex: boolean;
@@ -328,20 +343,40 @@ function drawMessagePages(
     28 + signature.lines.length * signature.lineHeight + (input.date ? 14 : 0);
   const lastBottom = Math.max(CONTENT_BOTTOM, 36 + footerHeight);
   const continuedBottom = 64;
+  const decoded = input.image ? decodeNoteImage(input.image) : null;
+  const photo = decoded
+    ? decoded.kind === "png"
+      ? await doc.embedPng(decoded.bytes)
+      : await doc.embedJpg(decoded.bytes)
+    : null;
+  const photoBox = photo
+    ? fitPhoto(photo.width, photo.height, TEXT_WIDTH, 190)
+    : null;
+  const photoReserve = photoBox ? photoBox.height + 18 : 0;
   const lastMax = linesPerPage(bodyLineHeight, lastBottom);
   const continuedMax = linesPerPage(bodyLineHeight, continuedBottom);
+  const firstMax = Math.max(
+    1,
+    linesPerPage(bodyLineHeight, lastBottom + photoReserve),
+  );
 
   const chunks: string[][] = [];
   let offset = 0;
   while (offset < lines.length || chunks.length === 0) {
     const remaining = lines.length - offset;
+    if (chunks.length === 0 && photoReserve) {
+      const take = Math.min(remaining, firstMax);
+      chunks.push(lines.slice(offset, offset + take));
+      offset += take;
+      if (offset >= lines.length) break;
+      continue;
+    }
     if (remaining <= lastMax) {
       chunks.push(lines.slice(offset));
       break;
     }
     chunks.push(lines.slice(offset, offset + continuedMax));
     offset += continuedMax;
-    if (offset >= lines.length) break;
   }
 
   chunks.forEach((chunk, chunkIndex) => {
@@ -366,9 +401,19 @@ function drawMessagePages(
     const blockHeight = chunk.length * bodyLineHeight;
     const top = CONTENT_TOP;
     let y =
-      chunks.length === 1
+      chunks.length === 1 && !photoBox
         ? bottom + (top - bottom + blockHeight) / 2 - bodyLineHeight
         : top - bodyLineHeight;
+
+    if (chunkIndex === 0 && photo && photoBox) {
+      page.drawImage(photo, {
+        x: MARGIN_X + (TEXT_WIDTH - photoBox.width) / 2,
+        y: y - photoBox.height + bodyLineHeight,
+        width: photoBox.width,
+        height: photoBox.height,
+      });
+      y -= photoBox.height + 18;
+    }
 
     withTextClip(page, () => {
       for (const line of chunk) {
@@ -430,6 +475,16 @@ function coverNameSize(name: string) {
 
 function linesPerPage(lineHeight: number, bottom: number) {
   return Math.max(1, Math.floor((CONTENT_TOP - bottom) / lineHeight));
+}
+
+function fitPhoto(
+  width: number,
+  height: number,
+  maxWidth: number,
+  maxHeight: number,
+) {
+  const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+  return { width: width * scale, height: height * scale };
 }
 
 function layoutFittedText(

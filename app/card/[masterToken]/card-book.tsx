@@ -21,6 +21,7 @@ type Note = {
   body: string;
   date: string;
   pen: PenId;
+  image?: string | null;
 };
 
 type Face =
@@ -234,12 +235,13 @@ export default function CardBook({
     closing: boolean;
     pending: Action | null;
     spread: boolean;
+    tuck: number | null;
   };
 
   const applyAction = useCallback((previous: Nav, action: Action): Nav => {
     const currentPlace = placeForView(leaves, spread, previous.view, last);
     if (action.kind === "close") {
-      if (currentPlace === 0) return { ...previous, spread, pending: null };
+      if (currentPlace === 0) return { ...previous, spread, pending: null, tuck: null };
       if (reducedMotion) {
         return {
           ...previous,
@@ -249,6 +251,7 @@ export default function CardBook({
           closing: false,
           pending: null,
           touched: true,
+          tuck: null,
         };
       }
       return {
@@ -259,6 +262,7 @@ export default function CardBook({
         closing: true,
         pending: null,
         touched: true,
+        tuck: currentPlace,
       };
     }
     const nextPlace = Math.min(last, Math.max(0, currentPlace + action.delta));
@@ -271,6 +275,7 @@ export default function CardBook({
       closing: false,
       pending: null,
       touched: true,
+      tuck: null,
     };
   }, [leaves, last, reducedMotion, spread]);
 
@@ -281,6 +286,7 @@ export default function CardBook({
     closing: false,
     pending: null,
     spread,
+    tuck: null,
   });
 
   if (nav.spread !== spread) {
@@ -291,11 +297,12 @@ export default function CardBook({
       closing: false,
       pending: null,
       touched: false,
+      tuck: null,
     }));
   }
 
   const place = placeForView(leaves, spread, nav.view, last);
-  const { moving, touched, closing } = nav;
+  const { moving, touched, closing, tuck } = nav;
   const closed = place === 0;
 
   const request = useCallback((action: Action) => {
@@ -314,7 +321,7 @@ export default function CardBook({
     setNav((previous) => {
       if (previous.moving === null) return previous;
       if (previous.pending) return applyAction(previous, previous.pending);
-      return { ...previous, moving: null, closing: false };
+      return { ...previous, moving: null, closing: false, tuck: null };
     });
   }, [applyAction]);
 
@@ -395,6 +402,11 @@ export default function CardBook({
 
   return (
     <div>
+      <div className="sr-only" aria-hidden>
+        {notes.map((note) =>
+          note.image ? <img key={note.id} src={note.image} alt="" /> : null,
+        )}
+      </div>
       <div
         className="card-frame"
         data-spread={spread}
@@ -440,7 +452,10 @@ export default function CardBook({
             ) : null}
 
             {leaves.map((leaf, index) => {
-              const turned = index < place;
+              const tucked = tuck ?? 0;
+              const turned = closing
+                ? index > 0 && index < tucked
+                : index < place;
               const facingFront = closed ? index === 0 : index === place;
               const facingBack = Boolean(spread && place > 0 && index === place - 1);
               const inMotion = moving === index;
@@ -448,7 +463,8 @@ export default function CardBook({
                 inMotion ||
                 index === place ||
                 index === place - 1 ||
-                (closed && index === 0);
+                (closed && index === 0) ||
+                (closing && index <= tucked);
 
               return (
                 <div
@@ -554,6 +570,10 @@ function LeafFace({
 }) {
   const towardReader = facing || turning;
   const crease = <span className="card-crease" data-side={side} aria-hidden />;
+  const photo = face.kind === "note" ? face.note.image : null;
+  const faceStyle = photo
+    ? { ["--note-photo" as string]: `url(${JSON.stringify(photo)})` }
+    : undefined;
   const contents = (
     <>
       {crease}
@@ -598,6 +618,8 @@ function LeafFace({
       className="card-face"
       data-face={side === "left" ? "back" : "front"}
       data-stock={faceStock(face)}
+      data-photo={photo ? "true" : undefined}
+      style={faceStyle}
       aria-hidden={!towardReader}
       inert={!towardReader}
       onClick={handlePageClick}
@@ -681,7 +703,12 @@ function NoteFace({
     >
       <div className="min-h-0 flex-1">
         <div className="h-full" style={{ color: `rgb(27 36 64 / ${inkFor(note.body)})` }}>
-          <MessageReader body={note.body} authorName={note.authorName} pen={note.pen} />
+          <MessageReader
+            body={note.body}
+            authorName={note.authorName}
+            pen={note.pen}
+            image={note.image}
+          />
         </div>
       </div>
 

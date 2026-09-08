@@ -70,6 +70,7 @@ export default async function CardPage({ params }: PageParams) {
           body: note.body,
           date: dateFormatter.format(note.createdAt),
           pen: parsePen(note.pen),
+          image: note.image,
         }))}
       />
 

@@ -1,30 +1,16 @@
 /* Materials for the folded card. Loaded after card-motion.css so grain,
    liner, and static edges win without touching transform rules. */
 
-:root {
-  --paper-tooth:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='tooth'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.32  0 0 0 0 0.2  0 0 0 0.62 0'/></filter><rect width='100%25' height='100%25' filter='url(%23tooth)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='pulp'><feTurbulence type='fractalNoise' baseFrequency='0.2' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.4  0 0 0 0 0.24  0 0 0 0.42 0'/></filter><rect width='100%25' height='100%25' filter='url(%23pulp)'/></svg>"),
-    repeating-linear-gradient(
-      180deg,
-      rgb(92 64 36 / 0.05) 0 1px,
-      transparent 1px 4px
-    );
-  --paper-tooth-size: 160px 160px, 280px 280px, auto;
-}
-
 .card-face:not([data-stock="cover"]),
 .card-insert:not([data-stock="cover"]),
 .card-panel:not([data-stock="cover"]) {
   background-color: var(--paper-liner);
-  background-image:
-    radial-gradient(90% 72% at 50% 36%, rgb(255 247 232 / 0.7), transparent 68%),
-    linear-gradient(
-      var(--paper-gutter, to right),
-      rgb(56 40 24 / 0.08),
-      rgb(56 40 24 / 0.03) 16%,
-      transparent 40%
-    );
+  background-image: linear-gradient(
+    var(--paper-gutter, to right),
+    rgb(27 36 64 / 0.045),
+    rgb(27 36 64 / 0.012) 22%,
+    transparent 48%
+  );
 }
 
 .card-face[data-face="back"]:not([data-stock="cover"]),
@@ -46,17 +32,20 @@
 .card-face::after,
 .card-insert::after,
 .card-panel::after {
-  opacity: 0.1;
+  opacity: 0.08;
+}
+
+.card-stage[data-closed="true"] .card-panel {
+  box-shadow:
+    0 1px 2px rgb(27 36 64 / 0.05),
+    0 18px 36px -18px rgb(27 36 64 / 0.22);
 }
 
 .card-face:not([data-stock="cover"])::after,
 .card-insert:not([data-stock="cover"])::after,
 .card-panel:not([data-stock="cover"])::after,
 .paper-surface::after {
-  opacity: 0.28;
-  mix-blend-mode: multiply;
-  background-image: var(--paper-tooth);
-  background-size: var(--paper-tooth-size);
+  opacity: 0;
 }
 
 .card-face::before,
@@ -68,8 +57,8 @@
   z-index: 1;
   pointer-events: none;
   box-shadow:
-    inset 0 1px 0 rgb(255 248 236 / 0.38),
-    inset 0 0 0 1px rgb(58 42 26 / 0.05);
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 0 0 1px rgb(27 36 64 / 0.04);
 }
 
 .card-face:not([data-stock="cover"]),
@@ -91,46 +80,53 @@
 }
 
 .card-crease {
-  width: 44px;
+  width: 36px;
   z-index: 3;
 }
 
 .card-crease[data-side="right"] {
   background: linear-gradient(
     to right,
-    rgb(48 34 22 / 0.22),
-    rgb(48 34 22 / 0.09) 12px,
-    rgb(48 34 22 / 0.03) 26px,
+    rgb(27 36 64 / 0.08),
+    rgb(27 36 64 / 0.025) 14px,
     transparent 100%
   );
-  box-shadow: inset 1px 0 0 rgb(48 34 22 / 0.14);
 }
 
 .card-crease[data-side="left"] {
   background: linear-gradient(
     to left,
-    rgb(48 34 22 / 0.22),
-    rgb(48 34 22 / 0.09) 12px,
-    rgb(48 34 22 / 0.03) 26px,
+    rgb(27 36 64 / 0.08),
+    rgb(27 36 64 / 0.025) 14px,
     transparent 100%
   );
-  box-shadow: inset -1px 0 0 rgb(48 34 22 / 0.14);
 }
 
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="left"],
+.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="left"] {
+  box-shadow:
+    0 1px 2px rgb(27 36 64 / 0.04),
+    0 14px 28px -16px rgb(27 36 64 / 0.18),
+    -1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
+}
+
 .card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="right"] {
   box-shadow:
-    0 1px 1px rgb(42 32 22 / 0.06),
-    0 18px 36px -20px rgb(42 32 22 / 0.34),
-    1px 2px 0 color-mix(in oklab, var(--card-stock) 78%, #2c1c12);
+    0 1px 2px rgb(27 36 64 / 0.04),
+    0 14px 28px -16px rgb(27 36 64 / 0.18),
+    1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
 }
 
 .paper-surface {
   position: relative;
   isolation: isolate;
   background-color: var(--paper-liner);
-  background-image:
-    radial-gradient(90% 72% at 50% 36%, rgb(255 247 232 / 0.7), transparent 68%);
+}
+
+.signing-sheet {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 10px 24px -16px rgb(27 36 64 / 0.16),
+    0 0 0 1px rgb(27 36 64 / 0.06);
 }
 
 .paper-surface::before {
@@ -138,7 +134,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.45);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
 }
 
 .paper-surface::after {
@@ -146,10 +142,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.28;
-  mix-blend-mode: multiply;
-  background-image: var(--paper-tooth);
-  background-size: var(--paper-tooth-size);
+  opacity: 0;
 }
 
 .card-cover {
@@ -716,6 +709,55 @@
   gap: 0.75rem;
   height: 100%;
   min-height: 0;
+}
+
+.note-reader[data-photo="true"] {
+  grid-template-rows: auto minmax(0, 1fr) auto 2.75rem;
+}
+
+.card-face[data-photo="true"] {
+  background-image: var(--note-photo),
+    linear-gradient(
+      var(--paper-gutter, to right),
+      rgb(27 36 64 / 0.045),
+      rgb(27 36 64 / 0.012) 22%,
+      transparent 48%
+    );
+  background-size: var(--note-photo-w, auto) var(--note-photo-h, 11rem), auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: var(--note-photo-x, 50%) var(--note-photo-y, 2rem), 0 0;
+}
+
+.card-face[data-photo="true"]:has(.note-photo[data-hidden]) {
+  background-image: linear-gradient(
+    var(--paper-gutter, to right),
+    rgb(27 36 64 / 0.045),
+    rgb(27 36 64 / 0.012) 22%,
+    transparent 48%
+  );
+  background-size: auto;
+  background-position: 0 0;
+}
+
+.note-photo {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  background-color: transparent;
+  background-image: none;
+}
+
+img.note-photo {
+  height: auto;
+  max-height: 11rem;
+  object-fit: contain;
+  object-position: center top;
+  background-image: none;
+}
+
+.note-photo-pick {
+  max-height: 8.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .note-page { position: relative; min-height: 0; overflow-y: auto; }
