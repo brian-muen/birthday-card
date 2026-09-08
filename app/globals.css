@@ -2,8 +2,10 @@
 
 :root {
   --paper: #fafaf7;
+  --paper-liner: #fffdf8;
   --raised: #ffffff;
   --ink: #1b2440;
+  --ink-pen: #2a231c;
   --muted: #59617a;
   --rule: #dedcd4;
   --brass: #7c5416;
@@ -11,8 +13,10 @@
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-paper-liner: var(--paper-liner);
   --color-raised: var(--raised);
   --color-ink: var(--ink);
+  --color-ink-pen: var(--ink-pen);
   --color-muted: var(--muted);
   --color-rule: var(--rule);
   --color-brass: var(--brass);
