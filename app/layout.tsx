@@ -62,7 +62,7 @@ const satisfy = Satisfy({
 export const metadata: Metadata = {
   title: "Birthday Card",
   description:
-    "Start a birthday card, share one link, and collect a message from everyone. They stay hidden until the day you hand it over.",
+    "Start a birthday card and collect private messages from everyone. Share the finished card with the birthday person when you are ready.",
 };
 
 export default function RootLayout({
