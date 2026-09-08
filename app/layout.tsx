@@ -10,6 +10,7 @@ import {
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
+import "./paper.css";
 
 // Garamond sets site headlines. Karla carries the interface.
 const garamond = EB_Garamond({
