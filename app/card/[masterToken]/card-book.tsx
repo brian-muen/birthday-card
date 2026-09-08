@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   useTransition,
@@ -165,148 +166,90 @@ export default function CardBook({
   const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
   const last = lastPlace(leaves, spread, notes.length);
 
-  // 0 is the closed card. Each step after that turns one more leaf.
-  // After the last note, closing lands on the back — not another inside page.
-  // From there the closed card flips over (Y-axis) to the front again.
-  const [{ place: rawPlace, moving, touched, shut, flipping, closing }, setPlace] =
+  // A place is the number of leaves turned. One transition owns each move;
+  // a second input is retained as one queued action and consumed on settle.
+  type Action = { kind: "turn"; delta: 1 | -1 } | { kind: "close" };
+  const [{ place: rawPlace, moving, touched, closing, pending }, setPlace] =
     useState<{
       place: number;
       moving: number | null;
       touched: boolean;
-      shut: "front" | "back";
-      flipping: boolean;
       closing: boolean;
-    }>({
-      place: 0,
-      moving: null,
-      touched: false,
-      shut: "front",
-      flipping: false,
-      closing: false,
-    });
+      pending: Action | null;
+    }>({ place: 0, moving: null, touched: false, closing: false, pending: null });
 
   const place = Math.min(rawPlace, last);
   const closed = place === 0;
-  const showingBack = closed && shut === "back" && !flipping;
-  const showingDeck = closing || (closed && (shut === "back" || flipping));
-
-  const turn = useCallback(
-    (delta: 1 | -1) => {
-      setPlace((previous) => {
-        const from = Math.min(previous.place, last);
-        const next = from + delta;
-        if (next < 0 || next > last) return previous;
-        return {
-          place: next,
-          moving: reducedMotion ? null : delta === 1 ? from : next,
-          touched: true,
-          shut: next === 0 ? "front" : previous.shut,
-          flipping: false,
-          closing: false,
-        };
-      });
-    },
-    [last, reducedMotion],
-  );
-
-  const closeToBack = useCallback(() => {
-    if (reducedMotion) {
-      setPlace({
-        place: 0,
-        moving: null,
-        touched: true,
-        shut: "back",
-        flipping: false,
-        closing: false,
-      });
-      return;
-    }
-    setPlace((previous) => ({
-      ...previous,
-      moving: null,
-      touched: true,
-      flipping: false,
-      closing: true,
-    }));
-  }, [reducedMotion]);
-
-  const turnOver = useCallback(() => {
+  const request = useCallback((action: Action) => {
     setPlace((previous) => {
-      if (previous.shut !== "back" || previous.flipping) return previous;
-      if (reducedMotion) {
-        return {
-          place: 0,
-          moving: null,
-          touched: true,
-          shut: "front",
-          flipping: false,
-          closing: false,
-        };
+      if (previous.moving !== null || previous.closing) {
+        return { ...previous, pending: action, touched: true };
       }
+      if (action.kind === "close") {
+        if (previous.place === 0) return previous;
+        return { ...previous, closing: true, touched: true };
+      }
+      const next = Math.min(last, Math.max(0, previous.place + action.delta));
+      if (next === previous.place) return previous;
       return {
         ...previous,
-        place: 0,
-        moving: null,
+        place: next,
+        moving: reducedMotion ? null : action.delta === 1 ? previous.place : next,
         touched: true,
-        flipping: true,
-        closing: false,
       };
     });
-  }, [reducedMotion]);
+  }, [last, reducedMotion]);
+
+  const turn = useCallback((delta: 1 | -1) => request({ kind: "turn", delta }), [request]);
+  const closeCard = useCallback(() => request({ kind: "close" }), [request]);
 
   useEffect(() => {
     if (!closing) return;
-    const timeout = window.setTimeout(() => {
-      setPlace({
-        place: 0,
-        moving: null,
-        touched: true,
-        shut: "back",
-        flipping: false,
-        closing: false,
-      });
-    }, 1200);
+    const timeout = window.setTimeout(() => setPlace((previous) => ({
+      ...previous, place: 0, moving: null, closing: false, pending: null,
+    })), reducedMotion ? 0 : 700);
     return () => window.clearTimeout(timeout);
-  }, [closing]);
+  }, [closing, reducedMotion]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (flipping || closing) {
+      if (closing) {
         event.preventDefault();
         return;
       }
       if (event.key === "ArrowRight") {
-        if (showingBack) turnOver();
-        else if (place >= last && notes.length > 0) closeToBack();
+        if (place >= last && notes.length > 0) closeCard();
         else turn(1);
       } else if (event.key === "ArrowLeft") {
-        if (showingBack) return;
-        if (place === 1 && last === 1 && notes.length > 0) closeToBack();
+        if (place === 1) closeCard();
         else turn(-1);
       } else return;
       event.preventDefault();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [turn, turnOver, closeToBack, showingBack, place, last, notes.length, flipping, closing]);
+  }, [turn, closeCard, place, last, closing]);
 
   function settle(event: React.TransitionEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     if (event.propertyName !== "transform") return;
-    setPlace((previous) =>
-      previous.moving === null ? previous : { ...previous, moving: null },
-    );
-  }
-
-  function settleFlip(event: React.AnimationEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget) return;
-    setPlace((previous) =>
-      previous.flipping
-        ? { ...previous, shut: "front", flipping: false }
-        : previous,
-    );
+    setPlace((previous) => {
+      if (previous.moving === null) return previous;
+      const action = previous.pending;
+      if (!action) return { ...previous, moving: null };
+      if (action.kind === "close") {
+        return { ...previous, moving: null, pending: null, closing: true };
+      }
+      const next = Math.min(last, Math.max(0, previous.place + action.delta));
+      return {
+        ...previous,
+        place: next,
+        moving: reducedMotion ? null : action.delta === 1 ? previous.place : next,
+        pending: null,
+      };
+    });
   }
 
   function settleClose(
@@ -316,35 +259,20 @@ export default function CardBook({
   ) {
     if (event.target !== event.currentTarget) return;
     if ("propertyName" in event && event.propertyName !== "transform") return;
-    setPlace({
-      place: 0,
-      moving: null,
-      touched: true,
-      shut: "back",
-      flipping: false,
-      closing: false,
-    });
+    setPlace((previous) => ({ ...previous, place: 0, moving: null, closing: false, pending: null }));
   }
 
   const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
-  const rightFace = closed
-    ? showingBack
-      ? undefined
-      : leaves[0]?.front
-    : leaves[place]?.front;
-
-  const announcement = flipping
-    ? "Turning the card over"
-    : closing
-      ? "Closing the card"
-      : showingBack
-      ? "The back of the card"
-      : closed
-        ? `Birthday card for ${recipientName}, closed`
-        : [describeFace(leftFace), describeFace(rightFace)]
-            .filter(Boolean)
-            .filter((item, index, all) => all.indexOf(item) === index)
-            .join(". ") || `Inside ${recipientName}'s card`;
+  const rightFace = closed ? leaves[0]?.front : leaves[place]?.front;
+  const announcement = closing
+    ? "Closing the card"
+    : closed
+      ? `Birthday card for ${recipientName}, closed`
+      : [describeFace(leftFace), describeFace(rightFace)]
+          .filter(Boolean)
+          .filter((item, index, all) => all.indexOf(item) === index)
+          .join(". ") || `Inside ${recipientName}'s card`;
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   return (
     <div>
@@ -352,7 +280,23 @@ export default function CardBook({
         className="card-frame"
         data-spread={spread}
         data-animate={touched}
-        data-flipping={flipping}
+        onPointerDown={(event) => {
+          if (event.pointerType === "mouse") return;
+          pointerStart.current = { x: event.clientX, y: event.clientY };
+        }}
+        onPointerUp={(event) => {
+          const start = pointerStart.current;
+          pointerStart.current = null;
+          if (!start || closing) return;
+          const dx = event.clientX - start.x;
+          const dy = event.clientY - start.y;
+          if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          if (dx < 0) {
+            if (place >= last && notes.length > 0) closeCard();
+            else turn(1);
+          } else if (place <= 1) closeCard();
+          else turn(-1);
+        }}
         style={{
           ["--card-stock" as string]: stockHex(stock),
         }}
@@ -361,8 +305,7 @@ export default function CardBook({
           className="card-stage"
           data-closed={closed}
           data-closing={closing}
-          data-shut={showingDeck ? "back" : "front"}
-          data-flipping={flipping}
+          data-shut="front"
         >
           <div aria-hidden className="card-panel" data-half="right">
             <span className="card-crease" data-side="right" />
@@ -374,44 +317,7 @@ export default function CardBook({
             </div>
           ) : null}
 
-          {showingDeck ? (
-            <div
-              className="card-deck"
-              data-shut={flipping ? "front" : "back"}
-              data-flip={flipping}
-              onAnimationEnd={settleFlip}
-            >
-              <button
-                type="button"
-                onClick={turnOver}
-                className="card-face cursor-pointer"
-                data-face="back"
-                data-stock="cover"
-                aria-label="Turn the card over"
-                tabIndex={showingBack ? 0 : -1}
-              >
-                <span className="card-crease" data-side="left" aria-hidden />
-                <span className="card-body" />
-              </button>
-              <div
-                className="card-face"
-                data-face="front"
-                data-stock="cover"
-                aria-hidden
-              >
-                <span className="card-crease" data-side="right" aria-hidden />
-                <CoverFace
-                  recipientName={recipientName}
-                  showDedication={!canManage}
-                  noteCount={notes.length}
-                  showCount={canManage}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {!showingDeck || closing
-            ? leaves.map((leaf, index) => {
+          {leaves.map((leaf, index) => {
                 const foldingShut = closing && index === place;
                 const turned = index < place || foldingShut;
                 const facingFront = closed
@@ -468,8 +374,7 @@ export default function CardBook({
                     />
                   </div>
                 );
-              })
-            : null}
+          })}
 
           {closing && !leaves[place] ? (
             <div
@@ -507,26 +412,13 @@ export default function CardBook({
       </p>
 
       <nav aria-label="Card" className="mt-9 min-h-11">
-        {showingBack ? (
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={turnOver}
-              className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
-            >
-              Turn it over
-            </button>
-          </div>
-        ) : closed || flipping || closing ? null : (
+        {closed || closing ? null : (
           <div className="flex items-center justify-between gap-6">
             <button
               type="button"
               onClick={() => {
-                if (place === 1 && last === 1 && notes.length > 0) {
-                  closeToBack();
-                  return;
-                }
-                turn(-1);
+                if (place === 1) closeCard();
+                else turn(-1);
               }}
               className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
             >
@@ -536,22 +428,19 @@ export default function CardBook({
             <button
               type="button"
               onClick={() => {
-                if (place >= last && notes.length > 0 && last > 1) {
-                  closeToBack();
-                  return;
-                }
-                turn(1);
+                if (place >= last && notes.length > 0) closeCard();
+                else turn(1);
               }}
-              disabled={place >= last && !(notes.length > 0 && last > 1)}
-              className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass disabled:pointer-events-none disabled:opacity-0"
+              className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
             >
-              {place >= last && notes.length > 0 && last > 1
-                ? "Close the card"
-                : "Next"}
+              {place >= last ? "Close the card" : "Next"}
             </button>
           </div>
         )}
       </nav>
+      <div className="card-progress" aria-label={`Page ${place} of ${last}`} role="group">
+        <span>{closed ? "Cover" : `Page ${place} of ${last}`}</span>
+      </div>
     </div>
   );
 }
@@ -609,7 +498,8 @@ function LeafFace({
         data-face="front"
         data-stock="cover"
         aria-hidden={!towardReader}
-        tabIndex={facing ? 0 : -1}
+          tabIndex={facing ? 0 : -1}
+          inert={!towardReader}
       >
         {contents}
       </button>
@@ -622,6 +512,7 @@ function LeafFace({
       data-face={side === "left" ? "back" : "front"}
       data-stock={stock}
       aria-hidden={!towardReader}
+      inert={!towardReader}
     >
       {contents}
     </div>
