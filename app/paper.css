@@ -95,6 +95,44 @@
   color: color-mix(in oklab, var(--ink-pen) 78%, transparent);
 }
 
+.card-cover-art {
+  flex: 0 1 auto;
+  width: min(72%, 11rem);
+  min-height: 0;
+  max-height: 42%;
+  margin-bottom: 1.25rem;
+}
+
+.design-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.design-option {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.design-thumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 5;
+  margin-bottom: 0.45rem;
+  border: 1px solid var(--rule);
+  background: var(--paper-liner);
+}
+
+.design-thumbnail svg { width: 90%; }
+.design-plain { font-family: var(--font-garamond), serif; font-style: italic; font-size: 1rem; }
+.design-option:has(input:checked) { color: var(--ink); }
+.design-option:has(input:checked) .design-thumbnail { outline: 2px solid var(--ink); outline-offset: 2px; }
+.design-option:has(input:focus-visible) .design-thumbnail { outline: 2px solid var(--brass); outline-offset: 4px; }
+
 .card-cover-name {
   position: relative;
   max-width: 12ch;
@@ -165,6 +203,9 @@
 }
 
 .paper-preview-stage {
+  align-self: start;
+  position: sticky;
+  top: 2rem;
   justify-self: center;
   width: min(100%, 21.5rem);
 }
@@ -352,6 +393,8 @@
   }
 
   .paper-preview-stage {
+    position: static;
+    align-self: center;
     width: min(72vw, 18rem);
   }
 

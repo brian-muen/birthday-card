@@ -6,6 +6,7 @@ import { asc, eq } from "drizzle-orm";
 import { ensureGiftToken, findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
+import { parseDesign } from "@/lib/design";
 import { parsePen } from "@/lib/pen";
 import { parseStock } from "@/lib/stock";
 import CardBook from "./card-book";
@@ -60,6 +61,7 @@ export default async function CardPage({ params }: PageParams) {
         masterToken={canManage ? card.masterToken : ""}
         canManage={canManage}
         recipientName={card.recipientName}
+        design={parseDesign(card.design)}
         intro={card.intro}
         stock={parseStock(card.stock)}
         notes={notes.map((note) => ({

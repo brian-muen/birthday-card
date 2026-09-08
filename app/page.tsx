@@ -1,4 +1,5 @@
 import { parseStock } from "@/lib/stock";
+import { parseDesign } from "@/lib/design";
 import CreateCardForm from "@/components/create-card-form";
 
 export default async function Home({
@@ -8,9 +9,10 @@ export default async function Home({
     error?: string;
     recipientName?: string;
     stock?: string;
+    design?: string;
   }>;
 }) {
-  const { error, recipientName, stock } = await searchParams;
+  const { error, recipientName, stock, design } = await searchParams;
   return (
     <main className="paper-home">
       <header className="paper-masthead">
@@ -20,6 +22,7 @@ export default async function Home({
         error={error}
         initialName={recipientName}
         initialStock={parseStock(stock)}
+        initialDesign={design === undefined ? "cake" : parseDesign(design)}
       />
     </main>
   );

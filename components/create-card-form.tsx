@@ -3,23 +3,28 @@
 import { useState } from "react";
 import { createCard } from "@/app/actions/create-card";
 import CardPreview from "@/components/card-preview";
+import CoverArt from "@/components/cover-art";
+import { DESIGNS, type DesignId } from "@/lib/design";
 import { DEFAULT_STOCK, STOCKS, type StockId } from "@/lib/stock";
 
 export default function CreateCardForm({
   error,
   initialName = "",
   initialStock = DEFAULT_STOCK,
+  initialDesign = "cake",
 }: {
   error?: string;
   initialName?: string;
   initialStock?: StockId;
+  initialDesign?: DesignId;
 }) {
   const [name, setName] = useState(initialName);
   const [stock, setStock] = useState<StockId>(initialStock);
+  const [design, setDesign] = useState<DesignId>(initialDesign);
 
   return (
     <div className="create-card-layout">
-      <CardPreview name={name} stock={stock} />
+      <CardPreview name={name} stock={stock} design={design} />
       <form action={createCard} className="create-card-form">
         <h1>Start a card</h1>
         <p className="paper-lede">
@@ -46,6 +51,21 @@ export default function CreateCardForm({
           />
           <p className="field-hint">Up to 80 characters</p>
         </div>
+        <fieldset className="stock-field">
+          <legend>Choose a design</legend>
+          <div className="design-options">
+            {DESIGNS.map((option) => (
+              <label className="design-option" key={option.id}>
+                <input type="radio" name="design" value={option.id} checked={design === option.id}
+                  onChange={() => setDesign(option.id)} className="sr-only" />
+                <span className="design-thumbnail" aria-hidden="true">
+                  {option.id === "plain" ? <span className="design-plain">Happy<br />birthday</span> : <CoverArt design={option.id} />}
+                </span>
+                <span>{option.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <fieldset className="stock-field">
           <legend>Choose the paper</legend>
           <div className="stock-options">

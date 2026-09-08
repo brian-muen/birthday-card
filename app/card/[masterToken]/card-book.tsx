@@ -12,6 +12,7 @@ import {
 import { deleteMessage } from "@/app/actions/delete-message";
 import { penVar, type PenId } from "@/lib/pen";
 import { stockHex } from "@/lib/stock";
+import CoverArt from "@/components/cover-art";
 import MessageReader from "@/components/message-reader";
 
 type Note = {
@@ -199,6 +200,7 @@ export default function CardBook({
   recipientName,
   notes,
   stock,
+  design = "plain",
 }: {
   masterToken: string;
   canManage: boolean;
@@ -206,6 +208,7 @@ export default function CardBook({
   intro: string | null;
   notes: Note[];
   stock: string;
+  design?: string;
 }) {
   const spread = useSyncExternalStore(
     subscribeToSpread,
@@ -472,6 +475,7 @@ export default function CardBook({
                     masterToken={masterToken}
                     canManage={canManage}
                     recipientName={recipientName}
+                    design={design}
                     onOpen={index === 0 ? () => activatePage(1) : undefined}
                     onPageTurn={index === 0 ? undefined : () => activatePage(1)}
                   />
@@ -483,6 +487,7 @@ export default function CardBook({
                     masterToken={masterToken}
                     canManage={canManage}
                     recipientName={recipientName}
+                    design={design}
                     onPageTurn={() => activatePage(-1)}
                   />
                 </div>
@@ -525,6 +530,7 @@ export default function CardBook({
 }
 
 function LeafFace({
+  design,
   face,
   side,
   facing,
@@ -535,6 +541,7 @@ function LeafFace({
   onOpen,
   onPageTurn,
 }: {
+  design: string;
   face: Face;
   side: "left" | "right";
   facing: boolean;
@@ -552,6 +559,7 @@ function LeafFace({
       {crease}
       <span className="card-light" aria-hidden />
       <FaceContents
+        design={design}
         face={face}
         side={side}
         masterToken={masterToken}
@@ -600,12 +608,14 @@ function LeafFace({
 }
 
 function FaceContents({
+  design,
   face,
   side,
   masterToken,
   canManage,
   recipientName,
 }: {
+  design: string;
   face: Face;
   side: "left" | "right";
   masterToken: string;
@@ -614,7 +624,7 @@ function FaceContents({
 }) {
   switch (face.kind) {
     case "cover":
-      return <CoverFace recipientName={recipientName} />;
+      return <CoverFace recipientName={recipientName} design={design} />;
     case "dedication":
       return (
         <div className="card-body card-dedication">
@@ -635,10 +645,11 @@ function FaceContents({
   }
 }
 
-function CoverFace({ recipientName }: { recipientName: string }) {
+function CoverFace({ recipientName, design }: { recipientName: string; design: string }) {
   return (
     <span className="card-body card-cover">
       <span className="card-cover-mark" aria-hidden="true" />
+      <CoverArt design={design} className="card-cover-art" />
       <span className="card-cover-greeting">Happy birthday</span>
       <span className={`card-cover-name ${coverTypeSize(recipientName)}`}>
         {recipientName}
