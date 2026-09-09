@@ -22,15 +22,13 @@ export default async function SignPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8 sm:py-20">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8 sm:py-16">
       <div className="max-w-2xl">
-        <h1 className="font-serif text-[2.15rem] leading-[1.15] tracking-[-0.015em] sm:text-[2.6rem]">
-          A note for {card.recipientName}.
+        <h1 className="font-serif text-[2.15rem] leading-[1.15] tracking-[-0.015em] sm:text-[2.45rem]">
+          A note for {card.recipientName}
         </h1>
-        <p className="mt-5 max-w-[54ch] text-[1.0625rem] leading-relaxed text-muted">
-          You are writing inside {card.recipientName}&rsquo;s birthday card.
-          Only they and the person who started the card will see it. It reaches
-          them when that person shares the recipient link — not on a schedule.
+        <p className="mt-3 max-w-[42ch] text-[1rem] leading-relaxed text-muted">
+          Private. Only they and the organizer will read it.
         </p>
       </div>
 

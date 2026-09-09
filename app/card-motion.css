@@ -172,6 +172,11 @@
   pointer-events: none;
 }
 
+.card-stage[data-closing="true"] .card-leaf[data-turned="true"]:not([data-cover="true"]) {
+  visibility: hidden;
+  transition: none;
+}
+
 .card-face {
   position: absolute;
   inset: 0;
@@ -446,7 +451,7 @@
 
 .card-cover-greeting {
   position: relative;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.125rem;
   font-style: italic;
   font-weight: 400;
@@ -460,7 +465,7 @@
   max-width: 92%;
   margin-top: 0.4em;
   overflow-wrap: anywhere;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.05;
@@ -476,7 +481,7 @@
 .card-dedication p {
   max-width: 16ch;
   margin: 0;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.25rem;
   font-style: italic;
   font-weight: 400;
@@ -525,12 +530,25 @@
   text-decoration: underline;
   text-decoration-color: var(--rule);
   text-underline-offset: 4px;
-  transition: color 150ms ease, text-decoration-color 150ms ease;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 
-.card-nav-link:hover {
-  color: var(--ink);
-  text-decoration-color: var(--brass);
+@media (hover: hover) and (pointer: fine) {
+  .card-nav-link:hover:not(:disabled) {
+    color: var(--ink);
+    text-decoration-color: var(--brass);
+  }
+}
+
+.card-nav-link:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .card-progress {
@@ -563,5 +581,13 @@
   .card-fold-shade {
     animation: none;
     opacity: 0;
+  }
+
+  .card-nav-link {
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+
+  .card-nav-link:active:not(:disabled) {
+    transform: none;
   }
 }

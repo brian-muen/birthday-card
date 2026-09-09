@@ -46,7 +46,7 @@ export default async function CardCreated({
   return (
     <main className="handoff">
       <header className="handoff-head">
-        <h1>{card.recipientName}&rsquo;s card is ready.</h1>
+        <h1>{card.recipientName}&rsquo;s card.</h1>
         <p>
           {noteCount === 0
             ? "No notes yet."
@@ -58,8 +58,8 @@ export default async function CardCreated({
 
       <ol className="handoff-list">
         <li>
-          <h2>Signing link</h2>
-          <p>For everyone writing. Each note stays private.</p>
+          <h2>Signing</h2>
+          <p>For everyone writing.</p>
           <ShareLink
             path={signingPath}
             copyLabel="Copy"
@@ -71,11 +71,8 @@ export default async function CardCreated({
           />
         </li>
         <li>
-          <h2>Gift link</h2>
-          <p>
-            Send this to {card.recipientName} when you are ready. That is how
-            the card arrives.
-          </p>
+          <h2>Gift</h2>
+          <p>How the card reaches {card.recipientName}.</p>
           <ShareLink
             path={giftPath}
             copyLabel="Copy"
@@ -87,11 +84,8 @@ export default async function CardCreated({
           />
         </li>
         <li>
-          <h2>Organizer link</h2>
-          <p>
-            Keep this. Same card, plus a way to take a note out. A lost link
-            can&rsquo;t be recovered.
-          </p>
+          <h2>Organizer</h2>
+          <p>Keep this. A lost link can&rsquo;t be recovered.</p>
           <ShareLink
             path={organizerPath}
             copyLabel="Copy"

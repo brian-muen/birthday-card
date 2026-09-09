@@ -1,14 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #fafaf7;
+  --paper: #c8d2d6;
   --paper-liner: #fffdf8;
-  --raised: #ffffff;
-  --ink: #1b2440;
+  --raised: #e8eef1;
+  --ink: #1a2228;
   --ink-pen: #2a231c;
-  --muted: #59617a;
-  --rule: #dedcd4;
-  --brass: #7c5416;
+  --muted: #545d64;
+  --rule: #a8b2b8;
+  --brass: #1a2228;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --cjk-sans: var(--font-noto-sans-kr), var(--font-noto-sans-sc),
+    var(--font-noto-sans-tc), "Apple SD Gothic Neo", "Malgun Gothic",
+    "PingFang SC", "PingFang TC", "Microsoft YaHei", "Microsoft JhengHei";
+  --cjk-serif: var(--font-noto-serif-kr), var(--font-noto-serif-sc),
+    var(--font-noto-serif-tc), "Apple SD Gothic Neo", "Songti SC", "Songti TC",
+    "PMingLiU";
+  --cjk-hand: var(--font-nanum-pen), var(--font-ma-shan), var(--cjk-sans);
 }
 
 @theme inline {
@@ -20,9 +29,9 @@
   --color-muted: var(--muted);
   --color-rule: var(--rule);
   --color-brass: var(--brass);
-  --font-sans: var(--font-karla);
-  --font-serif: var(--font-garamond);
-  --font-hand: var(--font-caveat);
+  --font-sans: var(--font-karla), var(--cjk-sans);
+  --font-serif: var(--font-garamond), var(--cjk-serif);
+  --font-hand: var(--font-caveat), var(--cjk-hand);
   --font-face-hand: var(--font-caveat);
   --font-face-script: var(--font-great-vibes);
   --font-face-serif: var(--font-cormorant);
@@ -37,13 +46,14 @@
 body {
   background-color: var(--paper);
   color: var(--ink);
-  font-family: var(--font-karla), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-karla), var(--cjk-sans), ui-sans-serif, system-ui,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgb(168 121 44 / 0.2);
+  background: rgb(26 34 40 / 0.16);
 }
 
 /* Fields already have their own focus (a ruled line, or the paper sheet).
@@ -68,7 +78,7 @@ select:focus-visible {
   background: transparent;
   padding: 0.5rem 0.125rem;
   color: var(--ink);
-  transition: border-color 150ms ease;
+  transition: border-color 160ms var(--ease-out);
 }
 
 .field::placeholder {
@@ -88,7 +98,7 @@ select:focus-visible {
 
 /* Writing on the card itself — never UI chrome. */
 .font-card {
-  font-family: var(--card-face), var(--font-caveat), cursive;
+  font-family: var(--card-face), var(--cjk-hand), var(--font-caveat), cursive;
 }
 
 /* The one shadow in the design, for things that are meant to be paper. */

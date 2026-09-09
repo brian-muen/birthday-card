@@ -464,7 +464,7 @@ export default function CardBook({
                 index === place ||
                 index === place - 1 ||
                 (closed && index === 0) ||
-                (closing && index <= tucked);
+                (closing && (index === 0 || index === tucked));
 
               return (
                 <div
@@ -754,7 +754,7 @@ function RemoveControl({
           type="button"
           onClick={confirmDelete}
           disabled={isPending}
-          className="font-medium text-ink underline decoration-rule decoration-2 underline-offset-4 hover:decoration-brass disabled:opacity-50"
+          className="quiet-link font-medium text-ink"
         >
           Remove
         </button>
@@ -765,7 +765,7 @@ function RemoveControl({
             setError(null);
           }}
           disabled={isPending}
-          className="underline decoration-rule decoration-2 underline-offset-4 hover:decoration-brass disabled:opacity-50"
+          className="quiet-link"
         >
           Keep it
         </button>
@@ -777,7 +777,7 @@ function RemoveControl({
     <button
       type="button"
       onClick={() => setConfirming(true)}
-      className="text-[0.75rem] text-muted underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:text-ink hover:decoration-brass"
+      className="quiet-link text-[0.75rem] text-muted"
     >
       Remove this note
     </button>

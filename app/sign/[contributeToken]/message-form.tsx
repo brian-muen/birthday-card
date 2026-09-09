@@ -257,9 +257,7 @@ export default function MessageForm({
           >
             {sentBy}
           </span>
-          . Only {recipientName} and the organizer can read it. Other people
-          signing cannot. Nothing waits for a birthday send — the organizer
-          delivers the card by sharing the recipient link.
+          . Only {recipientName} and the organizer can read it.
         </p>
         <button
           type="button"
@@ -284,42 +282,22 @@ export default function MessageForm({
       <fieldset className="max-w-2xl">
         <legend className="text-[0.9375rem] font-medium">Your pen</legend>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-3">
-          {PENS.map((option) => {
-            const selected = pen === option.id;
-            return (
-              <label
-                key={option.id}
-                className="flex cursor-pointer flex-col items-center gap-1.5"
-              >
-                <input
-                  type="radio"
-                  name="pen"
-                  value={option.id}
-                  checked={selected}
-                  onChange={() => setPen(option.id)}
-                  className="peer sr-only"
-                />
-                <span
-                  className={`flex size-11 items-center justify-center border bg-transparent text-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink ${
-                    selected
-                      ? "border-ink"
-                      : "border-rule text-muted"
-                  }`}
-                >
-                  <PenIcon id={option.id} />
-                </span>
-                <span
-                  className={`text-[0.75rem] ${
-                    selected
-                      ? "text-ink underline decoration-rule decoration-1 underline-offset-4"
-                      : "text-muted"
-                  }`}
-                >
-                  {option.label}
-                </span>
-              </label>
-            );
-          })}
+          {PENS.map((option) => (
+            <label key={option.id} className="pen-choice">
+              <input
+                type="radio"
+                name="pen"
+                value={option.id}
+                checked={pen === option.id}
+                onChange={() => setPen(option.id)}
+                className="sr-only"
+              />
+              <span className="pen-choice-mark">
+                <PenIcon id={option.id} />
+              </span>
+              <span className="pen-choice-label">{option.label}</span>
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -342,13 +320,13 @@ export default function MessageForm({
                     type="button"
                     onClick={() => setImage(null)}
                     disabled={pending || imageBusy}
-                    className="text-[0.8125rem] text-muted underline decoration-rule decoration-2 underline-offset-4 hover:text-ink hover:decoration-brass disabled:opacity-50"
+                    className="quiet-link text-[0.8125rem] text-muted"
                   >
                     Remove photo
                   </button>
                 </div>
               ) : (
-                <label className="inline-flex cursor-pointer text-[0.8125rem] text-muted underline decoration-rule decoration-2 underline-offset-4 hover:text-ink hover:decoration-brass">
+                <label className="quiet-link inline-flex text-[0.8125rem] text-muted">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
@@ -479,8 +457,7 @@ export default function MessageForm({
           {pending ? "Adding your message…" : "Add my message"}
         </button>
         <p className="max-w-[40ch] text-sm leading-relaxed text-muted">
-          Only {recipientName} and the organizer will see this note. Delivery
-          is when they share the recipient link.
+          Only {recipientName} and the organizer will see this.
         </p>
       </div>
     </form>

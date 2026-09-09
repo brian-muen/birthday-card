@@ -27,17 +27,16 @@ export default function CreateCardForm({
     <div className="create-card-layout">
       <CardPreview name={name} stock={stock} design={design} />
       <form action={createCard} className="create-card-form">
-        <h1>Start a card</h1>
-        <p className="paper-lede">
-          Share one link. Each person writes their own note.
-        </p>
+        <p className="paper-lede">Everyone writes a private note.</p>
         {error ? (
           <p role="alert" className="form-error">
             {error}
           </p>
         ) : null}
-        <div className="form-field">
-          <label htmlFor="recipientName">Whose birthday is it?</label>
+        <div className="form-field form-field-lead">
+          <h1>
+            <label htmlFor="recipientName">Whose birthday?</label>
+          </h1>
           <input
             id="recipientName"
             name="recipientName"
@@ -50,10 +49,9 @@ export default function CreateCardForm({
             placeholder="Their name"
             className="field"
           />
-          <p className="field-hint">Up to 80 characters</p>
         </div>
         <fieldset className="stock-field">
-          <legend>Choose a design</legend>
+          <legend>Cover</legend>
           <div className="design-options">
             {DESIGNS.map((option) => (
               <label className="design-option" key={option.id}>
@@ -68,7 +66,7 @@ export default function CreateCardForm({
           </div>
         </fieldset>
         <fieldset className="stock-field">
-          <legend>Choose the paper</legend>
+          <legend>Paper</legend>
           <div className="stock-options">
             {STOCKS.map((option) => (
               <label key={option.id} className="stock-option">
@@ -91,7 +89,7 @@ export default function CreateCardForm({
         </fieldset>
         <div className="form-field intro-field">
           <label htmlFor="intro">
-            A note for the people signing <span>(optional)</span>
+            For the people signing <span>(optional)</span>
           </label>
           <textarea
             id="intro"
@@ -105,12 +103,10 @@ export default function CreateCardForm({
             className="field"
             placeholder="A little context, if you like"
           />
-          <p className="field-hint">They&apos;ll read this before they write.</p>
         </div>
         <CreateButton />
         <p className="privacy-note">
-          Messages are private to the organizer and recipient. Other
-          contributors can&apos;t read them.
+          Only you and they can read the notes.
         </p>
       </form>
     </div>
@@ -121,7 +117,7 @@ function CreateButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" disabled={pending} aria-busy={pending} className="ui-button ui-button-primary create-button">
-      {pending ? "Creating your card…" : "Create the card"}
+      {pending ? "Making the card…" : "Make the card"}
     </button>
   );
 }
