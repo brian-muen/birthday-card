@@ -114,12 +114,9 @@ export async function buildCardPdf(input: {
 
   for (const [i, note] of input.notes.entries()) {
     const pen = parsePen(note.pen);
-    const writing = pickFace(
-      `${note.body}\n${note.authorName}`,
-      pens.get(pen),
-      cjk,
-    );
-    if (!writing) continue;
+    const latin = pens.get(pen);
+    if (!latin) continue;
+    const writing = pickFace(`${note.body}\n${note.authorName}`, latin, cjk);
     const sanitize = makeSanitizer(writing.pdf);
     const bodySize = penPdfSize(pen);
     await drawMessagePages(doc, {
@@ -168,7 +165,7 @@ async function embedNeededCjk(doc: PDFDocument, texts: string[]) {
 
 function pickFace(
   text: string,
-  latin: Face | undefined,
+  latin: Face,
   cjk: Partial<Record<CjkFaceId, Face>>,
 ) {
   if (!hasCjk(text)) return latin;
