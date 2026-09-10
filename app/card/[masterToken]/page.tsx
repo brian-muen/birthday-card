@@ -70,6 +70,7 @@ export default async function CardPage({ params }: PageParams) {
           body: note.body,
           date: dateFormatter.format(note.createdAt),
           pen: parsePen(note.pen),
+          image: note.image,
         }))}
       />
 
@@ -77,7 +78,7 @@ export default async function CardPage({ params }: PageParams) {
         <a
           href={`/card/${token}/pdf`}
           download
-          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+          className="quiet-link text-[0.9375rem] font-medium"
         >
           Download the card as a PDF
         </a>

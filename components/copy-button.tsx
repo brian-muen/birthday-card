@@ -31,19 +31,31 @@ export function CopyButton({
     }
   }
 
+  const caption =
+    state === "copied"
+      ? "Link copied"
+      : state === "failed"
+        ? "Couldn't copy"
+        : label;
+
   return (
     <button
       type="button"
       onClick={copy}
+      aria-label={caption}
       aria-live="polite"
       className="ui-button shrink-0"
       data-copied={state === "copied"}
     >
-      {state === "copied"
-        ? "Link copied"
-        : state === "failed"
-          ? "Couldn't copy"
-          : label}
+      <span className="ui-button-swap" aria-hidden="true">
+        <span data-visible={state === "idle" ? "true" : undefined}>{label}</span>
+        <span data-visible={state === "copied" ? "true" : undefined}>
+          Link copied
+        </span>
+        <span data-visible={state === "failed" ? "true" : undefined}>
+          Couldn&apos;t copy
+        </span>
+      </span>
     </button>
   );
 }

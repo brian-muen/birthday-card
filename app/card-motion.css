@@ -18,14 +18,9 @@
 .card-seat {
   position: relative;
   width: 100%;
-}
-
-.card-frame[data-spread="false"] .card-seat {
+  /* Match SPREAD_QUERY in card-book.tsx. Layout is CSS-first so a
+     desktop reload does not paint the mobile single-panel, then jump. */
   aspect-ratio: 5 / 7;
-}
-
-.card-frame[data-spread="true"] .card-seat {
-  aspect-ratio: 10 / 7;
 }
 
 .card-stage {
@@ -33,10 +28,6 @@
   inset: 0;
   perspective: 2250px;
   animation: card-settle 720ms var(--card-ease-cover) both;
-}
-
-.card-frame[data-spread="true"] .card-stage {
-  perspective: 2600px;
 }
 
 @keyframes card-settle {
@@ -86,24 +77,14 @@
     inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
-.card-frame[data-spread="true"] .card-panel[data-half="right"] {
-  left: 50%;
-  width: 50%;
+.card-panel[data-half="right"] {
+  left: 0;
+  width: 100%;
   transition: left var(--card-cover-turn) var(--card-ease-cover);
-}
-
-.card-frame[data-spread="true"] .card-stage[data-closed="true"] .card-panel[data-half="right"],
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="right"] {
-  left: 25%;
 }
 
 .card-stage[data-closing="true"] .card-panel[data-half="right"] {
   transition-duration: var(--card-close);
-}
-
-.card-frame[data-spread="false"] .card-panel[data-half="right"] {
-  left: 0;
-  width: 100%;
 }
 
 .card-panel[data-half="left"] {
@@ -125,6 +106,8 @@
 .card-leaf {
   position: absolute;
   inset-block: 0;
+  left: 0;
+  width: 100%;
   transform-origin: left center;
   transform-style: preserve-3d;
   z-index: 8;
@@ -145,19 +128,31 @@
     left var(--card-close) var(--card-ease-cover);
 }
 
-.card-frame[data-spread="true"] .card-leaf {
-  left: 50%;
-  width: 50%;
+.card-stage[data-closed="true"]:not([data-closing="true"]) .card-face[data-face="back"] {
+  visibility: hidden;
 }
 
-.card-frame[data-spread="true"] .card-stage[data-closed="true"] .card-leaf,
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-leaf {
-  left: 25%;
-}
+@media (min-width: 52rem) {
+  .card-seat {
+    aspect-ratio: 10 / 7;
+  }
 
-.card-frame[data-spread="false"] .card-leaf {
-  left: 0;
-  width: 100%;
+  .card-stage {
+    perspective: 2600px;
+  }
+
+  .card-panel[data-half="right"],
+  .card-leaf {
+    left: 50%;
+    width: 50%;
+  }
+
+  .card-stage[data-closed="true"] .card-panel[data-half="right"],
+  .card-stage[data-closing="true"] .card-panel[data-half="right"],
+  .card-stage[data-closed="true"] .card-leaf,
+  .card-stage[data-closing="true"] .card-leaf {
+    left: 25%;
+  }
 }
 
 .card-leaf[data-turned="true"] {
@@ -169,9 +164,12 @@
 }
 
 .card-stage[data-closing="true"] .card-leaf:not([data-cover="true"]) {
-  transition: none;
-  visibility: hidden;
   pointer-events: none;
+}
+
+.card-stage[data-closing="true"] .card-leaf[data-turned="true"]:not([data-cover="true"]) {
+  visibility: hidden;
+  transition: none;
 }
 
 .card-face {
@@ -182,6 +180,8 @@
   overflow: hidden;
   border: 0;
   isolation: isolate;
+  -webkit-transform-style: flat;
+  transform-style: flat;
   background-color: var(--card-stock);
   color: inherit;
   font: inherit;
@@ -214,6 +214,18 @@
 
 .card-face[data-face="back"] {
   transform: rotateY(180deg);
+}
+
+.card-face,
+.card-face * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.card-stage:has(.card-leaf[data-moving="true"]) .card-face[data-photo="true"] .card-light,
+.card-stage[data-closing="true"] .card-face[data-photo="true"] .card-light {
+  animation: none;
+  opacity: 0;
 }
 
 .card-face[data-stock="cover"] {
@@ -434,7 +446,7 @@
 
 .card-cover-greeting {
   position: relative;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.125rem;
   font-style: italic;
   font-weight: 400;
@@ -448,7 +460,7 @@
   max-width: 92%;
   margin-top: 0.4em;
   overflow-wrap: anywhere;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.05;
@@ -464,7 +476,7 @@
 .card-dedication p {
   max-width: 16ch;
   margin: 0;
-  font-family: var(--font-serif), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.25rem;
   font-style: italic;
   font-weight: 400;
@@ -513,12 +525,25 @@
   text-decoration: underline;
   text-decoration-color: var(--rule);
   text-underline-offset: 4px;
-  transition: color 150ms ease, text-decoration-color 150ms ease;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 
-.card-nav-link:hover {
-  color: var(--ink);
-  text-decoration-color: var(--brass);
+@media (hover: hover) and (pointer: fine) {
+  .card-nav-link:hover:not(:disabled) {
+    color: var(--ink);
+    text-decoration-color: var(--brass);
+  }
+}
+
+.card-nav-link:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .card-progress {
@@ -551,5 +576,13 @@
   .card-fold-shade {
     animation: none;
     opacity: 0;
+  }
+
+  .card-nav-link {
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+
+  .card-nav-link:active:not(:disabled) {
+    transform: none;
   }
 }

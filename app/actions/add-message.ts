@@ -3,6 +3,7 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
+import { parseNoteImage } from "@/lib/note-image";
 import { parsePen } from "@/lib/pen";
 
 // Kept in sync with the limits enforced in the client form.
@@ -16,11 +17,16 @@ export async function addMessage(input: {
   authorName: string;
   body: string;
   pen?: string;
+  image?: string | null;
 }): Promise<AddMessageResult> {
   const contributeToken = input.contributeToken?.trim() ?? "";
   const authorName = input.authorName?.trim() ?? "";
   const body = input.body?.trim() ?? "";
   const pen = parsePen(input.pen);
+  const image = parseNoteImage(input.image);
+  if (!image.ok) {
+    return { ok: false, error: image.error };
+  }
 
   if (!contributeToken) {
     return { ok: false, error: "This signing link is not valid." };
@@ -61,6 +67,7 @@ export async function addMessage(input: {
     authorName,
     body,
     pen,
+    image: image.dataUrl,
   });
 
   return { ok: true };

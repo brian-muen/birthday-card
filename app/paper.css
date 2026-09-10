@@ -1,30 +1,16 @@
 /* Materials for the folded card. Loaded after card-motion.css so grain,
    liner, and static edges win without touching transform rules. */
 
-:root {
-  --paper-tooth:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='tooth'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.42  0 0 0 0 0.32  0 0 0 0 0.2  0 0 0 0.62 0'/></filter><rect width='100%25' height='100%25' filter='url(%23tooth)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='280' height='280'><filter id='pulp'><feTurbulence type='fractalNoise' baseFrequency='0.2' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.4  0 0 0 0 0.24  0 0 0 0.42 0'/></filter><rect width='100%25' height='100%25' filter='url(%23pulp)'/></svg>"),
-    repeating-linear-gradient(
-      180deg,
-      rgb(92 64 36 / 0.05) 0 1px,
-      transparent 1px 4px
-    );
-  --paper-tooth-size: 160px 160px, 280px 280px, auto;
-}
-
 .card-face:not([data-stock="cover"]),
 .card-insert:not([data-stock="cover"]),
 .card-panel:not([data-stock="cover"]) {
   background-color: var(--paper-liner);
-  background-image:
-    radial-gradient(90% 72% at 50% 36%, rgb(255 247 232 / 0.7), transparent 68%),
-    linear-gradient(
-      var(--paper-gutter, to right),
-      rgb(56 40 24 / 0.08),
-      rgb(56 40 24 / 0.03) 16%,
-      transparent 40%
-    );
+  background-image: linear-gradient(
+    var(--paper-gutter, to right),
+    rgb(27 36 64 / 0.045),
+    rgb(27 36 64 / 0.012) 22%,
+    transparent 48%
+  );
 }
 
 .card-face[data-face="back"]:not([data-stock="cover"]),
@@ -46,17 +32,20 @@
 .card-face::after,
 .card-insert::after,
 .card-panel::after {
-  opacity: 0.1;
+  opacity: 0.08;
+}
+
+.card-stage[data-closed="true"] .card-panel {
+  box-shadow:
+    0 1px 2px rgb(27 36 64 / 0.05),
+    0 18px 36px -18px rgb(27 36 64 / 0.22);
 }
 
 .card-face:not([data-stock="cover"])::after,
 .card-insert:not([data-stock="cover"])::after,
 .card-panel:not([data-stock="cover"])::after,
 .paper-surface::after {
-  opacity: 0.28;
-  mix-blend-mode: multiply;
-  background-image: var(--paper-tooth);
-  background-size: var(--paper-tooth-size);
+  opacity: 0;
 }
 
 .card-face::before,
@@ -68,8 +57,8 @@
   z-index: 1;
   pointer-events: none;
   box-shadow:
-    inset 0 1px 0 rgb(255 248 236 / 0.38),
-    inset 0 0 0 1px rgb(58 42 26 / 0.05);
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    inset 0 0 0 1px rgb(27 36 64 / 0.04);
 }
 
 .card-face:not([data-stock="cover"]),
@@ -91,46 +80,53 @@
 }
 
 .card-crease {
-  width: 44px;
+  width: 36px;
   z-index: 3;
 }
 
 .card-crease[data-side="right"] {
   background: linear-gradient(
     to right,
-    rgb(48 34 22 / 0.22),
-    rgb(48 34 22 / 0.09) 12px,
-    rgb(48 34 22 / 0.03) 26px,
+    rgb(27 36 64 / 0.08),
+    rgb(27 36 64 / 0.025) 14px,
     transparent 100%
   );
-  box-shadow: inset 1px 0 0 rgb(48 34 22 / 0.14);
 }
 
 .card-crease[data-side="left"] {
   background: linear-gradient(
     to left,
-    rgb(48 34 22 / 0.22),
-    rgb(48 34 22 / 0.09) 12px,
-    rgb(48 34 22 / 0.03) 26px,
+    rgb(27 36 64 / 0.08),
+    rgb(27 36 64 / 0.025) 14px,
     transparent 100%
   );
-  box-shadow: inset -1px 0 0 rgb(48 34 22 / 0.14);
 }
 
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="left"],
+.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="left"] {
+  box-shadow:
+    0 1px 2px rgb(27 36 64 / 0.04),
+    0 14px 28px -16px rgb(27 36 64 / 0.18),
+    -1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
+}
+
 .card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="right"] {
   box-shadow:
-    0 1px 1px rgb(42 32 22 / 0.06),
-    0 18px 36px -20px rgb(42 32 22 / 0.34),
-    1px 2px 0 color-mix(in oklab, var(--card-stock) 78%, #2c1c12);
+    0 1px 2px rgb(27 36 64 / 0.04),
+    0 14px 28px -16px rgb(27 36 64 / 0.18),
+    1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
 }
 
 .paper-surface {
   position: relative;
   isolation: isolate;
   background-color: var(--paper-liner);
-  background-image:
-    radial-gradient(90% 72% at 50% 36%, rgb(255 247 232 / 0.7), transparent 68%);
+}
+
+.signing-sheet {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 10px 24px -16px rgb(27 36 64 / 0.16),
+    0 0 0 1px rgb(27 36 64 / 0.06);
 }
 
 .paper-surface::before {
@@ -138,7 +134,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 rgb(255 248 236 / 0.45);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
 }
 
 .paper-surface::after {
@@ -146,10 +142,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.28;
-  mix-blend-mode: multiply;
-  background-image: var(--paper-tooth);
-  background-size: var(--paper-tooth-size);
+  opacity: 0;
 }
 
 .card-cover {
@@ -174,7 +167,7 @@
 .card-cover-greeting {
   position: relative;
   max-width: 16ch;
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.05rem;
   font-style: italic;
   font-weight: 400;
@@ -203,6 +196,7 @@
   color: var(--muted);
   font-size: 0.72rem;
   text-align: center;
+  transition: color 160ms var(--ease-out);
 }
 
 .design-thumbnail {
@@ -213,10 +207,15 @@
   margin-bottom: 0.45rem;
   border: 1px solid var(--rule);
   background: var(--paper-liner);
+  transition: transform 160ms var(--ease-out);
+}
+
+.design-option:active .design-thumbnail {
+  transform: scale(0.97);
 }
 
 .design-thumbnail svg { width: 90%; }
-.design-plain { font-family: var(--font-garamond), serif; font-style: italic; font-size: 1rem; }
+.design-plain { font-family: var(--font-garamond), var(--cjk-serif), serif; font-style: italic; font-size: 1rem; }
 .design-option:has(input:checked) { color: var(--ink); }
 .design-option:has(input:checked) .design-thumbnail { outline: 2px solid var(--ink); outline-offset: 2px; }
 .design-option:has(input:focus-visible) .design-thumbnail { outline: 2px solid var(--brass); outline-offset: 4px; }
@@ -226,7 +225,7 @@
   max-width: 12ch;
   margin-top: 0.55rem;
   overflow-wrap: anywhere;
-  font-family: var(--font-cormorant), var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-cormorant), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-weight: 500;
   letter-spacing: -0.02em;
   line-height: 1.05;
@@ -256,7 +255,7 @@
   justify-content: center;
   padding: 2.4rem 1.8rem;
   color: var(--ink-pen);
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.12rem;
   font-style: italic;
   line-height: 1.55;
@@ -264,38 +263,19 @@
 }
 
 .paper-home {
-  width: min(100% - 2.5rem, 64rem);
+  width: min(100% - 2rem, 22.5rem);
   margin-inline: auto;
-  padding: 1.5rem 0 5rem;
-}
-
-.paper-masthead {
-  padding: 0.15rem 0 0;
-}
-
-.paper-mark {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
-  font-size: 1.05rem;
-  font-style: italic;
+  padding: 2.75rem 0 5rem;
 }
 
 .create-card-layout {
-  display: grid;
-  grid-template-columns: minmax(16rem, 21.5rem) minmax(16rem, 23rem);
-  justify-content: center;
-  gap: clamp(2.25rem, 7vw, 5.5rem);
-  align-items: center;
-  padding: clamp(2.25rem, 7vw, 5rem) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .paper-preview-stage {
-  align-self: start;
-  position: sticky;
-  top: 2rem;
-  justify-self: center;
-  width: min(100%, 21.5rem);
+  width: 100%;
 }
 
 .paper-preview {
@@ -318,37 +298,40 @@
 }
 
 .create-card-form {
-  max-width: 24rem;
+  width: 100%;
 }
 
 .create-card-form h1 {
   margin: 0;
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
-  font-size: clamp(1.85rem, 4vw, 2.35rem);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
+  font-size: 0.93rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
 .paper-lede {
-  max-width: 28ch;
-  margin: 0.7rem 0 0;
+  margin: 0 0 0.25rem;
   color: var(--muted);
-  font-size: 1rem;
-  line-height: 1.55;
+  font-size: 0.93rem;
+  line-height: 1.45;
 }
 
 .form-error {
-  border-left: 2px solid var(--brass);
-  margin: 1.5rem 0 0;
-  padding-left: 1rem;
-  color: var(--brass);
+  border-left: 2px solid var(--ink);
+  margin: 1.25rem 0 0;
+  padding-left: 0.85rem;
+  color: var(--ink);
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
 .form-field {
-  margin-top: 1.75rem;
+  margin-top: 1.6rem;
+}
+
+.form-field-lead {
+  margin-top: 1.15rem;
 }
 
 .form-field label,
@@ -371,8 +354,9 @@
   background: transparent;
   padding: 0.65rem 0.15rem;
   color: var(--ink);
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: 1.3rem;
+  transition: border-color 160ms var(--ease-out);
 }
 
 .field::placeholder {
@@ -411,15 +395,20 @@
   gap: 0.4rem;
   color: var(--muted);
   font-size: 0.78rem;
+  transition: color 160ms var(--ease-out);
 }
 
 .stock-swatch {
   display: block;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 0.95rem;
+  height: 1.3rem;
   border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px var(--paper);
+  box-shadow: inset 0 0 0 1px var(--paper);
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+.stock-option:active .stock-swatch {
+  transform: scale(0.97);
 }
 
 .stock-option:has(input:checked) {
@@ -442,7 +431,7 @@
   min-height: 2.75rem;
   max-height: 12rem;
   overflow-y: auto;
-  font-family: var(--font-karla), sans-serif;
+  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -452,40 +441,20 @@
 }
 
 .privacy-note {
-  max-width: 32rem;
-  margin: 1rem 0 0;
+  margin: 0.85rem 0 0;
   color: var(--muted);
-  font-size: 0.74rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 700px) {
   .paper-home {
-    width: min(100% - 2rem, 40rem);
-    padding-top: 1.15rem;
-  }
-
-  .create-card-layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    padding-top: 1.75rem;
+    padding-top: 1.5rem;
   }
 
   .paper-preview-stage {
-    position: static;
-    align-self: center;
-    width: min(72vw, 18rem);
-  }
-
-  .create-card-form {
-    width: 100%;
-    max-width: none;
-  }
-
-  .paper-lede {
-    max-width: none;
+    width: min(100%, 18.5rem);
+    margin-inline: auto;
   }
 }
 
@@ -508,7 +477,7 @@
 .handoff-head h1 {
   margin: 0;
   max-width: 18ch;
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
   font-size: clamp(1.85rem, 4vw, 2.4rem);
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -544,11 +513,11 @@
 .handoff-list h2 {
   grid-area: title;
   margin: 0;
-  font-family: var(--font-garamond), ui-serif, Georgia, serif;
-  font-size: 1.2rem;
-  font-weight: 500;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
+  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
+  font-size: 0.93rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
 .handoff-list > li > p {
@@ -580,10 +549,15 @@
   text-decoration: underline;
   text-decoration-color: var(--rule);
   text-underline-offset: 0.2em;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out);
 }
 
-.handoff-open:hover {
-  text-decoration-color: var(--brass);
+@media (hover: hover) and (pointer: fine) {
+  .handoff-open:hover {
+    text-decoration-color: var(--brass);
+  }
 }
 
 .handoff-address {
@@ -622,11 +596,16 @@
   text-decoration: underline;
   text-decoration-color: var(--rule);
   text-underline-offset: 0.2em;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out);
 }
 
-.handoff-slack summary:hover {
-  color: var(--ink);
-  text-decoration-color: var(--brass);
+@media (hover: hover) and (pointer: fine) {
+  .handoff-slack summary:hover {
+    color: var(--ink);
+    text-decoration-color: var(--brass);
+  }
 }
 
 .handoff-slack section {
@@ -655,51 +634,50 @@
   }
 }
 
-/* Quiet controls with a stable silhouette and a small, physical press. */
-.ui-button,
-.card-nav-link {
+/* Quiet controls with a stable silhouette and a physical press. */
+.ui-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
   padding: 0.55rem 1rem;
-  border: 1px solid color-mix(in oklab, var(--ink) 22%, var(--paper));
-  border-radius: 0.5rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
   background: var(--raised);
   color: var(--ink);
-  font-family: var(--font-karla), sans-serif;
+  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgb(27 36 64 / 0.08);
-  transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+  box-shadow: none;
+  transition:
+    background-color 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 
 .ui-button-primary {
   padding-inline: 1.4rem;
   background: var(--ink);
   border-color: var(--ink);
-  color: var(--paper);
+  color: #eef2f4;
 }
 
-@media (hover: hover) {
-  .ui-button:hover:not(:disabled),
-  .card-nav-link:hover:not(:disabled) {
-    background: #f0f1f5;
-    border-color: var(--muted);
+@media (hover: hover) and (pointer: fine) {
+  .ui-button:hover:not(:disabled) {
+    background: color-mix(in oklab, var(--ink) 8%, var(--paper));
   }
   .ui-button-primary:hover:not(:disabled) {
-    background: #303c5d;
-    border-color: #303c5d;
+    background: color-mix(in oklab, var(--ink) 82%, white);
+    border-color: color-mix(in oklab, var(--ink) 82%, white);
   }
 }
 
-.ui-button:active:not(:disabled),
-.card-nav-link:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: inset 0 1px 2px rgb(27 36 64 / 0.16);
+.ui-button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .ui-button:disabled {
@@ -708,7 +686,108 @@
   box-shadow: none;
 }
 
-.ui-button[data-copied="true"] { color: var(--brass); }
+.ui-button[data-copied="true"] {
+  color: var(--brass);
+}
+
+.ui-button-swap {
+  display: grid;
+  justify-items: center;
+}
+
+.ui-button-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity 200ms var(--ease-out),
+    filter 200ms var(--ease-out);
+}
+
+.ui-button-swap > *:not([data-visible="true"]) {
+  opacity: 0;
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.quiet-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .quiet-link:hover:not(:disabled) {
+    color: var(--ink);
+    text-decoration-color: var(--brass);
+  }
+}
+
+.quiet-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pen-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 160ms var(--ease-out);
+}
+
+.pen-choice-mark {
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: inherit;
+  transition:
+    transform 160ms var(--ease-out),
+    border-color 160ms var(--ease-out),
+    color 160ms var(--ease-out);
+}
+
+.pen-choice:active .pen-choice-mark {
+  transform: scale(0.97);
+}
+
+.pen-choice:has(input:checked) {
+  color: var(--ink);
+}
+
+.pen-choice:has(input:checked) .pen-choice-mark {
+  border-color: var(--ink);
+}
+
+.pen-choice:has(input:focus-visible) .pen-choice-mark {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.pen-choice-label {
+  font-size: 0.75rem;
+}
+
+.pen-choice:has(input:checked) .pen-choice-label {
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 4px;
+}
 
 .note-reader {
   display: grid;
@@ -716,6 +795,55 @@
   gap: 0.75rem;
   height: 100%;
   min-height: 0;
+}
+
+.note-reader[data-photo="true"] {
+  grid-template-rows: auto minmax(0, 1fr) auto 2.75rem;
+}
+
+.card-face[data-photo="true"] {
+  background-image: var(--note-photo),
+    linear-gradient(
+      var(--paper-gutter, to right),
+      rgb(27 36 64 / 0.045),
+      rgb(27 36 64 / 0.012) 22%,
+      transparent 48%
+    );
+  background-size: var(--note-photo-w, auto) var(--note-photo-h, 11rem), auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: var(--note-photo-x, 50%) var(--note-photo-y, 2rem), 0 0;
+}
+
+.card-face[data-photo="true"]:has(.note-photo[data-hidden]) {
+  background-image: linear-gradient(
+    var(--paper-gutter, to right),
+    rgb(27 36 64 / 0.045),
+    rgb(27 36 64 / 0.012) 22%,
+    transparent 48%
+  );
+  background-size: auto;
+  background-position: 0 0;
+}
+
+.note-photo {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  background-color: transparent;
+  background-image: none;
+}
+
+img.note-photo {
+  height: auto;
+  max-height: 11rem;
+  object-fit: contain;
+  object-position: center top;
+  background-image: none;
+}
+
+.note-photo-pick {
+  max-height: 8.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .note-page { position: relative; min-height: 0; overflow-y: auto; }
@@ -729,6 +857,29 @@
 .note-preview > div > div { height: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ui-button, .card-nav-link { transition: none; }
-  .ui-button:active:not(:disabled), .card-nav-link:active:not(:disabled) { transform: none; }
+  .ui-button {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .design-thumbnail,
+  .stock-swatch,
+  .pen-choice-mark {
+    transition: border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+  }
+
+  .ui-button:active:not(:disabled),
+  .design-option:active .design-thumbnail,
+  .stock-option:active .stock-swatch,
+  .pen-choice:active .pen-choice-mark,
+  .card-nav-link:active:not(:disabled) {
+    transform: none;
+  }
+
+  .ui-button-swap > * {
+    transition: opacity 160ms ease;
+    filter: none;
+  }
 }

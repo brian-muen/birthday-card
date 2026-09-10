@@ -45,6 +45,7 @@ export async function GET(
       body: note.body,
       date: dateFormatter.format(note.createdAt),
       pen: parsePen(note.pen),
+      image: note.image,
     })),
   });
 

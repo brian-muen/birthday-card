@@ -15,9 +15,6 @@ export default async function Home({
   const { error, recipientName, stock, design } = await searchParams;
   return (
     <main className="paper-home">
-      <header className="paper-masthead">
-        <p className="paper-mark">Birthday card</p>
-      </header>
       <CreateCardForm
         error={error}
         initialName={recipientName}

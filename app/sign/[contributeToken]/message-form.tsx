@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
 import MessageReader from "@/components/message-reader";
+import { prepareNoteImage } from "@/lib/prepare-note-image";
 import { PenIcon } from "@/components/pen-icon";
 import {
   DEFAULT_PEN,
@@ -18,10 +19,8 @@ import { stockHex } from "@/lib/stock";
 const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
 const COUNTER_THRESHOLD = MAX_BODY_LENGTH * 0.75;
-const LINER = "var(--paper-liner, #f0e4cf)";
+const LINER = "var(--paper-liner, #fffdf8)";
 const WRITING_INK = "var(--ink-pen, #2a241c)";
-const GRAIN =
-  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='fiber'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23fiber)'/></svg>\")";
 
 type Draft = { authorName: string; body: string; pen: PenId };
 type ErrorField = "name" | "body" | "form";
@@ -67,23 +66,16 @@ function PaperSheet({
 }) {
   return (
     <div
-      className={`signing-sheet relative isolate overflow-hidden ${className ?? ""}`}
+      className={`signing-sheet paper-surface relative isolate overflow-hidden ${className ?? ""}`}
       style={{
         backgroundColor: LINER,
         ["--card-stock" as string]: stockHex(stock),
-        boxShadow:
-          "inset 0 1px 0 rgb(255 255 255 / 0.72), inset 0 -1px 0 rgb(27 36 64 / 0.04), 0 0 0 1px rgb(27 36 64 / 0.08)",
       }}
     >
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 left-0 w-[5px]"
         style={{ backgroundColor: "var(--card-stock)" }}
-      />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-multiply"
-        style={{ backgroundImage: GRAIN, backgroundSize: "160px 160px" }}
       />
       <div className="relative">{children}</div>
     </div>
@@ -102,6 +94,8 @@ export default function MessageForm({
   const [authorName, setAuthorName] = useState("");
   const [body, setBody] = useState("");
   const [pen, setPen] = useState<PenId>(DEFAULT_PEN);
+  const [image, setImage] = useState<string | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorField, setErrorField] = useState<ErrorField | null>(null);
   const [sentBy, setSentBy] = useState<string | null>(null);
@@ -190,6 +184,7 @@ export default function MessageForm({
           authorName: name,
           body: message,
           pen: chosen,
+          image,
         });
 
         if (!result.ok) {
@@ -205,6 +200,7 @@ export default function MessageForm({
         setSentPen(chosen);
         setAuthorName("");
         setBody("");
+        setImage(null);
       } catch {
         fail("The note could not be added. Your words are still here — try again.", "form");
       }
@@ -219,7 +215,24 @@ export default function MessageForm({
     setErrorField(null);
     setAuthorName("");
     setBody("");
+    setImage(null);
     setPen(DEFAULT_PEN);
+  }
+
+  async function handlePhoto(file: File | undefined) {
+    if (!file) return;
+    setImageBusy(true);
+    const result = await prepareNoteImage(file);
+    setImageBusy(false);
+    if (!result.ok) {
+      fail(result.error, "form");
+      return;
+    }
+    setImage(result.dataUrl);
+    if (errorField === "form") {
+      setError(null);
+      setErrorField(null);
+    }
   }
 
   if (sentBy) {
@@ -244,9 +257,7 @@ export default function MessageForm({
           >
             {sentBy}
           </span>
-          . Only {recipientName} and the organizer can read it. Other people
-          signing cannot. Nothing waits for a birthday send — the organizer
-          delivers the card by sharing the recipient link.
+          . Only {recipientName} and the organizer can read it.
         </p>
         <button
           type="button"
@@ -271,42 +282,22 @@ export default function MessageForm({
       <fieldset className="max-w-2xl">
         <legend className="text-[0.9375rem] font-medium">Your pen</legend>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-3">
-          {PENS.map((option) => {
-            const selected = pen === option.id;
-            return (
-              <label
-                key={option.id}
-                className="flex cursor-pointer flex-col items-center gap-1.5"
-              >
-                <input
-                  type="radio"
-                  name="pen"
-                  value={option.id}
-                  checked={selected}
-                  onChange={() => setPen(option.id)}
-                  className="peer sr-only"
-                />
-                <span
-                  className={`flex size-11 items-center justify-center border bg-transparent text-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink ${
-                    selected
-                      ? "border-ink"
-                      : "border-rule text-muted"
-                  }`}
-                >
-                  <PenIcon id={option.id} />
-                </span>
-                <span
-                  className={`text-[0.75rem] ${
-                    selected
-                      ? "text-ink underline decoration-rule decoration-1 underline-offset-4"
-                      : "text-muted"
-                  }`}
-                >
-                  {option.label}
-                </span>
-              </label>
-            );
-          })}
+          {PENS.map((option) => (
+            <label key={option.id} className="pen-choice">
+              <input
+                type="radio"
+                name="pen"
+                value={option.id}
+                checked={pen === option.id}
+                onChange={() => setPen(option.id)}
+                className="sr-only"
+              />
+              <span className="pen-choice-mark">
+                <PenIcon id={option.id} />
+              </span>
+              <span className="pen-choice-label">{option.label}</span>
+            </label>
+          ))}
         </div>
       </fieldset>
 
@@ -321,6 +312,37 @@ export default function MessageForm({
               color: WRITING_INK,
             }}
           >
+            <div className="mb-5">
+              {image ? (
+                <div>
+                  <img src={image} alt="" className="note-photo note-photo-pick" />
+                  <button
+                    type="button"
+                    onClick={() => setImage(null)}
+                    disabled={pending || imageBusy}
+                    className="quiet-link text-[0.8125rem] text-muted"
+                  >
+                    Remove photo
+                  </button>
+                </div>
+              ) : (
+                <label className="quiet-link inline-flex text-[0.8125rem] text-muted">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                    className="sr-only"
+                    disabled={pending || imageBusy}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      void handlePhoto(file);
+                    }}
+                  />
+                  {imageBusy ? "Preparing photo…" : "Add a photo"}
+                </label>
+              )}
+            </div>
+
             <label htmlFor="body" className="sr-only">
               Your message for {recipientName}
             </label>
@@ -403,6 +425,7 @@ export default function MessageForm({
                 body={previewBody}
                 authorName={previewName}
                 pen={pen}
+                image={image}
               />
             </div>
           </PaperSheet>
@@ -428,14 +451,13 @@ export default function MessageForm({
       <div className="mt-8 flex max-w-2xl flex-wrap items-center gap-x-6 gap-y-3">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || imageBusy}
           className="ui-button ui-button-primary"
         >
           {pending ? "Adding your message…" : "Add my message"}
         </button>
         <p className="max-w-[40ch] text-sm leading-relaxed text-muted">
-          Only {recipientName} and the organizer will see this note. Delivery
-          is when they share the recipient link.
+          Only {recipientName} and the organizer will see this.
         </p>
       </div>
     </form>

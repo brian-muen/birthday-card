@@ -28,6 +28,7 @@ export const messages = pgTable("messages", {
   authorName: text("author_name").notNull(),
   body: text("body").notNull(),
   pen: text("pen").notNull().default("pencil"),
+  image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
