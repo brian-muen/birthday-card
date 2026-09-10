@@ -30,11 +30,13 @@ const ENSURE_TABLES = [
     created_at timestamp NOT NULL DEFAULT now()
   )`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS stock text NOT NULL DEFAULT 'red'`,
+  `ALTER TABLE cards ADD COLUMN IF NOT EXISTS design text NOT NULL DEFAULT 'plain'`,
   `ALTER TABLE cards ALTER COLUMN stock SET DEFAULT 'red'`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS gift_token text`,
   `CREATE UNIQUE INDEX IF NOT EXISTS cards_gift_token_unique ON cards (gift_token)`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS font text NOT NULL DEFAULT 'hand'`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS pen text NOT NULL DEFAULT 'pencil'`,
+  `ALTER TABLE messages ADD COLUMN IF NOT EXISTS image text`,
 ];
 
 async function createDb(): Promise<Db> {

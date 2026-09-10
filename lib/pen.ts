@@ -80,33 +80,58 @@ export function penIsLively(value: unknown): boolean {
   return parsePen(value) !== "ballpoint";
 }
 
+/**
+ * Paragraph metrics for the writing field. Fountain and brush keep their
+ * font ids; size and line-height keep them readable as body text.
+ */
 export function penBodyClass(value: unknown): string {
   switch (parsePen(value)) {
     case "fountain":
-      return "text-[1.5rem] leading-[1.7]";
+      return "text-[1.25rem] leading-[1.95]";
     case "marker":
-      return "text-[1.35rem] leading-[1.5]";
+      return "text-[1.3rem] leading-[1.55]";
     case "brush":
-      return "text-[1.45rem] leading-[1.65]";
+      return "text-[1.2rem] leading-[1.85]";
     case "ballpoint":
-      return "text-[1.125rem] leading-[1.6]";
+      return "text-[1.125rem] leading-[1.65]";
     default:
-      return "text-[1.25rem] leading-[1.6]";
+      return "text-[1.25rem] leading-[1.65]";
   }
 }
 
+/**
+ * Paragraph metrics for a finished note. Same font ids as the pen; script
+ * pens stay at reading size so Great Vibes / Satisfy are not body display.
+ */
 export function penNoteClass(value: unknown): string {
   switch (parsePen(value)) {
     case "fountain":
-      return "text-[1.5rem] leading-[1.7] sm:text-[1.625rem]";
+      return "text-[1.1875rem] leading-[2] sm:text-[1.25rem]";
     case "marker":
-      return "text-[1.25rem] leading-[1.5] sm:text-[1.375rem]";
+      return "text-[1.2rem] leading-[1.55] sm:text-[1.3rem]";
     case "brush":
-      return "text-[1.375rem] leading-[1.62] sm:text-[1.5rem]";
+      return "text-[1.125rem] leading-[1.85] sm:text-[1.2rem]";
     case "ballpoint":
-      return "text-[1.0625rem] leading-[1.6] sm:text-[1.125rem]";
+      return "text-[1.0625rem] leading-[1.65] sm:text-[1.125rem]";
     default:
-      return "text-[1.1875rem] leading-[1.62] sm:text-[1.25rem]";
+      return "text-[1.1875rem] leading-[1.65] sm:text-[1.25rem]";
+  }
+}
+
+/** Signature line: same pen, including script faces at a larger size. */
+export function penSignatureClass(value: unknown): string {
+  const face = penClass(value);
+  switch (parsePen(value)) {
+    case "fountain":
+      return `${face} text-[1.85rem] leading-[1.15] sm:text-[2.05rem]`;
+    case "marker":
+      return `${face} text-[1.45rem] leading-[1.2]`;
+    case "brush":
+      return `${face} text-[1.65rem] leading-[1.2] sm:text-[1.85rem]`;
+    case "ballpoint":
+      return `${face} text-[1.1875rem] leading-[1.3]`;
+    default:
+      return `${face} text-[1.45rem] leading-[1.2]`;
   }
 }
 

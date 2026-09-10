@@ -6,6 +6,7 @@ import { asc, eq } from "drizzle-orm";
 import { ensureGiftToken, findCardByToken, isMasterLink } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
+import { parseDesign } from "@/lib/design";
 import { parsePen } from "@/lib/pen";
 import { parseStock } from "@/lib/stock";
 import CardBook from "./card-book";
@@ -60,6 +61,7 @@ export default async function CardPage({ params }: PageParams) {
         masterToken={canManage ? card.masterToken : ""}
         canManage={canManage}
         recipientName={card.recipientName}
+        design={parseDesign(card.design)}
         intro={card.intro}
         stock={parseStock(card.stock)}
         notes={notes.map((note) => ({
@@ -68,6 +70,7 @@ export default async function CardPage({ params }: PageParams) {
           body: note.body,
           date: dateFormatter.format(note.createdAt),
           pen: parsePen(note.pen),
+          image: note.image,
         }))}
       />
 
@@ -75,7 +78,7 @@ export default async function CardPage({ params }: PageParams) {
         <a
           href={`/card/${token}/pdf`}
           download
-          className="text-[0.9375rem] font-medium underline decoration-rule decoration-2 underline-offset-4 transition-colors hover:decoration-brass"
+          className="quiet-link text-[0.9375rem] font-medium"
         >
           Download the card as a PDF
         </a>

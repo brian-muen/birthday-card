@@ -12,6 +12,7 @@ export const cards = pgTable("cards", {
   occasion: text("occasion").notNull(),
   intro: text("intro"),
   stock: text("stock").notNull().default("red"),
+  design: text("design").notNull().default("plain"),
   font: text("font").notNull().default("hand"),
   contributeToken: text("contribute_token").notNull().unique(),
   masterToken: text("master_token").notNull().unique(),
@@ -27,6 +28,7 @@ export const messages = pgTable("messages", {
   authorName: text("author_name").notNull(),
   body: text("body").notNull(),
   pen: text("pen").notNull().default("pencil"),
+  image: text("image"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

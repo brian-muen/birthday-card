@@ -6,13 +6,21 @@ import {
   EB_Garamond,
   Great_Vibes,
   Karla,
+  Ma_Shan_Zheng,
+  Nanum_Pen_Script,
+  Noto_Sans_KR,
+  Noto_Sans_SC,
+  Noto_Sans_TC,
+  Noto_Serif_KR,
+  Noto_Serif_SC,
+  Noto_Serif_TC,
   Satisfy,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
-import "./paper.css";
 
 // Garamond sets site headlines. Karla carries the interface.
+// paper.css loads after card-motion.css from globals.css.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
@@ -24,7 +32,7 @@ const karla = Karla({
   subsets: ["latin"],
 });
 
-// Cover stays Caveat. Signers pick a pen; each note uses that hand.
+// Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
@@ -60,6 +68,82 @@ const satisfy = Satisfy({
   subsets: ["latin"],
 });
 
+// CJK faces are split across many files; don't preload the whole set.
+const notoSansKR = Noto_Sans_KR({
+  weight: ["400", "600"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-sans-kr",
+});
+
+const notoSansSC = Noto_Sans_SC({
+  weight: ["400", "600"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-sans-sc",
+});
+
+const notoSansTC = Noto_Sans_TC({
+  weight: ["400", "600"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-sans-tc",
+});
+
+const notoSerifKR = Noto_Serif_KR({
+  weight: ["400", "500"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-serif-kr",
+});
+
+const notoSerifSC = Noto_Serif_SC({
+  weight: ["400", "500"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-serif-sc",
+});
+
+const notoSerifTC = Noto_Serif_TC({
+  weight: ["400", "500"],
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-noto-serif-tc",
+});
+
+const nanumPen = Nanum_Pen_Script({
+  weight: "400",
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-nanum-pen",
+});
+
+const maShan = Ma_Shan_Zheng({
+  weight: "400",
+  preload: false,
+  adjustFontFallback: false,
+  variable: "--font-ma-shan",
+});
+
+const fontVariables = [
+  karla.variable,
+  garamond.variable,
+  caveat.variable,
+  greatVibes.variable,
+  cormorant.variable,
+  sourceSans.variable,
+  caveatBrush.variable,
+  satisfy.variable,
+  notoSansKR.variable,
+  notoSansSC.variable,
+  notoSansTC.variable,
+  notoSerifKR.variable,
+  notoSerifSC.variable,
+  notoSerifTC.variable,
+  nanumPen.variable,
+  maShan.variable,
+].join(" ");
+
 export const metadata: Metadata = {
   title: "Birthday Card",
   description:
@@ -74,7 +158,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${karla.variable} ${garamond.variable} ${caveat.variable} ${greatVibes.variable} ${cormorant.variable} ${sourceSans.variable} ${caveatBrush.variable} ${satisfy.variable} h-full`}
+      className={`${fontVariables} h-full`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

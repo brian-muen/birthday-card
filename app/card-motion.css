@@ -1,53 +1,45 @@
 .card-frame {
   --card-stock: #e0b3a8;
-  --card-turn: 520ms;
-  --card-cover-turn: 800ms;
+  --card-turn: 540ms;
+  --card-cover-turn: 780ms;
   --card-close: 680ms;
-  --card-ease: cubic-bezier(0.55, 0.05, 0.35, 1);
-  --card-ease-cover: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --card-ease: cubic-bezier(0.26, 0.02, 0.18, 1);
+  --card-ease-cover: cubic-bezier(0.3, 0.02, 0.16, 1);
   overflow-x: clip;
   overflow-y: visible;
+  touch-action: pan-y;
 }
 
-.card-frame[data-flipping="true"],
-.card-frame:has([data-flipping="true"]),
+.card-frame:has([data-moving="true"]),
 .card-frame:has([data-closing="true"]) {
   overflow-x: visible;
 }
 
-.card-stage {
+.card-seat {
   position: relative;
   width: 100%;
-  perspective: 2250px;
-  transition:
-    transform var(--card-cover-turn) var(--card-ease-cover),
-    perspective-origin var(--card-cover-turn) var(--card-ease-cover);
-}
-
-.card-frame[data-spread="false"] .card-stage {
+  /* Match SPREAD_QUERY in card-book.tsx. Layout is CSS-first so a
+     desktop reload does not paint the mobile single-panel, then jump. */
   aspect-ratio: 5 / 7;
 }
 
-.card-frame[data-spread="true"] .card-stage {
-  aspect-ratio: 10 / 7;
-  perspective: 2600px;
+.card-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 2250px;
+  animation: card-settle 720ms var(--card-ease-cover) both;
 }
 
-.card-frame[data-animate="false"] .card-stage,
-.card-frame[data-animate="false"] .card-panel[data-half="left"] {
-  transition: none;
-}
+@keyframes card-settle {
+  from {
+    opacity: 0.62;
+    transform: translate3d(0, 14px, 0);
+  }
 
-/* Closed front, last fold, and closed back share one 5×7 seat (the
-   right-hand leaf). Never recenter onto the left landing — that swap
-   is what made the back pop larger. */
-.card-frame[data-spread="true"] .card-stage[data-closed="true"],
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] {
-  transform: translateX(-25%);
-  perspective-origin: 75% 50%;
-  /* Keep only the right-hand 5×7. The left half of the 10×7 stage
-     would otherwise sit beside the back and read as a size jump. */
-  clip-path: inset(0 0 0 50%);
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 .card-panel {
@@ -57,59 +49,56 @@
   isolation: isolate;
   background-color: var(--card-stock);
   box-shadow:
-    0 1px 2px rgb(27 36 64 / 0.04),
-    0 3px 8px -4px rgb(27 36 64 / 0.1),
-    inset 0 0 0 1px rgb(27 36 64 / 0.08);
+    0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent),
+    0 3px 8px -4px color-mix(in oklab, var(--ink) 10%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
 .card-stage[data-closed="true"] .card-panel {
   box-shadow:
-    0 1px 1px rgb(27 36 64 / 0.04),
-    0 2px 5px -2px rgb(27 36 64 / 0.08),
-    inset 0 0 0 1px rgb(27 36 64 / 0.08);
+    0 1px 1px color-mix(in oklab, var(--ink) 4%, transparent),
+    0 2px 5px -2px color-mix(in oklab, var(--ink) 8%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
 .card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="left"] {
   box-shadow:
-    0 1px 2px rgb(27 36 64 / 0.04),
-    0 3px 8px -4px rgb(27 36 64 / 0.1),
-    inset 1px 1px 0 rgb(27 36 64 / 0.08),
-    inset 0 -1px 0 rgb(27 36 64 / 0.08);
+    0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent),
+    0 3px 8px -4px color-mix(in oklab, var(--ink) 10%, transparent),
+    inset 1px 1px 0 color-mix(in oklab, var(--ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
 .card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="right"] {
   box-shadow:
-    0 1px 2px rgb(27 36 64 / 0.04),
-    0 3px 8px -4px rgb(27 36 64 / 0.1),
-    inset -1px 1px 0 rgb(27 36 64 / 0.08),
-    inset 0 -1px 0 rgb(27 36 64 / 0.08);
+    0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent),
+    0 3px 8px -4px color-mix(in oklab, var(--ink) 10%, transparent),
+    inset -1px 1px 0 color-mix(in oklab, var(--ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
-.card-frame[data-spread="true"] .card-panel[data-half="right"] {
-  left: 50%;
-  width: 50%;
-}
-
-.card-frame[data-spread="false"] .card-panel[data-half="right"] {
+.card-panel[data-half="right"] {
   left: 0;
   width: 100%;
+  transition: left var(--card-cover-turn) var(--card-ease-cover);
+}
+
+.card-stage[data-closing="true"] .card-panel[data-half="right"] {
+  transition-duration: var(--card-close);
 }
 
 .card-panel[data-half="left"] {
   left: 0;
   width: 50%;
   opacity: 0;
-  transition: opacity 280ms linear 420ms;
+  transition: opacity 220ms linear 360ms;
 }
 
-.card-stage[data-closed="false"] .card-panel[data-half="left"] {
+.card-stage[data-closed="false"]:not([data-closing="true"]) .card-panel[data-half="left"] {
   opacity: 1;
 }
 
-/* The left half slides out of the closed seat; don't leave it painted
-   beside the back after the fold (the open fade-in is delayed 420ms). */
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="left"],
-.card-stage[data-shut="back"] .card-panel[data-half="left"] {
+.card-stage[data-closing="true"] .card-panel[data-half="left"] {
   opacity: 0;
   transition: opacity 160ms linear;
 }
@@ -117,101 +106,52 @@
 .card-leaf {
   position: absolute;
   inset-block: 0;
+  left: 0;
+  width: 100%;
   transform-origin: left center;
   transform-style: preserve-3d;
   z-index: 8;
-  transition: transform var(--card-turn) var(--card-ease);
+  transition:
+    transform var(--card-turn) var(--card-ease),
+    left var(--card-cover-turn) var(--card-ease-cover);
 }
 
-.card-leaf[data-cover="true"],
-.card-leaf[data-folding="true"] {
-  transition-duration: var(--card-cover-turn);
-  transition-timing-function: var(--card-ease-cover);
+.card-leaf[data-cover="true"] {
+  transition:
+    transform var(--card-cover-turn) var(--card-ease-cover),
+    left var(--card-cover-turn) var(--card-ease-cover);
 }
 
-.card-frame[data-spread="true"] .card-leaf {
-  left: 50%;
-  width: 50%;
+.card-stage[data-closing="true"] .card-leaf[data-cover="true"] {
+  transition:
+    transform var(--card-close) var(--card-ease-cover),
+    left var(--card-close) var(--card-ease-cover);
 }
 
-.card-frame[data-spread="false"] .card-leaf {
-  left: 0;
-  width: 100%;
+.card-stage[data-closed="true"]:not([data-closing="true"]) .card-face[data-face="back"] {
+  visibility: hidden;
 }
 
-/* The closed card as a two-sided object: back and front share one silhouette. */
-.card-deck {
-  position: absolute;
-  inset-block: 0;
-  transform-origin: center center;
-  transform-style: preserve-3d;
-  z-index: 12;
-  transform: rotateY(0deg);
-}
-
-.card-frame[data-spread="true"] .card-deck {
-  left: 50%;
-  width: 50%;
-}
-
-.card-frame[data-spread="false"] .card-deck {
-  left: 0;
-  width: 100%;
-}
-
-.card-deck[data-shut="back"] {
-  transform: rotateY(180deg);
-}
-
-.card-deck[data-flip="true"] {
-  animation: card-turn-over var(--card-flip) var(--card-ease-cover) both;
-}
-
-.card-deck[data-flip="true"] .card-face {
-  pointer-events: none;
-}
-
-/* Empty right panel folding shut the same way a page turns. */
-.card-shutter {
-  position: absolute;
-  inset-block: 0;
-  transform-origin: left center;
-  transform-style: preserve-3d;
-  z-index: 30;
-  pointer-events: none;
-}
-
-.card-frame[data-spread="true"] .card-shutter {
-  left: 50%;
-  width: 50%;
-}
-
-.card-frame[data-spread="false"] .card-shutter {
-  left: 0;
-  width: 100%;
-}
-
-.card-shutter[data-swing="true"] {
-  animation: card-fold-shut var(--card-close) var(--card-ease-cover) both;
-}
-
-@keyframes card-fold-shut {
-  from {
-    transform: rotateY(0deg);
+@media (min-width: 52rem) {
+  .card-seat {
+    aspect-ratio: 10 / 7;
   }
 
-  to {
-    transform: rotateY(-180deg);
-  }
-}
-
-@keyframes card-turn-over {
-  from {
-    transform: rotateY(180deg);
+  .card-stage {
+    perspective: 2600px;
   }
 
-  to {
-    transform: rotateY(0deg);
+  .card-panel[data-half="right"],
+  .card-leaf {
+    left: 50%;
+    width: 50%;
+  }
+
+  .card-stage[data-closed="true"] .card-panel[data-half="right"],
+  .card-stage[data-closing="true"] .card-panel[data-half="right"],
+  .card-stage[data-closed="true"] .card-leaf,
+  .card-stage[data-closing="true"] .card-leaf {
+    left: 25%;
   }
 }
 
@@ -223,12 +163,16 @@
   z-index: 20;
 }
 
-.card-leaf[data-moving="true"] .card-face {
-  box-shadow: 0 8px 18px -14px rgb(27 36 64 / 0.22);
+.card-stage[data-closing="true"] .card-leaf:not([data-cover="true"]) {
+  pointer-events: none;
 }
 
-.card-face,
-.card-insert {
+.card-stage[data-closing="true"] .card-leaf[data-turned="true"]:not([data-cover="true"]) {
+  visibility: hidden;
+  transition: none;
+}
+
+.card-face {
   position: absolute;
   inset: 0;
   display: flex;
@@ -236,28 +180,32 @@
   overflow: hidden;
   border: 0;
   isolation: isolate;
+  -webkit-transform-style: flat;
+  transform-style: flat;
   background-color: var(--card-stock);
+  color: inherit;
+  font: inherit;
   text-align: inherit;
-  box-shadow: inset 0 0 0 1px rgb(27 36 64 / 0.08);
-}
-
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-face[data-face="back"],
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-insert[data-face="back"] {
-  box-shadow:
-    inset 1px 1px 0 rgb(27 36 64 / 0.08),
-    inset 0 -1px 0 rgb(27 36 64 / 0.08);
-}
-
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-face[data-face="front"],
-.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-insert:not([data-span="card"]) {
-  box-shadow:
-    inset -1px 1px 0 rgb(27 36 64 / 0.08),
-    inset 0 -1px 0 rgb(27 36 64 / 0.08);
-}
-
-.card-face {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 8%, transparent);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+}
+
+.card-face:not([data-stock="cover"]) {
+  background-color: var(--paper-liner, #fffdf8);
+}
+
+.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-face[data-face="back"] {
+  box-shadow:
+    inset 1px 1px 0 color-mix(in oklab, var(--ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
+}
+
+.card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-face[data-face="front"] {
+  box-shadow:
+    inset -1px 1px 0 color-mix(in oklab, var(--ink) 8%, transparent),
+    inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
 .card-face[data-face="front"] {
@@ -268,31 +216,167 @@
   transform: rotateY(180deg);
 }
 
+.card-face,
+.card-face * {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.card-stage:has(.card-leaf[data-moving="true"]) .card-face[data-photo="true"] .card-light,
+.card-stage[data-closing="true"] .card-face[data-photo="true"] .card-light {
+  animation: none;
+  opacity: 0;
+}
+
 .card-face[data-stock="cover"] {
   background: var(--card-stock);
 }
 
-/* Notes sit on the writing panel. They never travel across the crease. */
-.card-insert {
-  left: 0;
-  width: 100%;
-  z-index: 6;
-  background: var(--card-stock);
+.card-light,
+.card-fold-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
 }
 
-.card-frame[data-spread="true"] .card-insert {
-  left: 50%;
-  width: 50%;
+.card-light {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--ink) 4%, transparent),
+    color-mix(in oklab, var(--ink) 42%, transparent)
+  );
+  mix-blend-mode: multiply;
 }
 
-.card-insert[data-span="card"] {
-  left: 0;
-  width: 100%;
-  z-index: 80;
+.card-face[data-face="back"] .card-light {
+  background: linear-gradient(
+    270deg,
+    color-mix(in oklab, var(--ink) 4%, transparent),
+    color-mix(in oklab, var(--ink) 42%, transparent)
+  );
+}
+
+.card-fold-shade {
+  z-index: 3;
+  background: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--ink) 30%, transparent),
+    transparent 48%
+  );
+}
+
+.card-panel[data-half="left"] .card-fold-shade {
+  background: linear-gradient(
+    to left,
+    color-mix(in oklab, var(--ink) 26%, transparent),
+    transparent 48%
+  );
+}
+
+.card-leaf[data-moving="true"][data-turned="true"] .card-face[data-face="front"] .card-light,
+.card-leaf[data-moving="true"]:not([data-turned="true"]) .card-face[data-face="back"] .card-light {
+  animation: card-light-leave var(--card-turn) var(--card-ease) both;
+}
+
+.card-leaf[data-moving="true"][data-turned="true"] .card-face[data-face="back"] .card-light,
+.card-leaf[data-moving="true"]:not([data-turned="true"]) .card-face[data-face="front"] .card-light {
+  animation: card-light-arrive var(--card-turn) var(--card-ease) both;
+}
+
+.card-leaf[data-cover="true"][data-moving="true"] .card-light {
+  animation-duration: var(--card-cover-turn);
+  animation-timing-function: var(--card-ease-cover);
+}
+
+.card-stage[data-closing="true"] .card-leaf[data-cover="true"] .card-light {
+  animation-duration: var(--card-close);
+}
+
+.card-stage:has(.card-leaf[data-moving="true"][data-turned="true"]) .card-panel[data-half="right"] .card-fold-shade,
+.card-stage:has(.card-leaf[data-moving="true"]:not([data-turned="true"])) .card-panel[data-half="left"] .card-fold-shade {
+  animation: card-fold-cast var(--card-turn) var(--card-ease) both;
+}
+
+.card-stage:has(.card-leaf[data-moving="true"][data-turned="true"]) .card-panel[data-half="left"] .card-fold-shade,
+.card-stage:has(.card-leaf[data-moving="true"]:not([data-turned="true"])) .card-panel[data-half="right"] .card-fold-shade {
+  animation: card-fold-land var(--card-turn) var(--card-ease) both;
+}
+
+.card-stage:has(.card-leaf[data-cover="true"][data-moving="true"]) .card-fold-shade {
+  animation-duration: var(--card-cover-turn);
+  animation-timing-function: var(--card-ease-cover);
+}
+
+.card-stage[data-closing="true"] .card-fold-shade {
+  animation-duration: var(--card-close);
+}
+
+@keyframes card-light-leave {
+  0% {
+    opacity: 0.08;
+  }
+
+  46% {
+    opacity: 0.92;
+  }
+
+  54% {
+    opacity: 0.88;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes card-light-arrive {
+  0% {
+    opacity: 0.9;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes card-fold-cast {
+  0% {
+    opacity: 0;
+    transform: translateX(6%);
+  }
+
+  48% {
+    opacity: 0.7;
+    transform: translateX(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-8%);
+  }
+}
+
+@keyframes card-fold-land {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 .card-face::after,
-.card-insert::after,
 .card-panel::after {
   content: "";
   position: absolute;
@@ -307,7 +391,6 @@
   background-size: 140px 140px, 80px 80px, 240px 240px;
 }
 
-/* A scored fold in the paper — no pale seam, no book spine. */
 .card-crease {
   position: absolute;
   inset-block: 0;
@@ -319,8 +402,8 @@
   left: 0;
   background: linear-gradient(
     to right,
-    rgb(27 36 64 / 0.08),
-    rgb(27 36 64 / 0.03) 40%,
+    color-mix(in oklab, var(--ink) 8%, transparent),
+    color-mix(in oklab, var(--ink) 3%, transparent) 40%,
     transparent 100%
   );
 }
@@ -329,41 +412,15 @@
   right: 0;
   background: linear-gradient(
     to left,
-    rgb(27 36 64 / 0.06),
-    rgb(27 36 64 / 0.02) 40%,
+    color-mix(in oklab, var(--ink) 6%, transparent),
+    color-mix(in oklab, var(--ink) 2%, transparent) 40%,
     transparent 100%
   );
 }
 
 .card-stage[data-closed="true"] .card-panel .card-crease,
-.card-stage[data-closed="true"] .card-leaf .card-crease,
-.card-deck .card-face[data-face="front"] .card-crease {
+.card-stage[data-closed="true"] .card-leaf .card-crease {
   opacity: 0;
-}
-
-.card-shutter .card-face[data-face="front"] {
-  box-shadow:
-    0 1px 1px rgb(27 36 64 / 0.04),
-    0 2px 5px -2px rgb(27 36 64 / 0.08),
-    inset 0 0 0 1px rgb(27 36 64 / 0.08);
-}
-
-.card-stage[data-closed="true"] .card-deck .card-face,
-.card-stage[data-closing="true"] .card-deck .card-face {
-  box-shadow:
-    0 1px 1px rgb(27 36 64 / 0.04),
-    0 2px 5px -2px rgb(27 36 64 / 0.08),
-    inset 0 0 0 1px rgb(27 36 64 / 0.08);
-}
-
-.card-stage[data-flipping="true"] .card-panel,
-.card-stage[data-shut="back"] .card-panel,
-.card-stage[data-closing="true"] .card-panel {
-  visibility: hidden;
-}
-
-.card-stage[data-closing="true"] .card-deck {
-  pointer-events: none;
 }
 
 .card-body {
@@ -371,6 +428,60 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
+}
+
+.card-cover {
+  align-items: center;
+  justify-content: center;
+  padding: 2.15rem 1.7rem 2.4rem;
+  text-align: center;
+}
+
+.card-cover-mark {
+  position: absolute;
+  inset: 1.1rem 1.15rem 1.25rem;
+  border: 1px solid color-mix(in oklab, var(--ink) 14%, transparent);
+  pointer-events: none;
+}
+
+.card-cover-greeting {
+  position: relative;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-size: 1.125rem;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.card-cover-name {
+  position: relative;
+  display: block;
+  max-width: 92%;
+  margin-top: 0.4em;
+  overflow-wrap: anywhere;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.card-dedication {
+  align-items: center;
+  justify-content: center;
+  padding: 2.25rem 1.85rem;
+  text-align: center;
+}
+
+.card-dedication p {
+  max-width: 16ch;
+  margin: 0;
+  font-family: var(--font-serif), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
 }
 
 .card-scroll {
@@ -387,6 +498,54 @@
   );
 }
 
+.card-nav {
+  min-height: 2.75rem;
+  margin-top: 2rem;
+}
+
+.card-nav-meta {
+  max-width: 42ch;
+  margin: 0 auto 0.85rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.card-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.card-nav-link {
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 4px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition:
+    color 160ms var(--ease-out),
+    text-decoration-color 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-nav-link:hover:not(:disabled) {
+    color: var(--ink);
+    text-decoration-color: var(--brass);
+  }
+}
+
+.card-nav-link:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 .card-progress {
   display: flex;
   justify-content: center;
@@ -397,52 +556,33 @@
   letter-spacing: 0.01em;
 }
 
-@keyframes insert-in {
-  from {
-    opacity: 0;
-    transform: translateX(8px);
-  }
-}
-
-@keyframes insert-in-back {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-}
-
-.animate-insert-in {
-  animation: insert-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.animate-insert-in-back {
-  animation: insert-in-back 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.card-frame[data-animate="false"] .animate-insert-in,
-.card-frame[data-animate="false"] .animate-insert-in-back {
-  animation: none;
+.card-frame[data-animate="false"] .card-stage,
+.card-frame[data-animate="false"] .card-leaf,
+.card-frame[data-animate="false"] .card-panel {
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-stage,
   .card-leaf,
+  .card-panel,
   .card-panel[data-half="left"],
   .card-face[data-stock="cover"] {
     transition: none;
-  }
-
-  .card-deck[data-flip="true"],
-  .card-shutter[data-swing="true"] {
     animation: none;
   }
 
-  .card-shutter[data-swing="true"] {
-    transform: rotateY(-180deg);
+  .card-light,
+  .card-fold-shade {
+    animation: none;
+    opacity: 0;
   }
 
-  .animate-insert-in,
-  .animate-insert-in-back {
-    animation: none;
+  .card-nav-link {
+    transition: color 160ms ease, text-decoration-color 160ms ease;
+  }
+
+  .card-nav-link:active:not(:disabled) {
+    transform: none;
   }
 }
