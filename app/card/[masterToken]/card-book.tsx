@@ -39,7 +39,8 @@ type View =
 
 /**
  * Below this the open card is a single panel. Above it, a greeting-card
- * bifold with a note on each side.
+ * bifold with a note on each side. Keep in sync with the 52rem layout
+ * query in card-motion.css so the first paint already matches.
  */
 const SPREAD_QUERY = "(min-width: 52rem)";
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";

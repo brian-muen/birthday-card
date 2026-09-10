@@ -18,14 +18,9 @@
 .card-seat {
   position: relative;
   width: 100%;
-}
-
-.card-frame[data-spread="false"] .card-seat {
+  /* Match SPREAD_QUERY in card-book.tsx. Layout is CSS-first so a
+     desktop reload does not paint the mobile single-panel, then jump. */
   aspect-ratio: 5 / 7;
-}
-
-.card-frame[data-spread="true"] .card-seat {
-  aspect-ratio: 10 / 7;
 }
 
 .card-stage {
@@ -33,10 +28,6 @@
   inset: 0;
   perspective: 2250px;
   animation: card-settle 720ms var(--card-ease-cover) both;
-}
-
-.card-frame[data-spread="true"] .card-stage {
-  perspective: 2600px;
 }
 
 @keyframes card-settle {
@@ -86,24 +77,14 @@
     inset 0 -1px 0 color-mix(in oklab, var(--ink) 8%, transparent);
 }
 
-.card-frame[data-spread="true"] .card-panel[data-half="right"] {
-  left: 50%;
-  width: 50%;
+.card-panel[data-half="right"] {
+  left: 0;
+  width: 100%;
   transition: left var(--card-cover-turn) var(--card-ease-cover);
-}
-
-.card-frame[data-spread="true"] .card-stage[data-closed="true"] .card-panel[data-half="right"],
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-panel[data-half="right"] {
-  left: 25%;
 }
 
 .card-stage[data-closing="true"] .card-panel[data-half="right"] {
   transition-duration: var(--card-close);
-}
-
-.card-frame[data-spread="false"] .card-panel[data-half="right"] {
-  left: 0;
-  width: 100%;
 }
 
 .card-panel[data-half="left"] {
@@ -125,6 +106,8 @@
 .card-leaf {
   position: absolute;
   inset-block: 0;
+  left: 0;
+  width: 100%;
   transform-origin: left center;
   transform-style: preserve-3d;
   z-index: 8;
@@ -145,19 +128,31 @@
     left var(--card-close) var(--card-ease-cover);
 }
 
-.card-frame[data-spread="true"] .card-leaf {
-  left: 50%;
-  width: 50%;
+.card-stage[data-closed="true"]:not([data-closing="true"]) .card-face[data-face="back"] {
+  visibility: hidden;
 }
 
-.card-frame[data-spread="true"] .card-stage[data-closed="true"] .card-leaf,
-.card-frame[data-spread="true"] .card-stage[data-closing="true"] .card-leaf {
-  left: 25%;
-}
+@media (min-width: 52rem) {
+  .card-seat {
+    aspect-ratio: 10 / 7;
+  }
 
-.card-frame[data-spread="false"] .card-leaf {
-  left: 0;
-  width: 100%;
+  .card-stage {
+    perspective: 2600px;
+  }
+
+  .card-panel[data-half="right"],
+  .card-leaf {
+    left: 50%;
+    width: 50%;
+  }
+
+  .card-stage[data-closed="true"] .card-panel[data-half="right"],
+  .card-stage[data-closing="true"] .card-panel[data-half="right"],
+  .card-stage[data-closed="true"] .card-leaf,
+  .card-stage[data-closing="true"] .card-leaf {
+    left: 25%;
+  }
 }
 
 .card-leaf[data-turned="true"] {
