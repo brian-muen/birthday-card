@@ -1,8 +1,7 @@
-export const DEFAULT_DEDICATION = "From your brothers and sisters in Christ";
-export const DEDICATION_MAX = 160;
+const RETIRED_DEFAULT = "From your brothers and sisters in Christ";
 
-/** Cards created before this field existed have no stored value. */
 export function resolveDedication(value: string | null | undefined): string {
-  if (value == null) return DEFAULT_DEDICATION;
-  return value.trim();
+  const text = (value ?? "").trim();
+  if (!text || text === RETIRED_DEFAULT) return "";
+  return text;
 }

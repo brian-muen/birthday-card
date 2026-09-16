@@ -45,6 +45,11 @@ type View =
  */
 const SPREAD_QUERY = "(min-width: 52rem)";
 const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+/** Keep in sync with --card-* durations in card-motion.css. */
+const COVER_MS = 780;
+const CLOSE_MS = 680;
+const TURN_MS = 540;
+const SETTLE_BUFFER_MS = 80;
 
 function subscribeTo(query: string) {
   return (onChange: () => void) => {
@@ -88,31 +93,46 @@ function hasTextSelection() {
 }
 
 /**
- * Dedication is always the first inner leaf. Desktop then pairs notes
- * across the spread (dedication | first note, then the rest). Mobile
- * keeps one face per leaf so the writing turns with the page.
+ * Dedication is the first inner leaf when a card has one. Desktop then
+ * pairs notes across the spread. Mobile keeps one face per leaf so the
+ * writing turns with the page.
  */
-function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
+function buildLeaves(
+  notes: Note[],
+  spread: boolean,
+  hasDedication: boolean,
+): Leaf[] {
   if (!spread) {
-    return [
+    const leaves: Leaf[] = [
       { front: { kind: "cover" }, back: { kind: "empty" } },
-      { front: { kind: "dedication" }, back: { kind: "empty" } },
+    ];
+    if (hasDedication) {
+      leaves.push({ front: { kind: "dedication" }, back: { kind: "empty" } });
+    } else if (notes.length === 0) {
+      leaves.push({ front: { kind: "empty" }, back: { kind: "empty" } });
+    }
+    leaves.push(
       ...notes.map((note) => ({
         front: { kind: "note" as const, note },
         back: { kind: "empty" as const },
       })),
-    ];
+    );
+    return leaves;
   }
+
+  const coverBack: Face = hasDedication
+    ? { kind: "dedication" }
+    : { kind: "empty" };
 
   if (notes.length === 0) {
     return [
-      { front: { kind: "cover" }, back: { kind: "dedication" } },
+      { front: { kind: "cover" }, back: coverBack },
       { front: { kind: "empty" }, back: { kind: "empty" } },
     ];
   }
 
   const leaves: Leaf[] = [
-    { front: { kind: "cover" }, back: { kind: "dedication" } },
+    { front: { kind: "cover" }, back: coverBack },
     {
       front: { kind: "note", note: notes[0] },
       back: notes[1] ? { kind: "note", note: notes[1] } : { kind: "empty" },
@@ -129,8 +149,13 @@ function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
   return leaves;
 }
 
-function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
-  if (!spread) return 1 + noteCount;
+function lastPlace(
+  leaves: Leaf[],
+  spread: boolean,
+  noteCount: number,
+  hasDedication: boolean,
+) {
+  if (!spread) return Math.max(1, (hasDedication ? 1 : 0) + noteCount);
   if (noteCount === 0) return 1;
   let max = 1;
   for (let i = 1; i < leaves.length; i += 1) {
@@ -152,8 +177,7 @@ function visibleView(leaves: Leaf[], spread: boolean, place: number): View {
   }
   const front = leaves[place]?.front;
   if (front?.kind === "note") return { kind: "note", id: front.note.id };
-  if (front?.kind === "dedication") return { kind: "dedication" };
-  return { kind: "cover" };
+  return { kind: "dedication" };
 }
 
 function placeForView(
@@ -210,6 +234,7 @@ export default function CardBook({
   design?: string;
 }) {
   const dedicationText = resolveDedication(dedication);
+  const hasDedication = Boolean(dedicationText);
   const spread = useSyncExternalStore(
     subscribeToSpread,
     getSpread,
@@ -221,8 +246,11 @@ export default function CardBook({
     getServerFalse,
   );
 
-  const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
-  const last = lastPlace(leaves, spread, notes.length);
+  const leaves = useMemo(
+    () => buildLeaves(notes, spread, hasDedication),
+    [notes, spread, hasDedication],
+  );
+  const last = lastPlace(leaves, spread, notes.length, hasDedication);
 
   // Viewed face is the source of truth so a resize can remount the same note
   // on the other leaf model. Place is derived from that view.
@@ -240,7 +268,16 @@ export default function CardBook({
   const applyAction = useCallback((previous: Nav, action: Action): Nav => {
     const currentPlace = placeForView(leaves, spread, previous.view, last);
     if (action.kind === "close") {
-      if (currentPlace === 0) return { ...previous, spread, pending: null, tuck: null };
+      if (currentPlace === 0) {
+        return {
+          ...previous,
+          spread,
+          pending: null,
+          moving: null,
+          closing: false,
+          tuck: null,
+        };
+      }
       if (reducedMotion) {
         return {
           ...previous,
@@ -265,7 +302,16 @@ export default function CardBook({
       };
     }
     const nextPlace = Math.min(last, Math.max(0, currentPlace + action.delta));
-    if (nextPlace === currentPlace) return { ...previous, spread, pending: null };
+    if (nextPlace === currentPlace) {
+      return {
+        ...previous,
+        spread,
+        pending: null,
+        moving: null,
+        closing: false,
+        tuck: null,
+      };
+    }
     return {
       ...previous,
       spread,
@@ -326,8 +372,15 @@ export default function CardBook({
 
   useEffect(() => {
     if (moving === null) return;
-    const duration = closing ? 780 : moving === 0 ? 900 : 640;
-    const timeout = window.setTimeout(finishMove, reducedMotion ? 0 : duration);
+    const duration = closing
+      ? CLOSE_MS
+      : moving === 0
+        ? COVER_MS
+        : TURN_MS;
+    const timeout = window.setTimeout(
+      finishMove,
+      reducedMotion ? 0 : duration + SETTLE_BUFFER_MS,
+    );
     return () => window.clearTimeout(timeout);
   }, [moving, closing, reducedMotion, finishMove]);
 
@@ -438,19 +491,20 @@ export default function CardBook({
             data-closed={closed}
             data-closing={closing}
           >
-            <div aria-hidden className="card-panel" data-half="right">
-              <span className="card-crease" data-side="right" />
-              <span className="card-fold-shade" />
-            </div>
-
-            {spread ? (
-              <div aria-hidden className="card-panel" data-half="left">
-                <span className="card-crease" data-side="left" />
+            <div className="card-world">
+              <div aria-hidden className="card-panel" data-half="right">
+                <span className="card-crease" data-side="right" />
                 <span className="card-fold-shade" />
               </div>
-            ) : null}
 
-            {leaves.map((leaf, index) => {
+              {spread ? (
+                <div aria-hidden className="card-panel" data-half="left">
+                  <span className="card-crease" data-side="left" />
+                  <span className="card-fold-shade" />
+                </div>
+              ) : null}
+
+              {leaves.map((leaf, index) => {
               const tucked = tuck ?? 0;
               const turned = closing
                 ? index > 0 && index < tucked
@@ -490,7 +544,7 @@ export default function CardBook({
                     recipientName={recipientName}
                     dedication={dedicationText}
                     design={design}
-                    onOpen={index === 0 ? () => activatePage(1) : undefined}
+                    onOpen={index === 0 ? () => turn(1) : undefined}
                     onPageTurn={index === 0 ? undefined : () => activatePage(1)}
                   />
                   <LeafFace
@@ -508,6 +562,7 @@ export default function CardBook({
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>
@@ -601,14 +656,14 @@ function LeafFace({
     return (
       <button
         type="button"
-        onClick={onOpen}
+        onClick={facing ? onOpen : undefined}
         className="card-face"
         data-face="front"
         data-stock="cover"
         aria-label={`Open ${recipientName}'s birthday card`}
         aria-hidden={!towardReader}
         tabIndex={facing ? 0 : -1}
-        inert={!towardReader}
+        inert={!facing}
       >
         {contents}
       </button>

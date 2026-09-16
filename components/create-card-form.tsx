@@ -5,48 +5,44 @@ import { useFormStatus } from "react-dom";
 import { createCard } from "@/app/actions/create-card";
 import CardPreview from "@/components/card-preview";
 import BoxCover from "@/components/box-cover";
+import CoverArt from "@/components/cover-art";
 import { isBoxDesign } from "@/lib/box-art/recipes";
-import { DEFAULT_DEDICATION, DEDICATION_MAX } from "@/lib/dedication";
 import { DESIGNS, type DesignId } from "@/lib/design";
 import { DEFAULT_STOCK, STOCKS, type StockId } from "@/lib/stock";
 
 const COVER_KINDS = [
+  { id: "classic", label: "Birthday" },
   { id: "window", label: "Paintings" },
   { id: "stickers", label: "Stickers" },
-  { id: "plain", label: "Words" },
 ] as const;
 
 type CoverKind = (typeof COVER_KINDS)[number]["id"];
 
 function kindOf(id: DesignId): CoverKind {
-  return DESIGNS.find((design) => design.id === id)?.group ?? "window";
+  const group = DESIGNS.find((design) => design.id === id)?.group;
+  return group ?? "classic";
 }
 
 function firstOfKind(kind: CoverKind): DesignId {
-  return DESIGNS.find((design) => design.group === kind)?.id ?? "plain";
+  return DESIGNS.find((design) => design.group === kind)?.id ?? "cake";
 }
 
 export default function CreateCardForm({
   error,
   initialName = "",
-  initialDedication = DEFAULT_DEDICATION,
   initialStock = DEFAULT_STOCK,
-  initialDesign = "recital",
+  initialDesign = "cake",
 }: {
   error?: string;
   initialName?: string;
-  initialDedication?: string;
   initialStock?: StockId;
   initialDesign?: DesignId;
 }) {
   const [name, setName] = useState(initialName);
-  const [dedication, setDedication] = useState(initialDedication);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [stock, setStock] = useState<StockId>(initialStock);
   const [design, setDesign] = useState<DesignId>(initialDesign);
   const [kind, setKind] = useState<CoverKind>(kindOf(initialDesign));
   const covers = DESIGNS.filter((option) => option.group === kind);
-  const insideLine = dedication.trim() || "A few words inside";
 
   function chooseKind(next: CoverKind) {
     setKind(next);
@@ -78,13 +74,7 @@ export default function CreateCardForm({
         </p>
       ) : null}
 
-      <CardPreview
-        name={name}
-        stock={stock}
-        design={design}
-        dedication={dedication}
-        showInside={moreOpen}
-      />
+      <CardPreview name={name} stock={stock} design={design} />
 
       <div className="cover-kinds" role="group" aria-label="Cover style">
         {COVER_KINDS.map((option) => (
@@ -101,23 +91,19 @@ export default function CreateCardForm({
       </div>
 
       <div className="cover-slot">
-        {kind === "plain" ? (
-          <input type="hidden" name="design" value="plain" />
-        ) : (
-          <fieldset className="cover-field">
-            <legend className="sr-only">Cover</legend>
-            <div className="design-options">
-              {covers.map((option) => (
-                <DesignChoice
-                  key={option.id}
-                  option={option}
-                  selected={design}
-                  onSelect={setDesign}
-                />
-              ))}
-            </div>
-          </fieldset>
-        )}
+        <fieldset className="cover-field">
+          <legend className="sr-only">Cover</legend>
+          <div className="design-options" data-count={covers.length}>
+            {covers.map((option) => (
+              <DesignChoice
+                key={option.id}
+                option={option}
+                selected={design}
+                onSelect={setDesign}
+              />
+            ))}
+          </div>
+        </fieldset>
       </div>
 
       <fieldset className="stock-field">
@@ -146,28 +132,8 @@ export default function CreateCardForm({
       <CreateButton />
       <p className="privacy-note">Notes stay between you and them.</p>
 
-      <details
-        className="create-more"
-        onToggle={(event) => setMoreOpen(event.currentTarget.open)}
-      >
-        <summary>{insideLine}</summary>
-        <div className="form-field dedication-field">
-          <label htmlFor="dedication">Inside the card</label>
-          <textarea
-            id="dedication"
-            name="dedication"
-            rows={2}
-            value={dedication}
-            onChange={(event) => {
-              setDedication(event.currentTarget.value);
-              event.currentTarget.style.height = "auto";
-              event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`;
-            }}
-            maxLength={DEDICATION_MAX}
-            className="field"
-            placeholder="From your friends"
-          />
-        </div>
+      <details className="create-more">
+        <summary>A note for people signing</summary>
         <div className="form-field intro-field">
           <label htmlFor="intro">
             For people signing <span>optional</span>
@@ -213,7 +179,7 @@ function DesignChoice({
         {isBoxDesign(option.id) ? (
           <BoxCover design={option.id} compact />
         ) : (
-          <span className="design-plain">Happy<br />birthday</span>
+          <CoverArt design={option.id} />
         )}
       </span>
       <span className="sr-only">{option.label}</span>
