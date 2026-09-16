@@ -54,7 +54,7 @@ export default async function CardPage({ params }: PageParams) {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-[52rem] flex-1 flex-col justify-center px-6 py-14 sm:py-20">
+    <main className="recipient-page">
       <h1 className="sr-only">Happy birthday, {card.recipientName}</h1>
 
       <CardBook
@@ -63,6 +63,7 @@ export default async function CardPage({ params }: PageParams) {
         recipientName={card.recipientName}
         design={parseDesign(card.design)}
         intro={card.intro}
+        dedication={card.dedication}
         stock={parseStock(card.stock)}
         notes={notes.map((note) => ({
           id: note.id,
@@ -74,15 +75,15 @@ export default async function CardPage({ params }: PageParams) {
         }))}
       />
 
-      <div className="mt-14 border-t border-rule pt-6">
+      <footer className="recipient-keepsake">
         <a
           href={`/card/${token}/pdf`}
           download
           className="quiet-link text-[0.9375rem] font-medium"
         >
-          Download the card as a PDF
+          Save a PDF keepsake
         </a>
-      </div>
+      </footer>
     </main>
   );
 }
