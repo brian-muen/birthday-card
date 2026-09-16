@@ -459,11 +459,9 @@ export default function CardBook({
               const facingBack = Boolean(spread && place > 0 && index === place - 1);
               const inMotion = moving === index;
               const painted =
-                inMotion ||
-                index === place ||
-                index === place - 1 ||
-                (closed && index === 0) ||
-                (closing && (index === 0 || index === tucked));
+                closing || closed
+                  ? index === 0
+                  : inMotion || index === place || index === place - 1;
 
               return (
                 <div
