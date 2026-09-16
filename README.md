@@ -14,8 +14,8 @@ send it to the recipient when you're ready.
 - `/` — landing page with a create-card form. After creating, you're shown
   the links at `/created/[masterToken]`.
 - Organizer accounts are optional. Anyone can create a card without signing
-  in. Signing in saves that card to `/cards` so a lost organizer link can be
-  found later. Contributors never need an account.
+  in. Google sign-in saves that card to `/cards` so a lost organizer link can
+  be found later. Contributors never need an account.
 
 ## Tech
 
@@ -61,6 +61,21 @@ Sending DMs requires that password (created page field, or the last word of
 From Slack:
 
 `/card except @name https://manna-birthday-card.vercel.app/sign/… PASSWORD`
+
+## Organizer Google sign-in
+
+Create and sign a card with no account. Google is only for organizers who want
+to find those links later.
+
+1. In [Google Cloud](https://console.cloud.google.com/apis/credentials), create
+   an OAuth client of type **Web application**.
+2. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/google/callback`
+   - `https://your-domain/api/auth/google/callback`
+3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local` and on
+   Vercel.
+4. Set `APP_URL` to the public origin (no trailing slash) so the redirect URI
+   Google sees matches the console exactly.
 
 ## Development
 

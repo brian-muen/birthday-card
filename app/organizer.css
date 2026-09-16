@@ -74,43 +74,13 @@
   line-height: 1.5;
 }
 
-.account-split {
-  display: grid;
-  gap: 2.5rem;
-  margin-top: 2.5rem;
+.account-google {
+  margin-top: 2.25rem;
+  max-width: 22rem;
 }
 
-@media (min-width: 40rem) {
-  .account-split {
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-  }
-}
-
-.account-split h2 {
-  margin: 0 0 1.1rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.account-split .form-field {
-  margin-top: 1.25rem;
-}
-
-.account-split .form-field:first-of-type {
-  margin-top: 0;
-}
-
-.account-split .form-field label {
-  display: block;
-  margin-bottom: 0.45rem;
-  font-size: 0.94rem;
-  font-weight: 600;
-}
-
-.account-split .ui-button {
+.account-google .ui-button {
   width: 100%;
-  margin-top: 1.5rem;
 }
 
 .cards-list {
