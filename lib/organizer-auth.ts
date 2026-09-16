@@ -10,7 +10,9 @@ import { generateToken } from "@/lib/tokens";
 export const SESSION_COOKIE = "organizer_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
-export async function getCurrentOrganizer(): Promise<Organizer | null> {
+export type PublicOrganizer = Pick<Organizer, "id" | "email">;
+
+export async function getCurrentOrganizer(): Promise<PublicOrganizer | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
@@ -26,6 +28,7 @@ export async function getCurrentOrganizer(): Promise<Organizer | null> {
 
   const organizer = await db.query.organizers.findFirst({
     where: eq(organizers.id, row.organizerId),
+    columns: { id: true, email: true },
   });
   return organizer ?? null;
 }
@@ -58,7 +61,13 @@ export async function destroyOrganizerSession() {
       .delete(organizerSessions)
       .where(eq(organizerSessions.token, token));
   }
-  jar.delete(SESSION_COOKIE);
+  jar.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
 }
 
 export async function finishOrganizerLogin(organizerId: number, nextRaw: unknown) {

@@ -25,6 +25,10 @@ test("safeNextPath stays on this site", () => {
   assert.equal(safeNextPath("//evil.example"), "/cards");
   assert.equal(safeNextPath("/\\evil"), "/cards");
   assert.equal(safeNextPath(null), "/cards");
+  assert.equal(safeNextPath("/\t//evil.com"), "/cards");
+  assert.equal(safeNextPath("/%09//evil.com"), "/cards");
+  assert.equal(safeNextPath("/account"), "/cards");
+  assert.equal(safeNextPath("/account?next=/cards"), "/cards");
 });
 
 test("createdMasterToken only accepts a 24-character token path", () => {
