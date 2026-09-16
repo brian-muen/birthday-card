@@ -7,7 +7,7 @@
   --card-ease-cover: cubic-bezier(0.3, 0.02, 0.16, 1);
   /* Nav, progress, page padding, and keepsake link. Size the OPEN
      spread to the leftover viewport so neither state clips. */
-  --card-chrome: 12.5rem;
+  --card-chrome: 13.75rem;
   --card-fit-w: 5;
   --card-fit-h: 7;
   width: min(

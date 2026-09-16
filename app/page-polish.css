@@ -244,7 +244,7 @@ body { background: var(--paper); }
   width: min(100%, 76rem);
   margin-inline: auto;
   overflow-x: clip;
-  padding: 1rem clamp(1rem, 5vw, 3rem) 1.15rem;
+  padding: 1.35rem clamp(1rem, 5vw, 3rem) 1.15rem;
 }
 .recipient-page > div:first-of-type { width: min(100%, 68rem); margin-inline: auto; }
 .recipient-page .card-frame { max-width: 68rem; }
