@@ -4,12 +4,12 @@
 .card-face:not([data-stock="cover"]),
 .card-insert:not([data-stock="cover"]),
 .card-panel:not([data-stock="cover"]) {
-  background-color: var(--paper-liner);
+  background-color: color-mix(in oklab, var(--card-stock) 8%, var(--paper-liner));
   background-image: linear-gradient(
     var(--paper-gutter, to right),
-    rgb(27 36 64 / 0.045),
-    rgb(27 36 64 / 0.012) 22%,
-    transparent 48%
+    rgb(35 32 28 / 0.10),
+    rgb(35 32 28 / 0.025) 3px,
+    transparent 12px
   );
 }
 
@@ -37,8 +37,10 @@
 
 .card-stage[data-closed="true"] .card-panel {
   box-shadow:
-    0 1px 2px rgb(27 36 64 / 0.05),
-    0 18px 36px -18px rgb(27 36 64 / 0.22);
+    1px 2px 0 color-mix(in oklab, var(--card-stock) 60%, #a9a296),
+    2px 4px 0 color-mix(in oklab, var(--card-stock) 35%, #d6cfc1),
+    0 5px 6px -2px rgb(35 32 28 / 0.20),
+    0 20px 34px -16px rgb(35 32 28 / 0.24);
 }
 
 .card-face:not([data-stock="cover"])::after,
@@ -80,15 +82,16 @@
 }
 
 .card-crease {
-  width: 36px;
+  width: 12px;
   z-index: 3;
 }
 
 .card-crease[data-side="right"] {
   background: linear-gradient(
     to right,
-    rgb(27 36 64 / 0.08),
-    rgb(27 36 64 / 0.025) 14px,
+    rgb(35 32 28 / 0.13),
+    rgb(255 255 255 / 0.45) 1px,
+    rgb(35 32 28 / 0.025) 4px,
     transparent 100%
   );
 }
@@ -96,8 +99,9 @@
 .card-crease[data-side="left"] {
   background: linear-gradient(
     to left,
-    rgb(27 36 64 / 0.08),
-    rgb(27 36 64 / 0.025) 14px,
+    rgb(35 32 28 / 0.13),
+    rgb(255 255 255 / 0.45) 1px,
+    rgb(35 32 28 / 0.025) 4px,
     transparent 100%
   );
 }
@@ -106,14 +110,16 @@
   box-shadow:
     0 1px 2px rgb(27 36 64 / 0.04),
     0 14px 28px -16px rgb(27 36 64 / 0.18),
-    -1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
+    -1px 2px 0 color-mix(in oklab, var(--card-stock) 50%, #bdb5a7),
+    -1px 4px 0 color-mix(in oklab, var(--card-stock) 35%, #d6cfc1);
 }
 
 .card-frame[data-spread="true"] .card-stage[data-closed="false"] .card-panel[data-half="right"] {
   box-shadow:
     0 1px 2px rgb(27 36 64 / 0.04),
     0 14px 28px -16px rgb(27 36 64 / 0.18),
-    1px 1px 0 color-mix(in oklab, var(--card-stock) 45%, transparent);
+    1px 2px 0 color-mix(in oklab, var(--card-stock) 50%, #bdb5a7),
+    1px 4px 0 color-mix(in oklab, var(--card-stock) 35%, #d6cfc1);
 }
 
 .paper-surface {
@@ -125,7 +131,9 @@
 .signing-sheet {
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.7),
-    0 10px 24px -16px rgb(27 36 64 / 0.16),
+    0 2px 0 #ded8ca,
+    0 4px 0 #c8c1b3,
+    0 12px 24px -12px rgb(27 36 64 / 0.20),
     0 0 0 1px rgb(27 36 64 / 0.06);
 }
 
@@ -184,9 +192,267 @@
   margin-bottom: 1.25rem;
 }
 
+.box-cover {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0.34rem 0.32rem 0.38rem 0.42rem;
+  background: var(--card-stock);
+  --box-board: #f4efe4;
+  --wrap: #d4c4a0;
+}
+
+.box-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--box-board);
+  box-shadow:
+    -5px 0 0 var(--wrap),
+    -6px 0 0 color-mix(in oklab, var(--wrap) 58%, #2a1c10),
+    -8px 3px 12px rgb(40 28 16 / 0.16),
+    inset 0 1px 0 rgb(255 252 246 / 0.55);
+}
+
+.box-well,
+.box-mat {
+  position: absolute;
+  inset: 0;
+}
+
+.box-well {
+  z-index: 0;
+  overflow: hidden;
+  background: var(--box-well);
+  box-shadow: inset 0 2px 10px rgb(40 24 12 / 0.18);
+}
+
+.box-well[data-painting] {
+  background-image: none;
+}
+
+.box-painting {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--paint-pos, 50% 40%);
+  transform: scale(var(--paint-zoom, 1));
+  transform-origin: var(--paint-pos, 50% 40%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.box-well[data-paper="seigaiha"] {
+  background-image:
+    radial-gradient(
+      circle at 50% 100%,
+      transparent 54%,
+      color-mix(in oklab, #6a8884 26%, transparent) 55% 59%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      transparent 54%,
+      color-mix(in oklab, #6a8884 26%, transparent) 55% 59%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      transparent 54%,
+      color-mix(in oklab, #6a8884 26%, transparent) 55% 59%,
+      transparent 60%
+    );
+  background-size: 20px 11px;
+}
+
+.box-well[data-paper="washi"] {
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 8px,
+      color-mix(in oklab, #7f8a5c 16%, transparent) 8px 9px
+    ),
+    repeating-linear-gradient(
+      92deg,
+      transparent 0 17px,
+      color-mix(in oklab, #7f8a5c 8%, transparent) 17px 18px
+    );
+}
+
+.box-well[data-paper="staff"] {
+  background-image: none;
+}
+
+.box-well[data-paper="dots"] {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, #c4a88a 34%, transparent) 1.05px,
+    transparent 1.2px
+  );
+  background-size: 11px 11px;
+}
+
+.box-print {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.box-mat {
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.box-mat-board {
+  filter: drop-shadow(0.35px 1.1px 0.85px rgb(40 24 12 / 0.34));
+}
+
+.box-cut-shade {
+  stroke: rgb(36 24 14);
+  stroke-width: 2.7;
+  opacity: 0.2;
+}
+
+.box-cut-lip {
+  stroke: rgb(72 52 32);
+  stroke-width: 1.2;
+  opacity: 0.3;
+}
+
+.box-cut-edge {
+  stroke: rgb(48 34 22);
+  stroke-width: 0.45;
+  opacity: 0.46;
+}
+
+.box-cut-light {
+  stroke: #fffdf6;
+  stroke-width: 0.5;
+  opacity: 0.78;
+}
+
+.box-piece {
+  display: block;
+  position: absolute;
+  height: auto;
+  max-width: none;
+  overflow: visible;
+  transform-origin: center center;
+  pointer-events: none;
+  user-select: none;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
+}
+
+.box-piece[data-print="true"] {
+  z-index: 1;
+  filter: none;
+  opacity: 0.88;
+}
+
+.box-piece[data-print="true"][data-on-frame="true"] {
+  z-index: 3;
+  opacity: 0.92;
+}
+
+.box-piece[data-depth="1"] {
+  z-index: 1;
+  filter:
+    drop-shadow(0 0.5px 0.3px rgb(48 32 16 / 0.1))
+    drop-shadow(0 1px 0.8px rgb(48 32 16 / 0.14));
+}
+
+.box-piece[data-on-frame="true"] {
+  z-index: 3;
+}
+
+.box-piece[data-depth="2"] {
+  filter:
+    drop-shadow(0 0.7px 0.4px rgb(48 32 16 / 0.12))
+    drop-shadow(0 1.8px 1.4px rgb(48 32 16 / 0.18));
+}
+
+.box-piece[data-depth="3"] {
+  filter:
+    drop-shadow(0 1px 0.5px rgb(48 32 16 / 0.14))
+    drop-shadow(0 2.6px 2px rgb(48 32 16 / 0.22));
+}
+
+.box-type {
+  position: absolute;
+  right: 8%;
+  bottom: 4%;
+  left: 8%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.box-cover .card-cover-greeting {
+  font-size: clamp(0.95rem, 2.6vw, 1.15rem);
+  font-style: italic;
+  color: color-mix(in oklab, #8a6a38 86%, var(--ink-pen));
+}
+
+.box-cover .card-cover-name[data-length="short"] {
+  font-size: clamp(1.45rem, 4.6vw, 2.15rem);
+}
+
+.box-cover .card-cover-name {
+  max-width: 14ch;
+  margin-top: 0.12em;
+}
+
+.box-cover .card-cover-name[data-empty] {
+  opacity: 0.38;
+}
+
+.design-thumbnail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 5;
+  margin-bottom: 0.45rem;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--paper-liner);
+  transition: transform 160ms var(--ease-out);
+}
+
+.design-thumbnail .box-cover {
+  position: absolute;
+  inset: 0;
+  padding: 0.18rem 0.16rem 0.2rem 0.22rem;
+}
+
+.design-thumbnail .box-stage {
+  box-shadow:
+    -3px 0 0 var(--wrap),
+    -4px 0 0 color-mix(in oklab, var(--wrap) 58%, #2a1c10),
+    -5px 2px 7px rgb(40 28 16 / 0.14);
+}
+
 .design-options {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
   gap: 0.6rem;
   margin-top: 0.75rem;
 }
@@ -199,22 +465,14 @@
   transition: color 160ms var(--ease-out);
 }
 
-.design-thumbnail {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 4 / 5;
-  margin-bottom: 0.45rem;
-  border: 1px solid var(--rule);
-  background: var(--paper-liner);
-  transition: transform 160ms var(--ease-out);
-}
-
 .design-option:active .design-thumbnail {
   transform: scale(0.97);
 }
 
-.design-thumbnail svg { width: 90%; }
+.design-thumbnail > svg,
+.design-thumbnail .card-cover-art {
+  width: 90%;
+}
 .design-plain { font-family: var(--font-garamond), var(--cjk-serif), serif; font-style: italic; font-size: 1rem; }
 .design-option:has(input:checked) { color: var(--ink); }
 .design-option:has(input:checked) .design-thumbnail { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -381,6 +639,10 @@
   padding: 0;
 }
 
+.stock-field + .stock-field {
+  margin-top: 1.2rem;
+}
+
 .stock-options {
   display: flex;
   flex-wrap: wrap;
@@ -426,14 +688,24 @@
   outline-offset: 3px;
 }
 
+.dedication-field .field,
 .intro-field .field {
   resize: none;
   min-height: 2.75rem;
   max-height: 12rem;
   overflow-y: auto;
-  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
   font-size: 1rem;
   line-height: 1.5;
+}
+
+.dedication-field .field {
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-size: 1.2rem;
+  font-style: italic;
+}
+
+.intro-field .field {
+  font-family: var(--font-karla), var(--cjk-sans), sans-serif;
 }
 
 .create-button {
@@ -805,9 +1077,9 @@
   background-image: var(--note-photo),
     linear-gradient(
       var(--paper-gutter, to right),
-      rgb(27 36 64 / 0.045),
-      rgb(27 36 64 / 0.012) 22%,
-      transparent 48%
+      rgb(35 32 28 / 0.10),
+      rgb(35 32 28 / 0.025) 3px,
+      transparent 12px
     );
   background-size: var(--note-photo-w, auto) var(--note-photo-h, 11rem), auto;
   background-repeat: no-repeat, no-repeat;
@@ -817,9 +1089,9 @@
 .card-face[data-photo="true"]:has(.note-photo[data-hidden]) {
   background-image: linear-gradient(
     var(--paper-gutter, to right),
-    rgb(27 36 64 / 0.045),
-    rgb(27 36 64 / 0.012) 22%,
-    transparent 48%
+    rgb(35 32 28 / 0.10),
+    rgb(35 32 28 / 0.025) 3px,
+    transparent 12px
   );
   background-size: auto;
   background-position: 0 0;

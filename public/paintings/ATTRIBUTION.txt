@@ -1,0 +1,38 @@
+Paintings by named artists, used as the picture inside each cover window.
+Museum open-access / public-domain reproductions. No generated images.
+
+recital.jpg
+  Pierre-Auguste Renoir, Woman at the Piano, 1875–76
+  Oil on canvas. Art Institute of Chicago, 1937.1025
+  https://www.artic.edu/artworks/25825
+
+goldfish.jpg
+  Watanabe Seitei, Goldfish, ca. 1887
+  Album leaf; ink and color on silk. The Metropolitan Museum of Art
+  https://www.metmuseum.org/art/collection/search/54739
+
+loquat.jpg
+  Xugu, Pipa (Loquats) 枇杷圖, c. 1888–89
+  Hanging scroll; ink and color on paper. The Cleveland Museum of Art, 1999.6
+  https://www.clevelandart.org/art/1999.6
+
+cats.jpg
+  Wang Li, Cat
+  Hanging scroll; ink and color on paper. The Metropolitan Museum of Art
+  https://www.metmuseum.org/art/collection/search/49470
+
+cat-minzhen.jpg
+  Min Zhen 閔貞, Cat and Butterfly, 1788
+  Album leaf; ink on paper. The Cleveland Museum of Art, 1985.71.5
+  https://www.clevelandart.org/art/1985.71.5
+
+leaves.jpg
+  Itō Jakuchū, Maple Tree and Small Birds
+  from Colorful Realm of Living Beings (動植綵絵)
+  Color on silk. Wikimedia Commons
+  File:Maple Tree and Small Birds, Colorful Realm, Ito Jakuchu.jpg
+
+mimosa.jpg
+  Alvar Cawén, Mimosa, 1914
+  Oil on canvas. Finnish National Gallery / Wikimedia Commons
+  File:Mimosa (Alvar Cawen).jpg

@@ -8,18 +8,20 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
+    dedication?: string;
     stock?: string;
     design?: string;
   }>;
 }) {
-  const { error, recipientName, stock, design } = await searchParams;
+  const { error, recipientName, dedication, stock, design } = await searchParams;
   return (
     <main className="paper-home">
       <CreateCardForm
         error={error}
         initialName={recipientName}
+        initialDedication={dedication}
         initialStock={parseStock(stock)}
-        initialDesign={design === undefined ? "cake" : parseDesign(design)}
+        initialDesign={design === undefined ? "recital" : parseDesign(design)}
       />
     </main>
   );

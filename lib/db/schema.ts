@@ -11,6 +11,7 @@ export const cards = pgTable("cards", {
   recipientName: text("recipient_name").notNull(),
   occasion: text("occasion").notNull(),
   intro: text("intro"),
+  dedication: text("dedication"),
   stock: text("stock").notNull().default("red"),
   design: text("design").notNull().default("plain"),
   font: text("font").notNull().default("hand"),

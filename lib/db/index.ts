@@ -14,6 +14,7 @@ const ENSURE_TABLES = [
     recipient_name text NOT NULL,
     occasion text NOT NULL,
     intro text,
+    dedication text,
     stock text NOT NULL DEFAULT 'red',
     font text NOT NULL DEFAULT 'hand',
     contribute_token text NOT NULL UNIQUE,
@@ -37,6 +38,7 @@ const ENSURE_TABLES = [
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS font text NOT NULL DEFAULT 'hand'`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS pen text NOT NULL DEFAULT 'pencil'`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS image text`,
+  `ALTER TABLE cards ADD COLUMN IF NOT EXISTS dedication text`,
 ];
 
 async function createDb(): Promise<Db> {
