@@ -110,3 +110,4 @@ select:focus-visible {
 
 @import "./card-motion.css";
 @import "./paper.css";
+@import "./page-polish.css";

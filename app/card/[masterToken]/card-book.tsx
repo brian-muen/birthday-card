@@ -10,9 +10,10 @@ import {
   useTransition,
 } from "react";
 import { deleteMessage } from "@/app/actions/delete-message";
+import { resolveDedication } from "@/lib/dedication";
 import { penVar, type PenId } from "@/lib/pen";
 import { stockHex } from "@/lib/stock";
-import CoverArt from "@/components/cover-art";
+import CoverSurface from "@/components/cover-surface";
 import MessageReader from "@/components/message-reader";
 
 type Note = {
@@ -72,12 +73,6 @@ function hashOf(value: string) {
 
 function inkFor(text: string) {
   return 0.8 + (hashOf(text) % 16) / 100;
-}
-
-function coverTypeSize(name: string) {
-  if (name.length > 24) return "text-[1.625rem] sm:text-[1.875rem]";
-  if (name.length > 13) return "text-[2rem] sm:text-[2.375rem]";
-  return "text-[2.375rem] sm:text-[2.875rem]";
 }
 
 function isChromeTarget(target: EventTarget | null) {
@@ -200,6 +195,7 @@ export default function CardBook({
   masterToken,
   canManage,
   recipientName,
+  dedication,
   notes,
   stock,
   design = "plain",
@@ -208,10 +204,12 @@ export default function CardBook({
   canManage: boolean;
   recipientName: string;
   intro: string | null;
+  dedication: string | null;
   notes: Note[];
   stock: string;
   design?: string;
 }) {
+  const dedicationText = resolveDedication(dedication);
   const spread = useSyncExternalStore(
     subscribeToSpread,
     getSpread,
@@ -461,11 +459,9 @@ export default function CardBook({
               const facingBack = Boolean(spread && place > 0 && index === place - 1);
               const inMotion = moving === index;
               const painted =
-                inMotion ||
-                index === place ||
-                index === place - 1 ||
-                (closed && index === 0) ||
-                (closing && (index === 0 || index === tucked));
+                closing || closed
+                  ? index === 0
+                  : inMotion || index === place || index === place - 1;
 
               return (
                 <div
@@ -492,6 +488,7 @@ export default function CardBook({
                     masterToken={masterToken}
                     canManage={canManage}
                     recipientName={recipientName}
+                    dedication={dedicationText}
                     design={design}
                     onOpen={index === 0 ? () => activatePage(1) : undefined}
                     onPageTurn={index === 0 ? undefined : () => activatePage(1)}
@@ -504,6 +501,7 @@ export default function CardBook({
                     masterToken={masterToken}
                     canManage={canManage}
                     recipientName={recipientName}
+                    dedication={dedicationText}
                     design={design}
                     onPageTurn={() => activatePage(-1)}
                   />
@@ -555,6 +553,7 @@ function LeafFace({
   masterToken,
   canManage,
   recipientName,
+  dedication,
   onOpen,
   onPageTurn,
 }: {
@@ -566,6 +565,7 @@ function LeafFace({
   masterToken: string;
   canManage: boolean;
   recipientName: string;
+  dedication: string;
   onOpen?: () => void;
   onPageTurn?: () => void;
 }) {
@@ -586,6 +586,7 @@ function LeafFace({
         masterToken={masterToken}
         canManage={canManage}
         recipientName={recipientName}
+        dedication={dedication}
       />
     </>
   );
@@ -637,6 +638,7 @@ function FaceContents({
   masterToken,
   canManage,
   recipientName,
+  dedication,
 }: {
   design: string;
   face: Face;
@@ -644,6 +646,7 @@ function FaceContents({
   masterToken: string;
   canManage: boolean;
   recipientName: string;
+  dedication: string;
 }) {
   switch (face.kind) {
     case "cover":
@@ -651,7 +654,7 @@ function FaceContents({
     case "dedication":
       return (
         <div className="card-body card-dedication">
-          <p>From your brothers and sisters in Christ</p>
+          {dedication ? <p>{dedication}</p> : null}
         </div>
       );
     case "note":
@@ -669,16 +672,7 @@ function FaceContents({
 }
 
 function CoverFace({ recipientName, design }: { recipientName: string; design: string }) {
-  return (
-    <span className="card-body card-cover">
-      <span className="card-cover-mark" aria-hidden="true" />
-      <CoverArt design={design} className="card-cover-art" />
-      <span className="card-cover-greeting">Happy birthday</span>
-      <span className={`card-cover-name ${coverTypeSize(recipientName)}`}>
-        {recipientName}
-      </span>
-    </span>
-  );
+  return <CoverSurface design={design} recipientName={recipientName} />;
 }
 
 function NoteFace({

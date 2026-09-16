@@ -3,9 +3,11 @@ import type { Font as FkFont } from "@pdf-lib/fontkit";
 import {
   PDFDocument,
   type PDFFont,
+  type PDFImage,
   type PDFPage,
   StandardFonts,
   clip,
+  degrees,
   endPath,
   popGraphicsState,
   pushGraphicsState,
@@ -15,9 +17,13 @@ import {
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { resolveDedication } from "@/lib/dedication";
 import { parsePen, penFile, penPdfSize, type PenId } from "@/lib/pen";
 import { stockRgb } from "@/lib/stock";
 import { DESIGN_ART, parseDesign } from "@/lib/design";
+import { PIECES } from "@/lib/box-art/pieces";
+import { BOX_RECIPES, STAGE, isBoxDesign } from "@/lib/box-art/recipes";
+import { seigaiha, washi } from "@/lib/box-art/ink";
 import { hasCjk, hasHan, hasHangul } from "@/lib/cjk";
 import { loadCjkFont, type CjkFaceId } from "@/lib/cjk-font";
 
@@ -38,8 +44,6 @@ const CLIP_X = 22;
 const CLIP_Y = 22;
 const CLIP_WIDTH = PAGE_WIDTH - 44;
 const CLIP_HEIGHT = PAGE_HEIGHT - 44;
-
-const DEDICATION = "From your brothers and sisters in Christ";
 
 // Keep kerning, drop ligatures so one PDF draw matches one shaped glyph.
 const LAYOUT_FEATURES = {
@@ -66,11 +70,13 @@ export type PdfNote = {
 export async function buildCardPdf(input: {
   recipientName: string;
   intro: string | null;
+  dedication?: string | null;
   stock: string;
   design?: string;
   showCount: boolean;
   notes: PdfNote[];
 }) {
+  const dedication = resolveDedication(input.dedication);
   const doc = await PDFDocument.create();
   doc.setTitle(`Happy Birthday, ${input.recipientName}`);
   doc.registerFontkit(fontkit);
@@ -81,8 +87,9 @@ export async function buildCardPdf(input: {
   const cjk = await embedNeededCjk(doc, [
     input.recipientName,
     input.intro ?? "",
+    dedication,
     ...input.notes.flatMap((note) => [note.authorName, note.body]),
-  ]).catch(() => ({} as Partial<Record<CjkFaceId, Face>>));
+  ]);
 
   const pens = new Map<PenId, Face>();
   for (const note of input.notes) {
@@ -99,7 +106,7 @@ export async function buildCardPdf(input: {
     return rgb(r, g, b);
   })();
 
-  drawCoverPage(doc, {
+  await drawCoverPage(doc, {
     design: input.design,
     printed: coverFace,
     printedItalic,
@@ -107,10 +114,13 @@ export async function buildCardPdf(input: {
     recipientName: sanitizePrinted(input.recipientName),
   });
 
-  drawDedicationPage(doc, {
-    printedItalic,
-    dedication: DEDICATION,
-  });
+  const dedicationFace = pickFace(dedication, printedItalic, cjk);
+  if (dedication) {
+    drawDedicationPage(doc, {
+      printedItalic: dedicationFace,
+      dedication: makeSanitizer(dedicationFace.pdf)(dedication),
+    });
+  }
 
   for (const [i, note] of input.notes.entries()) {
     const pen = parsePen(note.pen);
@@ -148,7 +158,9 @@ async function embedFace(doc: PDFDocument, file: string): Promise<Face> {
 
 async function embedCjkFace(doc: PDFDocument, id: CjkFaceId): Promise<Face> {
   const bytes = await loadCjkFont(id);
-  const pdf = await doc.embedFont(bytes, { subset: true });
+  // Same as Latin: fontkit's subsetter remaps CJK glyph ids onto the
+  // ASCII range, so Hangul/Han draw as a string of English letters.
+  const pdf = await doc.embedFont(bytes, { subset: false });
   return { pdf, fk: fontkit.create(bytes) };
 }
 
@@ -242,7 +254,262 @@ function addPage(
   return page;
 }
 
-function drawCoverPage(
+function hexRgb(hex: string) {
+  return rgb(
+    parseInt(hex.slice(1, 3), 16) / 255,
+    parseInt(hex.slice(3, 5), 16) / 255,
+    parseInt(hex.slice(5, 7), 16) / 255,
+  );
+}
+
+async function embedPublicImage(doc: PDFDocument, src: string) {
+  const bytes = await readFile(
+    path.join(process.cwd(), "public", src.replace(/^\//, "")),
+  );
+  return /\.png$/i.test(src) ? doc.embedPng(bytes) : doc.embedJpg(bytes);
+}
+
+function parseObjectPosition(value?: string) {
+  if (!value) return { x: 0.5, y: 0.4 };
+  const parts = value.trim().split(/\s+/);
+  const x = Number.parseFloat(parts[0] ?? "50") / 100;
+  const y = Number.parseFloat(parts[1] ?? parts[0] ?? "40") / 100;
+  return {
+    x: Number.isFinite(x) ? x : 0.5,
+    y: Number.isFinite(y) ? y : 0.4,
+  };
+}
+
+function drawCoverImage(
+  page: PDFPage,
+  image: PDFImage,
+  stage: { x: number; y: number; w: number; h: number },
+  hole: { x: number; y: number; w: number; h: number },
+  painting: { position?: string; zoom?: number },
+) {
+  const pos = parseObjectPosition(painting.position);
+  const zoom = painting.zoom && painting.zoom > 0 ? painting.zoom : 1;
+  const destRatio = stage.w / stage.h;
+  const imageRatio = image.width / image.height;
+  const coverW = (imageRatio > destRatio ? stage.h * imageRatio : stage.w) * zoom;
+  const coverH = (imageRatio > destRatio ? stage.h : stage.w / imageRatio) * zoom;
+  page.pushOperators(
+    pushGraphicsState(),
+    rectangle(hole.x, hole.y, hole.w, hole.h),
+    clip(),
+    endPath(),
+  );
+  page.drawImage(image, {
+    x: stage.x - (coverW - stage.w) * pos.x,
+    y: stage.y - (coverH - stage.h) * (1 - pos.y),
+    width: coverW,
+    height: coverH,
+  });
+  page.pushOperators(popGraphicsState());
+}
+
+const HOLE_BOX = {
+  recital: { x: 0.08, y: 0.1, w: 0.84, h: 0.68 },
+  goldfish: { x: 0.08, y: 0.11, w: 0.84, h: 0.7 },
+  loquat: { x: 0.05, y: 0.13, w: 0.9, h: 0.62 },
+  cats: { x: 0.1, y: 0.11, w: 0.78, h: 0.68 },
+  mimosa: { x: 0.1, y: 0.12, w: 0.8, h: 0.68 },
+  leaves: { x: 0.08, y: 0.12, w: 0.84, h: 0.66 },
+} as const;
+
+function holeBoxFor(design: keyof typeof BOX_RECIPES) {
+  const family = design.replace(/-cut$/, "") as keyof typeof HOLE_BOX;
+  return HOLE_BOX[family] ?? HOLE_BOX.recital;
+}
+
+function drawPlacedPiece(
+  page: PDFPage,
+  place: (typeof BOX_RECIPES)["recital"]["places"][number],
+  originX: number,
+  originY: number,
+  boxW: number,
+  boxH: number,
+  images: Map<string, PDFImage>,
+) {
+  const piece = PIECES[place.piece];
+  if (!piece) return;
+  const [, , pieceW, pieceH] = piece.viewBox;
+  const width = (place.w / 100) * boxW;
+  const height = width * (pieceH / pieceW);
+  const x = originX + (place.x / 100) * boxW;
+  const top = originY + boxH - (place.y / 100) * boxH;
+  const y = top - height;
+  const opacity = place.kind === "print" ? 0.88 : 1;
+  const angle = place.rotate ?? 0;
+  const rad = (angle * Math.PI) / 180;
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+
+  if (piece.src) {
+    const image = images.get(piece.src);
+    if (!image) return;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    page.drawImage(image, {
+      x: cx - (width / 2) * cos + (height / 2) * sin,
+      y: cy - (width / 2) * sin - (height / 2) * cos,
+      width,
+      height,
+      rotate: angle ? degrees(angle) : undefined,
+      opacity,
+    });
+    return;
+  }
+
+  const pathScale = width / pieceW;
+  for (const ink of piece.paths) {
+    page.drawSvgPath(ink.d, {
+      x,
+      y,
+      scale: pathScale,
+      color: ink.fill ? hexRgb(ink.fill) : undefined,
+      borderColor: ink.stroke ? hexRgb(ink.stroke) : undefined,
+      borderWidth: ink.stroke ? (ink.strokeWidth ?? 1.1) * pathScale : 0,
+      opacity: ink.opacity,
+      rotate: angle ? degrees(angle) : undefined,
+    });
+  }
+}
+
+async function drawBoxCover(
+  doc: PDFDocument,
+  page: PDFPage,
+  input: {
+    design: keyof typeof BOX_RECIPES;
+    greeting: string;
+    greetingSize: number;
+    nameLayout: ReturnType<typeof layoutFittedText>;
+    printed: Face;
+    printedItalic: Face;
+  },
+) {
+  const recipe = BOX_RECIPES[input.design];
+  const images = new Map<string, PDFImage>();
+  if (recipe.painting) {
+    images.set(recipe.painting.src, await embedPublicImage(doc, recipe.painting.src));
+  }
+  for (const place of recipe.places) {
+    const src = PIECES[place.piece]?.src;
+    if (!src || images.has(src)) continue;
+    images.set(src, await embedPublicImage(doc, src));
+  }
+  const gold = rgb(0.54, 0.42, 0.22);
+  const pad = 18;
+  const wrapW = 7;
+  const stageY = 40;
+  const stageH = PAGE_HEIGHT - 80;
+  const stageX = pad + wrapW;
+  const stageW = PAGE_WIDTH - stageX - pad;
+  page.drawRectangle({
+    x: pad,
+    y: stageY,
+    width: wrapW,
+    height: stageH,
+    color: hexRgb(recipe.wrap),
+  });
+  page.drawRectangle({
+    x: stageX,
+    y: stageY,
+    width: stageW,
+    height: stageH,
+    color: hexRgb("#f4efe4"),
+  });
+
+  const hole = holeBoxFor(input.design);
+  const holeBox = {
+    x: stageX + stageW * hole.x,
+    y: stageY + stageH * (1 - hole.y - hole.h),
+    w: stageW * hole.w,
+    h: stageH * hole.h,
+  };
+  page.drawRectangle({
+    x: holeBox.x,
+    y: holeBox.y,
+    width: holeBox.w,
+    height: holeBox.h,
+    color: hexRgb(recipe.well),
+  });
+  if (recipe.painting) {
+    const painting = images.get(recipe.painting.src);
+    if (painting) {
+      drawCoverImage(
+        page,
+        painting,
+        { x: stageX, y: stageY, w: stageW, h: stageH },
+        holeBox,
+        recipe.painting,
+      );
+    }
+  }
+  page.drawRectangle({
+    x: holeBox.x,
+    y: holeBox.y,
+    width: holeBox.w,
+    height: holeBox.h,
+    borderColor: rgb(0.2, 0.14, 0.1),
+    borderOpacity: 0.28,
+    borderWidth: 1.25,
+  });
+  page.drawRectangle({
+    x: holeBox.x + 0.7,
+    y: holeBox.y + 0.7,
+    width: holeBox.w - 1.4,
+    height: holeBox.h - 1.4,
+    borderColor: rgb(1, 0.99, 0.96),
+    borderOpacity: 0.45,
+    borderWidth: 0.6,
+  });
+
+  const printScale = Math.min(stageW / STAGE.w, stageH / STAGE.h);
+  const wellPrint = recipe.painting
+    ? recipe.print
+    : recipe.paper === "seigaiha"
+      ? [...seigaiha("#9bb0ae"), ...recipe.print]
+      : recipe.paper === "washi"
+        ? [...washi("#c5ccb0"), ...recipe.print]
+        : recipe.print;
+  for (const path of wellPrint) {
+    page.drawSvgPath(path.d, {
+      x: stageX,
+      y: stageY + stageH - STAGE.h * printScale,
+      scale: printScale,
+      color: path.fill ? hexRgb(path.fill) : undefined,
+      borderColor: path.stroke ? hexRgb(path.stroke) : undefined,
+      borderWidth: path.stroke ? (path.strokeWidth ?? 1.1) * printScale : 0,
+      opacity: path.opacity,
+    });
+  }
+
+  for (const place of recipe.places) {
+    drawPlacedPiece(page, place, stageX, stageY, stageW, stageH, images);
+  }
+
+  let textY = 54;
+  for (const line of [...input.nameLayout.lines].reverse()) {
+    drawCentered(page, line, {
+      face: input.printed,
+      size: input.nameLayout.size,
+      y: textY,
+      color: gold,
+    });
+    textY += input.nameLayout.lineHeight;
+  }
+  textY += 6;
+  drawCentered(page, input.greeting, {
+    face: input.printedItalic,
+    size: input.greetingSize,
+    y: textY,
+    color: gold,
+    opacity: 0.9,
+  });
+}
+
+async function drawCoverPage(
   doc: PDFDocument,
   input: {
     design?: string;
@@ -277,7 +544,21 @@ function drawCoverPage(
 
   const greetingHeight = greetingSize * 1.3;
   const nameHeight = nameLayout.lines.length * nameLayout.lineHeight;
-  const shapes = DESIGN_ART[parseDesign(input.design)];
+  const designId = parseDesign(input.design);
+
+  if (isBoxDesign(designId)) {
+    await drawBoxCover(doc, page, {
+      design: designId,
+      greeting,
+      greetingSize,
+      nameLayout,
+      printed: input.printed,
+      printedItalic: input.printedItalic,
+    });
+    return;
+  }
+
+  const shapes = DESIGN_ART[designId as keyof typeof DESIGN_ART] ?? [];
   const artHeight = shapes.length ? 150 : 0;
   const blockHeight = artHeight + greetingHeight + 8 + nameHeight;
   let y = (PAGE_HEIGHT + blockHeight) / 2;

@@ -149,8 +149,8 @@
 
   .card-stage[data-closed="true"] .card-panel[data-half="right"],
   .card-stage[data-closing="true"] .card-panel[data-half="right"],
-  .card-stage[data-closed="true"] .card-leaf,
-  .card-stage[data-closing="true"] .card-leaf {
+  .card-stage[data-closed="true"] .card-leaf[data-cover="true"],
+  .card-stage[data-closing="true"] .card-leaf[data-cover="true"] {
     left: 25%;
   }
 }
@@ -163,12 +163,13 @@
   z-index: 20;
 }
 
-.card-stage[data-closing="true"] .card-leaf:not([data-cover="true"]) {
+/* Inner leaves must not travel with the cover. `visibility: hidden` does
+   not hide preserve-3d descendants, so a close used to slide every turned
+   note into the same spot beside the cover. Opacity composites the leaf. */
+.card-stage[data-closing="true"] .card-leaf:not([data-cover="true"]),
+.card-stage[data-closed="true"] .card-leaf:not([data-cover="true"]) {
+  opacity: 0;
   pointer-events: none;
-}
-
-.card-stage[data-closing="true"] .card-leaf[data-turned="true"]:not([data-cover="true"]) {
-  visibility: hidden;
   transition: none;
 }
 
