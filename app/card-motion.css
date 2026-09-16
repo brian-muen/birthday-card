@@ -5,6 +5,16 @@
   --card-close: 680ms;
   --card-ease: cubic-bezier(0.26, 0.02, 0.18, 1);
   --card-ease-cover: cubic-bezier(0.3, 0.02, 0.16, 1);
+  /* Nav, progress, page padding, and keepsake link. Size the OPEN
+     spread to the leftover viewport so neither state clips. */
+  --card-chrome: 12.5rem;
+  --card-fit-w: 5;
+  --card-fit-h: 7;
+  width: min(
+    100%,
+    calc((100svh - var(--card-chrome)) * var(--card-fit-w) / var(--card-fit-h))
+  );
+  margin-inline: auto;
   overflow-x: clip;
   overflow-y: visible;
   touch-action: pan-y;
@@ -20,14 +30,25 @@
   width: 100%;
   /* Match SPREAD_QUERY in card-book.tsx. Layout is CSS-first so a
      desktop reload does not paint the mobile single-panel, then jump. */
-  aspect-ratio: 5 / 7;
+  aspect-ratio: var(--card-fit-w) / var(--card-fit-h);
 }
 
 .card-stage {
   position: absolute;
   inset: 0;
   perspective: 2250px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
   animation: card-settle 720ms var(--card-ease-cover) both;
+}
+
+/* Hinge stays at 50% of this layer. Closed cards are centered by
+   translating the whole bound object, never by sliding the cover. */
+.card-world {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform var(--card-cover-turn) var(--card-ease-cover);
 }
 
 @keyframes card-settle {
@@ -80,11 +101,6 @@
 .card-panel[data-half="right"] {
   left: 0;
   width: 100%;
-  transition: left var(--card-cover-turn) var(--card-ease-cover);
-}
-
-.card-stage[data-closing="true"] .card-panel[data-half="right"] {
-  transition-duration: var(--card-close);
 }
 
 .card-panel[data-half="left"] {
@@ -108,24 +124,23 @@
   inset-block: 0;
   left: 0;
   width: 100%;
-  transform-origin: left center;
+  transform: rotateY(0deg);
+  transform-origin: 0 50%;
   transform-style: preserve-3d;
   z-index: 8;
-  transition:
-    transform var(--card-turn) var(--card-ease),
-    left var(--card-cover-turn) var(--card-ease-cover);
+  transition: transform var(--card-turn) var(--card-ease);
 }
 
 .card-leaf[data-cover="true"] {
-  transition:
-    transform var(--card-cover-turn) var(--card-ease-cover),
-    left var(--card-cover-turn) var(--card-ease-cover);
+  transition: transform var(--card-cover-turn) var(--card-ease-cover);
 }
 
 .card-stage[data-closing="true"] .card-leaf[data-cover="true"] {
-  transition:
-    transform var(--card-close) var(--card-ease-cover),
-    left var(--card-close) var(--card-ease-cover);
+  transition-duration: var(--card-close);
+}
+
+.card-stage[data-closing="true"] .card-world {
+  transition-duration: var(--card-close);
 }
 
 .card-stage[data-closed="true"]:not([data-closing="true"]) .card-face[data-face="back"] {
@@ -133,8 +148,9 @@
 }
 
 @media (min-width: 52rem) {
-  .card-seat {
-    aspect-ratio: 10 / 7;
+  .card-frame {
+    --card-fit-w: 10;
+    --card-fit-h: 7;
   }
 
   .card-stage {
@@ -147,11 +163,15 @@
     width: 50%;
   }
 
-  .card-stage[data-closed="true"] .card-panel[data-half="right"],
-  .card-stage[data-closing="true"] .card-panel[data-half="right"],
-  .card-stage[data-closed="true"] .card-leaf[data-cover="true"],
-  .card-stage[data-closing="true"] .card-leaf[data-cover="true"] {
-    left: 25%;
+  /* 1px overlap so a rotating cover never shows a hairline at the spine. */
+  .card-leaf {
+    width: calc(50% + 1px);
+    margin-left: -1px;
+  }
+
+  .card-stage[data-closed="true"] .card-world,
+  .card-stage[data-closing="true"] .card-world {
+    transform: translate3d(-25%, 0, 0);
   }
 }
 
@@ -558,6 +578,7 @@
 }
 
 .card-frame[data-animate="false"] .card-stage,
+.card-frame[data-animate="false"] .card-world,
 .card-frame[data-animate="false"] .card-leaf,
 .card-frame[data-animate="false"] .card-panel {
   transition: none;
@@ -565,6 +586,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card-stage,
+  .card-world,
   .card-leaf,
   .card-panel,
   .card-panel[data-half="left"],

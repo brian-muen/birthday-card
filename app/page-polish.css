@@ -240,16 +240,21 @@ body { background: var(--paper); }
 .signing-submit p { margin: 0; }
 .signing-success { max-width: 40rem; margin-top: 3rem; border-top: 1px solid var(--rule); padding-top: 2rem; }
 
-.recipient-page { width: min(100%, 76rem); margin-inline: auto; padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 5vw, 3rem) 3rem; }
+.recipient-page {
+  width: min(100%, 76rem);
+  margin-inline: auto;
+  overflow-x: clip;
+  padding: 1rem clamp(1rem, 5vw, 3rem) 1.15rem;
+}
 .recipient-page > div:first-of-type { width: min(100%, 68rem); margin-inline: auto; }
-.recipient-page .card-frame { max-width: 68rem; margin-inline: auto; }
-.recipient-page .card-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem 1.5rem; margin-top: 1.25rem; text-align: center; }
+.recipient-page .card-frame { max-width: 68rem; }
+.recipient-page .card-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem 1.5rem; margin-top: 1rem; text-align: center; }
 .card-nav-link, .quiet-link { color: var(--ink); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--ink) 32%, transparent); text-decoration-thickness: 1px; text-underline-offset: .22em; }
 .card-nav-link { min-height: 44px; border: 0; background: transparent; padding: .35rem; cursor: pointer; font-size: .9rem; }
 .card-nav-link:hover, .quiet-link:hover { text-decoration-color: var(--ink); }
 .card-open-hint, .card-nav-meta, .card-progress { margin: 0; color: var(--muted); font-size: .82rem; }
 .card-progress { margin-top: .8rem; text-align: center; }
-.recipient-keepsake { margin: clamp(2rem, 5vw, 4rem) auto 0; border-top: 1px solid color-mix(in oklab, var(--rule) 75%, transparent); padding-top: 1rem; text-align: center; }
+.recipient-keepsake { margin: 1.15rem auto 0; border-top: 1px solid color-mix(in oklab, var(--rule) 75%, transparent); padding-top: 0.85rem; text-align: center; }
 
 @media (max-width: 48rem) {
   .paper-home { padding: 1.35rem 1rem 2.5rem; }
