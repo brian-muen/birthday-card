@@ -22,6 +22,7 @@
 
 # local dev database (PGlite)
 /.pglite
+/.pglite-*
 
 # misc
 .DS_Store
