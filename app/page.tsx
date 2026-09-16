@@ -9,12 +9,11 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
-    dedication?: string;
     stock?: string;
     design?: string;
   }>;
 }) {
-  const { error, recipientName, dedication, stock, design } = await searchParams;
+  const { error, recipientName, stock, design } = await searchParams;
   return (
     <>
       <OrganizerBar />
@@ -22,7 +21,6 @@ export default async function Home({
         <CreateCardForm
           error={error}
           initialName={recipientName}
-          initialDedication={dedication}
           initialStock={parseStock(stock)}
           initialDesign={design === undefined ? "cake" : parseDesign(design)}
         />

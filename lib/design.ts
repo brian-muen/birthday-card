@@ -14,15 +14,17 @@ export const DESIGNS = [
   { id: "cats-cut", label: "Cats", group: "stickers" },
   { id: "mimosa-cut", label: "Mimosa", group: "stickers" },
   { id: "leaves-cut", label: "Leaves", group: "stickers" },
-  { id: "plain", label: "Just words", group: "plain" },
 ] as const;
 
+const RETIRED_IDS = ["plain"] as const;
+
 export type PickerDesignId = (typeof DESIGNS)[number]["id"];
-export type DesignId = PickerDesignId;
+export type DesignId = PickerDesignId | (typeof RETIRED_IDS)[number];
 
 export function parseDesign(value: unknown): DesignId {
   const id = String(value ?? "");
   if (DESIGNS.some((design) => design.id === id)) return id as PickerDesignId;
+  if ((RETIRED_IDS as readonly string[]).includes(id)) return id as DesignId;
   return "cake";
 }
 

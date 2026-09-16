@@ -88,31 +88,44 @@ function hasTextSelection() {
 }
 
 /**
- * Dedication is always the first inner leaf. Desktop then pairs notes
- * across the spread (dedication | first note, then the rest). Mobile
- * keeps one face per leaf so the writing turns with the page.
+ * Dedication is the first inner leaf when a card has one. Desktop then
+ * pairs notes across the spread. Mobile keeps one face per leaf so the
+ * writing turns with the page.
  */
-function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
+function buildLeaves(
+  notes: Note[],
+  spread: boolean,
+  hasDedication: boolean,
+): Leaf[] {
   if (!spread) {
-    return [
+    const leaves: Leaf[] = [
       { front: { kind: "cover" }, back: { kind: "empty" } },
-      { front: { kind: "dedication" }, back: { kind: "empty" } },
+    ];
+    if (hasDedication) {
+      leaves.push({ front: { kind: "dedication" }, back: { kind: "empty" } });
+    }
+    leaves.push(
       ...notes.map((note) => ({
         front: { kind: "note" as const, note },
         back: { kind: "empty" as const },
       })),
-    ];
+    );
+    return leaves;
   }
+
+  const coverBack: Face = hasDedication
+    ? { kind: "dedication" }
+    : { kind: "empty" };
 
   if (notes.length === 0) {
     return [
-      { front: { kind: "cover" }, back: { kind: "dedication" } },
+      { front: { kind: "cover" }, back: coverBack },
       { front: { kind: "empty" }, back: { kind: "empty" } },
     ];
   }
 
   const leaves: Leaf[] = [
-    { front: { kind: "cover" }, back: { kind: "dedication" } },
+    { front: { kind: "cover" }, back: coverBack },
     {
       front: { kind: "note", note: notes[0] },
       back: notes[1] ? { kind: "note", note: notes[1] } : { kind: "empty" },
@@ -129,8 +142,13 @@ function buildLeaves(notes: Note[], spread: boolean): Leaf[] {
   return leaves;
 }
 
-function lastPlace(leaves: Leaf[], spread: boolean, noteCount: number) {
-  if (!spread) return 1 + noteCount;
+function lastPlace(
+  leaves: Leaf[],
+  spread: boolean,
+  noteCount: number,
+  hasDedication: boolean,
+) {
+  if (!spread) return (hasDedication ? 1 : 0) + noteCount;
   if (noteCount === 0) return 1;
   let max = 1;
   for (let i = 1; i < leaves.length; i += 1) {
@@ -148,7 +166,10 @@ function visibleView(leaves: Leaf[], spread: boolean, place: number): View {
     const right = leaves[place]?.front;
     if (right?.kind === "note") return { kind: "note", id: right.note.id };
     if (left?.kind === "note") return { kind: "note", id: left.note.id };
-    return { kind: "dedication" };
+    if (left?.kind === "dedication" || right?.kind === "dedication") {
+      return { kind: "dedication" };
+    }
+    return { kind: "cover" };
   }
   const front = leaves[place]?.front;
   if (front?.kind === "note") return { kind: "note", id: front.note.id };
@@ -210,6 +231,7 @@ export default function CardBook({
   design?: string;
 }) {
   const dedicationText = resolveDedication(dedication);
+  const hasDedication = Boolean(dedicationText);
   const spread = useSyncExternalStore(
     subscribeToSpread,
     getSpread,
@@ -221,8 +243,11 @@ export default function CardBook({
     getServerFalse,
   );
 
-  const leaves = useMemo(() => buildLeaves(notes, spread), [notes, spread]);
-  const last = lastPlace(leaves, spread, notes.length);
+  const leaves = useMemo(
+    () => buildLeaves(notes, spread, hasDedication),
+    [notes, spread, hasDedication],
+  );
+  const last = lastPlace(leaves, spread, notes.length, hasDedication);
 
   // Viewed face is the source of truth so a resize can remount the same note
   // on the other leaf model. Place is derived from that view.
