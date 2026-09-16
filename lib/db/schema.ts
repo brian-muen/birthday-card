@@ -9,7 +9,7 @@ import {
 export const organizers = pgTable("organizers", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
-  googleSub: text("google_sub").notNull().unique(),
+  googleSub: text("google_sub").unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
