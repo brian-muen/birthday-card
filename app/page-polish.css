@@ -1,0 +1,270 @@
+/* Quiet paper UI for the three public card surfaces. The artwork remains the
+   loudest element; controls use the same ink, rule, and cardstock vocabulary. */
+:root {
+  --surface: color-mix(in oklab, var(--paper) 72%, white);
+  --surface-deep: color-mix(in oklab, var(--paper) 88%, var(--ink));
+  --content-width: 70rem;
+}
+
+body { background: var(--paper); }
+
+.paper-home,
+.signing-page,
+.recipient-page { width: 100%; min-height: 100svh; }
+
+.paper-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1.6rem, 5vh, 3.25rem) 1.15rem 3rem;
+}
+.paper-home .create-card-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: min(100%, 22.5rem);
+  margin-inline: auto;
+}
+.paper-home .create-name { text-align: center; }
+.paper-home .create-name h1 {
+  margin: 0;
+  font: 500 clamp(1.85rem, 6vw, 2.4rem)/1.05 var(--font-garamond), var(--cjk-serif), Georgia, serif;
+  letter-spacing: -0.03em;
+}
+.paper-home .create-name h1 label { cursor: text; }
+.paper-home .create-name .field {
+  margin-top: 0.55rem;
+  text-align: center;
+  font-size: 1.45rem;
+  caret-color: var(--ink);
+}
+.paper-home .form-error {
+  margin: 0.85rem 0 0;
+  border: 0;
+  padding: 0;
+  color: #6b3a3a;
+  text-align: center;
+}
+.paper-home .paper-preview-stage {
+  width: min(100%, 19rem);
+  margin: 1.65rem auto 1.15rem;
+}
+.paper-home .paper-preview {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  position: relative;
+  filter: drop-shadow(0 16px 22px rgb(27 36 64 / 0.16));
+}
+.paper-home .paper-preview .card-face {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+.paper-home .paper-preview .card-dedication { flex: 1; }
+.paper-home .paper-preview-thickness {
+  position: absolute;
+  inset: 0.35rem -0.4rem -0.28rem 0.4rem;
+  background: color-mix(in oklab, var(--card-stock) 72%, #776d66);
+  z-index: -1;
+}
+
+.paper-home .cover-kinds {
+  display: flex;
+  justify-content: center;
+  gap: 1.15rem;
+  margin: 0 0 0.7rem;
+}
+.paper-home .cover-kind {
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  padding: 0.2rem 0 0.28rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.1;
+  cursor: pointer;
+}
+.paper-home .cover-kind[aria-pressed="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.paper-home .cover-kind:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.paper-home .cover-slot {
+  min-height: 3.8rem;
+}
+.paper-home .cover-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.paper-home .design-options {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+.paper-home .design-option { margin: 0; }
+.paper-home .design-thumbnail {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--paper-liner);
+  outline: none;
+  transition: border-color 160ms var(--ease-out);
+}
+.paper-home .design-option:hover .design-thumbnail { border-color: var(--ink); }
+.paper-home .design-option:has(input:checked) .design-thumbnail,
+.paper-home .design-option:has(input:focus-visible) .design-thumbnail {
+  border-color: var(--ink);
+  outline: 1px solid var(--ink);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.paper-home .design-option:has(input:focus-visible) .design-thumbnail {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.paper-home .design-thumbnail > * { width: 100%; height: 100%; }
+.paper-home .design-plain {
+  display: grid;
+  place-items: center;
+  font: italic 0.72rem/1.05 var(--font-garamond), Georgia, serif;
+  color: var(--ink-pen);
+}
+
+.paper-home .stock-field { margin: 1rem 0 0; }
+.paper-home .stock-options {
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 0;
+}
+.paper-home .stock-option { display: grid; place-items: center; }
+.paper-home .stock-swatch {
+  width: 1.05rem;
+  height: 1.35rem;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgb(255 253 248 / 0.45);
+}
+.paper-home .stock-option:has(input:checked) .stock-swatch {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: inset 0 0 0 1px var(--paper);
+}
+.paper-home .stock-option:has(input:focus-visible) .stock-swatch {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.paper-home .create-button {
+  width: auto;
+  min-width: 12.5rem;
+  margin: 1.65rem auto 0;
+}
+.paper-home .privacy-note {
+  margin: 0.7rem 0 0;
+  text-align: center;
+}
+.paper-home .create-more {
+  margin-top: 1.75rem;
+  border-top: 1px solid color-mix(in oklab, var(--rule) 80%, transparent);
+  padding-top: 0.85rem;
+}
+.paper-home .create-more summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  text-align: center;
+  list-style: none;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--ink) 28%, transparent);
+  text-underline-offset: 0.22em;
+}
+.paper-home .create-more summary::-webkit-details-marker { display: none; }
+.paper-home .create-more[open] summary { color: var(--ink); }
+.paper-home .create-more .form-field { margin-top: 1.15rem; }
+.paper-home .create-more .form-field:first-of-type { margin-top: 1.25rem; }
+.paper-home .dedication-field span,
+.paper-home .intro-field span { color: var(--muted); font-weight: 400; }
+
+.signing-title { margin: 0; font: 500 clamp(2.25rem, 5vw, 3.5rem)/.98 var(--font-garamond), var(--cjk-serif), Georgia, serif; letter-spacing: -.035em; }
+.paper-lede { max-width: 34ch; margin: .9rem 0 0; color: var(--muted); font-size: 1.05rem; line-height: 1.5; }
+.form-field, .stock-field { margin-top: 1.75rem; }
+.form-field > label, .stock-field legend { display: block; margin-bottom: .5rem; font-size: .94rem; font-weight: 600; }
+.stock-field { border: 0; padding: 0; }
+.ui-button { border: 1px solid color-mix(in oklab, var(--ink) 30%, transparent); background: transparent; color: var(--ink); padding: .72rem 1.05rem; font-size: .94rem; font-weight: 600; line-height: 1.1; cursor: pointer; transition: background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+.ui-button:hover:not(:disabled) { transform: translateY(-1px); background: color-mix(in oklab, var(--paper-liner) 35%, transparent); }
+.ui-button-primary { border-color: var(--ink); background: var(--ink); color: var(--paper-liner); }
+.ui-button-primary:hover:not(:disabled) { background: color-mix(in oklab, var(--ink) 88%, white); }
+.ui-button:disabled { cursor: wait; opacity: .55; }
+.privacy-note { margin-top: .85rem; color: var(--muted); font-size: .8rem; text-align: center; }
+.form-error, .signing-error { margin: 1rem 0; color: #713d3d; font-size: .9rem; line-height: 1.45; }
+
+.signing-page { width: min(100%, 58rem); margin-inline: auto; padding: clamp(2.75rem, 7vw, 6rem) clamp(1.2rem, 5vw, 3rem) 5rem; }
+.signing-heading { max-width: 44rem; }
+.signing-heading p { margin-top: .9rem; }
+.signing-intro { max-width: 46ch; margin: 2.6rem 0 0; border-block: 1px solid var(--rule); padding: 1rem 0; color: var(--ink); font: 1.25rem/1.5 var(--font-caveat), var(--cjk-hand), cursive; white-space: pre-wrap; }
+.signing-form { margin-top: 3rem; }
+.signing-pens { border: 0; margin: 0; padding: 0; }
+.signing-pens legend { font-weight: 600; }
+.pen-choice { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .86rem; cursor: pointer; }
+.pen-choice-mark { display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border: 1px solid var(--rule); border-radius: 50%; }
+.pen-choice:has(input:checked) { color: var(--ink); font-weight: 600; }
+.pen-choice:has(input:checked) .pen-choice-mark { border: 2px solid var(--ink); background: var(--paper-liner); }
+.pen-choice-mark svg { width: 1rem; height: 1rem; }
+.signing-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; align-items: start; margin-top: 1.75rem; }
+.signing-sheet { border-radius: 1px; }
+.signing-sheet textarea { min-height: 13rem; font-size: 1.35rem; line-height: 1.5; }
+.signing-sheet input { background: transparent; }
+.signing-photo-control { cursor: pointer; }
+.note-photo-pick { display: block; width: min(100%, 11rem); max-height: 11rem; object-fit: cover; margin-bottom: .55rem; }
+.signing-preview summary { color: var(--muted); cursor: pointer; font-size: .84rem; }
+.signing-preview[open] summary { color: var(--ink); }
+.note-preview { font-size: .92rem; }
+.signing-error { color: var(--ink); font-weight: 600; }
+.signing-submit { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; margin-top: 1.75rem; }
+.signing-submit p { margin: 0; }
+.signing-success { max-width: 40rem; margin-top: 3rem; border-top: 1px solid var(--rule); padding-top: 2rem; }
+
+.recipient-page { width: min(100%, 76rem); margin-inline: auto; padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 5vw, 3rem) 3rem; }
+.recipient-page > div:first-of-type { width: min(100%, 68rem); margin-inline: auto; }
+.recipient-page .card-frame { max-width: 68rem; margin-inline: auto; }
+.recipient-page .card-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .8rem 1.5rem; margin-top: 1.25rem; text-align: center; }
+.card-nav-link, .quiet-link { color: var(--ink); text-decoration: underline; text-decoration-color: color-mix(in oklab, var(--ink) 32%, transparent); text-decoration-thickness: 1px; text-underline-offset: .22em; }
+.card-nav-link { min-height: 44px; border: 0; background: transparent; padding: .35rem; cursor: pointer; font-size: .9rem; }
+.card-nav-link:hover, .quiet-link:hover { text-decoration-color: var(--ink); }
+.card-open-hint, .card-nav-meta, .card-progress { margin: 0; color: var(--muted); font-size: .82rem; }
+.card-progress { margin-top: .8rem; text-align: center; }
+.recipient-keepsake { margin: clamp(2rem, 5vw, 4rem) auto 0; border-top: 1px solid color-mix(in oklab, var(--rule) 75%, transparent); padding-top: 1rem; text-align: center; }
+
+@media (max-width: 48rem) {
+  .paper-home { padding: 1.35rem 1rem 2.5rem; }
+  .paper-home .paper-preview-stage { width: min(58vw, 15.5rem); }
+  .signing-page { padding-top: 2.5rem; }
+  .signing-title { font-size: clamp(2.25rem, 11vw, 3.1rem); }
+  .signing-workspace { display: block; }
+  .signing-preview { margin-top: 1.25rem; }
+  .signing-sheet textarea { min-height: 11rem; }
+  .recipient-page { padding-inline: .75rem; }
+}
+
+@media (max-width: 28rem) {
+  .paper-home .paper-preview-stage { width: min(72vw, 15rem); }
+  .paper-home .create-button { width: 100%; }
+  .signing-submit .ui-button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-home .paper-preview,
+  .paper-home .design-thumbnail,
+  .ui-button { transition: none; }
+}

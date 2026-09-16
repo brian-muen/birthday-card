@@ -37,6 +37,7 @@ export async function GET(
   const pdfBytes = await buildCardPdf({
     recipientName: card.recipientName,
     intro: card.intro,
+    dedication: card.dedication,
     stock: parseStock(card.stock),
     design: parseDesign(card.design),
     showCount,

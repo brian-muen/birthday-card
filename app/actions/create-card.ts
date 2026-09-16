@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
+import { DEDICATION_MAX } from "@/lib/dedication";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parseStock } from "@/lib/stock";
 import { parseDesign } from "@/lib/design";
@@ -16,6 +17,7 @@ const INTRO_MAX = 500;
 export async function createCard(formData: FormData) {
   const recipientName = String(formData.get("recipientName") ?? "").trim();
   const intro = String(formData.get("intro") ?? "").trim();
+  const dedication = String(formData.get("dedication") ?? "").trim();
   const stock = parseStock(formData.get("stock"));
   const design = parseDesign(formData.get("design"));
 
@@ -26,6 +28,7 @@ export async function createCard(formData: FormData) {
     if (recipientName) {
       params.set("recipientName", recipientName.slice(0, RECIPIENT_NAME_MAX));
     }
+    params.set("dedication", dedication.slice(0, DEDICATION_MAX));
     params.set("stock", stock);
     params.set("design", design);
     redirect(`/?${params.toString()}`);
@@ -36,6 +39,9 @@ export async function createCard(formData: FormData) {
   }
   if (recipientName.length > RECIPIENT_NAME_MAX) {
     fail(`The name must be ${RECIPIENT_NAME_MAX} characters or fewer.`);
+  }
+  if (dedication.length > DEDICATION_MAX) {
+    fail(`The dedication must be ${DEDICATION_MAX} characters or fewer.`);
   }
   if (intro.length > INTRO_MAX) {
     fail(`Welcome note must be ${INTRO_MAX} characters or fewer.`);
@@ -51,6 +57,7 @@ export async function createCard(formData: FormData) {
     recipientName,
     occasion: "Birthday",
     intro: intro || null,
+    dedication,
     stock,
     design,
     contributeToken,

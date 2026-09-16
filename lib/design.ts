@@ -1,20 +1,37 @@
 export const DESIGNS = [
-  { id: "cake", label: "Birthday cake" },
-  { id: "balloons", label: "Balloons" },
-  { id: "flowers", label: "Flowers" },
-  { id: "plain", label: "Just words" },
+  { id: "recital", label: "Piano", group: "window" },
+  { id: "goldfish", label: "Goldfish", group: "window" },
+  { id: "loquat", label: "Loquat", group: "window" },
+  { id: "cats", label: "Cats", group: "window" },
+  { id: "mimosa", label: "Mimosa", group: "window" },
+  { id: "leaves", label: "Leaves", group: "window" },
+  { id: "recital-cut", label: "Piano", group: "stickers" },
+  { id: "goldfish-cut", label: "Goldfish", group: "stickers" },
+  { id: "loquat-cut", label: "Loquat", group: "stickers" },
+  { id: "cats-cut", label: "Cats", group: "stickers" },
+  { id: "mimosa-cut", label: "Mimosa", group: "stickers" },
+  { id: "leaves-cut", label: "Leaves", group: "stickers" },
+  { id: "plain", label: "Just words", group: "plain" },
 ] as const;
 
-export type DesignId = (typeof DESIGNS)[number]["id"];
+const LEGACY_IDS = ["cake", "balloons", "flowers"] as const;
+
+export type PickerDesignId = (typeof DESIGNS)[number]["id"];
+export type DesignId = PickerDesignId | (typeof LEGACY_IDS)[number];
+
 // Older cards keep their original cover.
 export function parseDesign(value: unknown): DesignId {
-  return DESIGNS.some((design) => design.id === value) ? value as DesignId : "plain";
+  const id = String(value ?? "");
+  if (DESIGNS.some((design) => design.id === id)) return id as PickerDesignId;
+  if ((LEGACY_IDS as readonly string[]).includes(id)) return id as DesignId;
+  return "plain";
 }
 
 type Shape = { d: string; fill?: string; stroke?: string };
 const ink = "#594b55";
-// Shared vector artwork keeps the screen and PDF illustrations identical.
-export const DESIGN_ART: Record<DesignId, Shape[]> = {
+type FlatDesignId = "plain" | "cake" | "balloons" | "flowers";
+// Shared vector artwork keeps the screen and PDF illustrations identical for older covers.
+export const DESIGN_ART: Record<FlatDesignId, Shape[]> = {
   plain: [],
   cake: [
     { d: "M29 129 Q80 139 131 129 L131 133 Q80 143 29 133 Z", fill: "#abb7a1" },
