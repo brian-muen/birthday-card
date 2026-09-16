@@ -42,7 +42,7 @@ const ENSURE_TABLES = [
   `CREATE TABLE IF NOT EXISTS organizers (
     id serial PRIMARY KEY,
     email text NOT NULL UNIQUE,
-    password_hash text NOT NULL,
+    google_sub text UNIQUE,
     created_at timestamp NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS organizer_sessions (
@@ -51,6 +51,9 @@ const ENSURE_TABLES = [
     expires_at timestamp NOT NULL,
     created_at timestamp NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE organizers ADD COLUMN IF NOT EXISTS google_sub text`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS organizers_google_sub_unique ON organizers (google_sub)`,
+  `ALTER TABLE organizers DROP COLUMN IF EXISTS password_hash`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS organizer_id integer REFERENCES organizers(id) ON DELETE SET NULL`,
   `CREATE INDEX IF NOT EXISTS cards_organizer_id_idx ON cards (organizer_id)`,
 ];

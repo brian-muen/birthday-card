@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { hashPassword, parseEmail, verifyPassword } from "../lib/password.ts";
+import { parseEmail } from "../lib/email.ts";
 import { createdMasterToken, safeNextPath } from "../lib/safe-next-path.ts";
 
 test("parseEmail lowercases and rejects junk", () => {
@@ -9,13 +9,6 @@ test("parseEmail lowercases and rejects junk", () => {
   assert.equal(parseEmail("not-an-email"), null);
   assert.equal(parseEmail("a@b"), null);
   assert.equal(parseEmail(""), null);
-});
-
-test("hashPassword verifies the same password and rejects another", async () => {
-  const stored = await hashPassword("correct horse");
-  assert.equal(await verifyPassword("correct horse", stored), true);
-  assert.equal(await verifyPassword("wrong password", stored), false);
-  assert.equal(await verifyPassword("correct horse", "not-a-hash"), false);
 });
 
 test("safeNextPath stays on this site", () => {

@@ -152,11 +152,11 @@ export default async function CardCreated({
           ) : (
             <>
               <p>
-                Optional: save this card to an account so a lost organizer link
+                Optional: save this card with Google so a lost organizer link
                 is not the end of it.
               </p>
               <Link href={accountHref} className="handoff-open">
-                Save to an account
+                Save with Google
               </Link>
             </>
           )}
