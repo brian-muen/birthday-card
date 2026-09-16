@@ -7,12 +7,15 @@ send it to the recipient when you're ready.
 
 ## How it works
 
-- No user accounts. Security comes from unguessable URL tokens.
-- Each card has two independent 24-char tokens:
+- Each card has unguessable URL tokens:
   - `contributeToken` → `/sign/[contributeToken]` — write-only message form
+  - `giftToken` → `/card/[giftToken]` — read the finished card
   - `masterToken` → `/card/[masterToken]` — view all messages, delete messages
 - `/` — landing page with a create-card form. After creating, you're shown
-  both links at `/created/[masterToken]`.
+  the links at `/created/[masterToken]`.
+- Organizer accounts are optional. Anyone can create a card without signing
+  in. Signing in saves that card to `/cards` so a lost organizer link can be
+  found later. Contributors never need an account.
 
 ## Tech
 
@@ -23,9 +26,10 @@ send it to the recipient when you're ready.
 
 ## Shared modules (the contract)
 
-- `lib/db/schema.ts` — `cards` and `messages` tables, `Card`/`Message` types
+- `lib/db/schema.ts` — `organizers`, `organizer_sessions`, `cards`, and `messages` tables
 - `lib/db/index.ts` — `getDb(): Promise<Db>` returns the Drizzle instance
 - `lib/tokens.ts` — `generateToken()` for URL tokens
+- `lib/organizer-auth.ts` — optional organizer session cookie
 
 Example usage in a server action:
 

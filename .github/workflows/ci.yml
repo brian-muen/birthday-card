@@ -26,5 +26,8 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      - name: Auth tests
+        run: node --test tests/organizer-auth.test.mjs
+
       - name: Build
         run: npm run build

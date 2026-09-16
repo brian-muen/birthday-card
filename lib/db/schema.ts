@@ -6,6 +6,22 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+export const organizers = pgTable("organizers", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const organizerSessions = pgTable("organizer_sessions", {
+  token: text("token").primaryKey(),
+  organizerId: integer("organizer_id")
+    .notNull()
+    .references(() => organizers.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const cards = pgTable("cards", {
   id: serial("id").primaryKey(),
   recipientName: text("recipient_name").notNull(),
@@ -17,6 +33,9 @@ export const cards = pgTable("cards", {
   contributeToken: text("contribute_token").notNull().unique(),
   masterToken: text("master_token").notNull().unique(),
   giftToken: text("gift_token").unique(),
+  organizerId: integer("organizer_id").references(() => organizers.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -32,5 +51,6 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export type Organizer = typeof organizers.$inferSelect;
 export type Card = typeof cards.$inferSelect;
 export type Message = typeof messages.$inferSelect;
