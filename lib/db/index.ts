@@ -39,6 +39,20 @@ const ENSURE_TABLES = [
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS pen text NOT NULL DEFAULT 'pencil'`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS image text`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS dedication text`,
+  `CREATE TABLE IF NOT EXISTS organizers (
+    id serial PRIMARY KEY,
+    email text NOT NULL UNIQUE,
+    password_hash text NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS organizer_sessions (
+    token text PRIMARY KEY,
+    organizer_id integer NOT NULL REFERENCES organizers(id) ON DELETE CASCADE,
+    expires_at timestamp NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+  )`,
+  `ALTER TABLE cards ADD COLUMN IF NOT EXISTS organizer_id integer REFERENCES organizers(id) ON DELETE SET NULL`,
+  `CREATE INDEX IF NOT EXISTS cards_organizer_id_idx ON cards (organizer_id)`,
 ];
 
 async function createDb(): Promise<Db> {

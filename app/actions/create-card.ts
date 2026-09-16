@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
 import { DEDICATION_MAX } from "@/lib/dedication";
+import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parseStock } from "@/lib/stock";
 import { parseDesign } from "@/lib/design";
 import { generateToken } from "@/lib/tokens";
@@ -51,6 +52,7 @@ export async function createCard(formData: FormData) {
   const giftToken = generateToken();
 
   const db = await getDb();
+  const organizer = await getCurrentOrganizer();
   await db.insert(cards).values({
     recipientName,
     occasion: "Birthday",
@@ -61,6 +63,7 @@ export async function createCard(formData: FormData) {
     contributeToken,
     masterToken,
     giftToken,
+    organizerId: organizer?.id ?? null,
   });
 
   redirect(`/created/${masterToken}`);
