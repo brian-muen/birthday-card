@@ -109,6 +109,11 @@ body { background: var(--paper); }
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.4rem;
 }
+.paper-home .design-options[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 12rem);
+  margin-inline: auto;
+}
 .paper-home .design-option { margin: 0; }
 .paper-home .design-thumbnail {
   display: grid;

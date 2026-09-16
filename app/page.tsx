@@ -24,7 +24,7 @@ export default async function Home({
           initialName={recipientName}
           initialDedication={dedication}
           initialStock={parseStock(stock)}
-          initialDesign={design === undefined ? "recital" : parseDesign(design)}
+          initialDesign={design === undefined ? "cake" : parseDesign(design)}
         />
       </main>
     </>

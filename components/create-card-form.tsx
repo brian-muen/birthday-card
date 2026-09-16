@@ -5,12 +5,14 @@ import { useFormStatus } from "react-dom";
 import { createCard } from "@/app/actions/create-card";
 import CardPreview from "@/components/card-preview";
 import BoxCover from "@/components/box-cover";
+import CoverArt from "@/components/cover-art";
 import { isBoxDesign } from "@/lib/box-art/recipes";
 import { DEFAULT_DEDICATION, DEDICATION_MAX } from "@/lib/dedication";
 import { DESIGNS, type DesignId } from "@/lib/design";
 import { DEFAULT_STOCK, STOCKS, type StockId } from "@/lib/stock";
 
 const COVER_KINDS = [
+  { id: "classic", label: "Birthday" },
   { id: "window", label: "Paintings" },
   { id: "stickers", label: "Stickers" },
   { id: "plain", label: "Words" },
@@ -19,11 +21,11 @@ const COVER_KINDS = [
 type CoverKind = (typeof COVER_KINDS)[number]["id"];
 
 function kindOf(id: DesignId): CoverKind {
-  return DESIGNS.find((design) => design.id === id)?.group ?? "window";
+  return DESIGNS.find((design) => design.id === id)?.group ?? "classic";
 }
 
 function firstOfKind(kind: CoverKind): DesignId {
-  return DESIGNS.find((design) => design.group === kind)?.id ?? "plain";
+  return DESIGNS.find((design) => design.group === kind)?.id ?? "cake";
 }
 
 export default function CreateCardForm({
@@ -31,7 +33,7 @@ export default function CreateCardForm({
   initialName = "",
   initialDedication = DEFAULT_DEDICATION,
   initialStock = DEFAULT_STOCK,
-  initialDesign = "recital",
+  initialDesign = "cake",
 }: {
   error?: string;
   initialName?: string;
@@ -106,7 +108,7 @@ export default function CreateCardForm({
         ) : (
           <fieldset className="cover-field">
             <legend className="sr-only">Cover</legend>
-            <div className="design-options">
+            <div className="design-options" data-count={covers.length}>
               {covers.map((option) => (
                 <DesignChoice
                   key={option.id}
@@ -212,8 +214,10 @@ function DesignChoice({
       <span className="design-thumbnail" aria-hidden="true">
         {isBoxDesign(option.id) ? (
           <BoxCover design={option.id} compact />
-        ) : (
+        ) : option.id === "plain" ? (
           <span className="design-plain">Happy<br />birthday</span>
+        ) : (
+          <CoverArt design={option.id} />
         )}
       </span>
       <span className="sr-only">{option.label}</span>

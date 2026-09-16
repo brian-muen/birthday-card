@@ -1,4 +1,7 @@
 export const DESIGNS = [
+  { id: "cake", label: "Cake", group: "classic" },
+  { id: "balloons", label: "Balloons", group: "classic" },
+  { id: "flowers", label: "Flowers", group: "classic" },
   { id: "recital", label: "Piano", group: "window" },
   { id: "goldfish", label: "Goldfish", group: "window" },
   { id: "loquat", label: "Loquat", group: "window" },
@@ -14,17 +17,13 @@ export const DESIGNS = [
   { id: "plain", label: "Just words", group: "plain" },
 ] as const;
 
-const LEGACY_IDS = ["cake", "balloons", "flowers"] as const;
-
 export type PickerDesignId = (typeof DESIGNS)[number]["id"];
-export type DesignId = PickerDesignId | (typeof LEGACY_IDS)[number];
+export type DesignId = PickerDesignId;
 
-// Older cards keep their original cover.
 export function parseDesign(value: unknown): DesignId {
   const id = String(value ?? "");
   if (DESIGNS.some((design) => design.id === id)) return id as PickerDesignId;
-  if ((LEGACY_IDS as readonly string[]).includes(id)) return id as DesignId;
-  return "plain";
+  return "cake";
 }
 
 type Shape = { d: string; fill?: string; stroke?: string };
