@@ -47,8 +47,12 @@ export async function GET(request: NextRequest) {
   }
 
   const profile = await googleProfileFromCode(origin, code, start.verifier);
-  if (!profile) {
-    fail("Google did not share a verified email.");
+  if (!profile.ok) {
+    fail(
+      profile.reason === "token"
+        ? "Could not finish Google sign-in. Try again."
+        : "Google did not share an email. In Google Cloud, add the Email scope, then try again.",
+    );
   }
 
   const organizerId = await upsertOrganizerFromGoogle(

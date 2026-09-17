@@ -1,6 +1,10 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
-import { parseEmail } from "./email";
+import {
+  type GoogleIdentity,
+  type GoogleProfile,
+  profileFromGoogleIdentity,
+} from "./email";
 import { safeNextPath } from "./safe-next-path";
 
 export const GOOGLE_OAUTH_COOKIE = "organizer_oauth";
@@ -96,7 +100,24 @@ export function sameOAuthState(left: string, right: string) {
   return timingSafeEqual(a, b);
 }
 
-export async function googleProfileFromCode(origin: string, code: string, verifier: string) {
+function claimsFromIdToken(idToken: string | undefined): GoogleIdentity | null {
+  if (!idToken) return null;
+  const payload = idToken.split(".")[1];
+  if (!payload) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as GoogleIdentity;
+  } catch {
+    return null;
+  }
+}
+
+export async function googleProfileFromCode(
+  origin: string,
+  code: string,
+  verifier: string,
+): Promise<GoogleProfile> {
   const body = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID ?? "",
     client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
@@ -111,22 +132,32 @@ export async function googleProfileFromCode(origin: string, code: string, verifi
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!tokenResponse.ok) return null;
-  const tokens = (await tokenResponse.json()) as { access_token?: string };
-  if (!tokens.access_token) return null;
-
-  const userResponse = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-    headers: { Authorization: `Bearer ${tokens.access_token}` },
-  });
-  if (!userResponse.ok) return null;
-  const user = (await userResponse.json()) as {
-    sub?: string;
-    email?: string;
-    email_verified?: boolean;
+  if (!tokenResponse.ok) return { ok: false, reason: "token" };
+  const tokens = (await tokenResponse.json()) as {
+    access_token?: string;
+    id_token?: string;
   };
-  const email = user.email_verified ? parseEmail(user.email) : null;
-  if (!user.sub || !email) return null;
-  return { googleSub: user.sub, email };
+  if (!tokens.access_token && !tokens.id_token) {
+    return { ok: false, reason: "token" };
+  }
+
+  const fromIdToken = claimsFromIdToken(tokens.id_token);
+  let fromUserinfo: GoogleIdentity | null = null;
+  if (tokens.access_token) {
+    const userResponse = await fetch(
+      "https://openidconnect.googleapis.com/v1/userinfo",
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } },
+    );
+    if (userResponse.ok) {
+      fromUserinfo = (await userResponse.json()) as GoogleIdentity;
+    }
+  }
+
+  return profileFromGoogleIdentity({
+    sub: fromUserinfo?.sub ?? fromIdToken?.sub,
+    email: fromUserinfo?.email ?? fromIdToken?.email,
+    email_verified: fromUserinfo?.email_verified ?? fromIdToken?.email_verified,
+  });
 }
 
 function sha256Base64Url(value: string) {
