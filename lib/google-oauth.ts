@@ -17,20 +17,49 @@ export type GoogleOAuthStart = {
 };
 
 export function googleOAuthConfigured() {
-  return Boolean(
-    process.env.GOOGLE_CLIENT_ID?.trim() &&
-      process.env.GOOGLE_CLIENT_SECRET?.trim(),
-  );
+  return Boolean(googleClientId() && googleClientSecret());
 }
 
-export function appOrigin(request: Request): string {
-  const fromEnv = (
-    process.env.APP_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    ""
-  ).replace(/\/$/, "");
-  if (fromEnv) return fromEnv;
+function envText(name: string) {
+  return process.env[name]?.trim() ?? "";
+}
+
+function googleClientId() {
+  return envText("GOOGLE_CLIENT_ID");
+}
+
+function googleClientSecret() {
+  return envText("GOOGLE_CLIENT_SECRET");
+}
+
+export function publicAppOrigin() {
+  const fromEnv = envText("APP_URL") || envText("NEXT_PUBLIC_APP_URL");
+  if (fromEnv) return fromEnv.replace(/\/$/, "");
+  const vercel = envText("VERCEL_PROJECT_PRODUCTION_URL").replace(/\/$/, "");
+  if (vercel) return `https://${vercel}`;
+  return "https://manna-birthday-card.vercel.app";
+}
+
+export function requestOrigin(request: Request) {
+  const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "")
+    .split(",")[0]
+    .trim();
+  const proto = (request.headers.get("x-forwarded-proto") || "https")
+    .split(",")[0]
+    .trim();
+  if (host) return `${proto}://${host}`;
   return new URL(request.url).origin;
+}
+
+export function appOrigin(request: Request) {
+  const incoming = requestOrigin(request);
+  if (
+    incoming.startsWith("http://localhost") ||
+    incoming.startsWith("http://127.0.0.1")
+  ) {
+    return incoming;
+  }
+  return publicAppOrigin();
 }
 
 export function googleCallbackUrl(origin: string) {
@@ -82,7 +111,7 @@ export function googleOAuthCookieOptions(secure: boolean) {
 
 export function googleAuthorizationUrl(origin: string, start: GoogleOAuthStart) {
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  url.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID ?? "");
+  url.searchParams.set("client_id", googleClientId());
   url.searchParams.set("redirect_uri", googleCallbackUrl(origin));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid email profile");
@@ -119,8 +148,8 @@ export async function googleProfileFromCode(
   verifier: string,
 ): Promise<GoogleProfile> {
   const body = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-    client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    client_id: googleClientId(),
+    client_secret: googleClientSecret(),
     code,
     code_verifier: verifier,
     grant_type: "authorization_code",
@@ -132,7 +161,9 @@ export async function googleProfileFromCode(
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!tokenResponse.ok) return { ok: false, reason: "token" };
+  if (!tokenResponse.ok) {
+    return { ok: false, reason: await googleTokenFailure(tokenResponse) };
+  }
   const tokens = (await tokenResponse.json()) as {
     access_token?: string;
     id_token?: string;
@@ -162,4 +193,21 @@ export async function googleProfileFromCode(
 
 function sha256Base64Url(value: string) {
   return createHash("sha256").update(value).digest("base64url");
+}
+
+async function googleTokenFailure(
+  response: Response,
+): Promise<"token" | "client" | "redirect" | "grant"> {
+  try {
+    const body = (await response.json()) as {
+      error?: string;
+      error_description?: string;
+    };
+    if (body.error === "invalid_client") return "client";
+    if (body.error === "redirect_uri_mismatch") return "redirect";
+    if (body.error === "invalid_grant") return "grant";
+  } catch {
+    // Google sometimes returns a non-JSON body; keep the generic token error.
+  }
+  return "token";
 }

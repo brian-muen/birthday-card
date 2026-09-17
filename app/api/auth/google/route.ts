@@ -10,6 +10,7 @@ import {
   googleOAuthConfigured,
   googleOAuthCookieOptions,
   newGoogleOAuthStart,
+  requestOrigin,
 } from "@/lib/google-oauth";
 import { safeNextPath } from "@/lib/safe-next-path";
 
@@ -25,6 +26,13 @@ export async function GET(request: NextRequest) {
   }
 
   const origin = appOrigin(request);
+  if (requestOrigin(request) !== origin) {
+    const bounce = new URL("/api/auth/google", origin);
+    const nextParam = request.nextUrl.searchParams.get("next");
+    if (nextParam) bounce.searchParams.set("next", nextParam);
+    return NextResponse.redirect(bounce);
+  }
+
   const start = newGoogleOAuthStart(next);
   const response = NextResponse.redirect(googleAuthorizationUrl(origin, start));
   response.cookies.set(

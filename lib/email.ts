@@ -17,7 +17,7 @@ export type GoogleIdentity = {
 
 export type GoogleProfile =
   | { ok: true; googleSub: string; email: string }
-  | { ok: false; reason: "token" | "profile" };
+  | { ok: false; reason: "token" | "profile" | "client" | "redirect" | "grant" };
 
 export function profileFromGoogleIdentity(user: GoogleIdentity): GoogleProfile {
   const email = parseEmail(user.email);
