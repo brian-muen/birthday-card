@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseEmail } from "../lib/email.ts";
+import { parseEmail, profileFromGoogleIdentity } from "../lib/email.ts";
 import { createdMasterToken, safeNextPath } from "../lib/safe-next-path.ts";
 
 test("parseEmail lowercases and rejects junk", () => {
@@ -22,6 +22,32 @@ test("safeNextPath stays on this site", () => {
   assert.equal(safeNextPath("/%09//evil.com"), "/cards");
   assert.equal(safeNextPath("/account"), "/cards");
   assert.equal(safeNextPath("/account?next=/cards"), "/cards");
+});
+
+test("profileFromGoogleIdentity keeps a Google email even if verified is missing", () => {
+  assert.deepEqual(
+    profileFromGoogleIdentity({
+      sub: "google-sub-1",
+      email: "Ada@Example.com",
+    }),
+    { ok: true, googleSub: "google-sub-1", email: "ada@example.com" },
+  );
+  assert.deepEqual(
+    profileFromGoogleIdentity({
+      sub: "google-sub-1",
+      email: "ada@example.com",
+      email_verified: "true",
+    }),
+    { ok: true, googleSub: "google-sub-1", email: "ada@example.com" },
+  );
+  assert.deepEqual(profileFromGoogleIdentity({ sub: "google-sub-1" }), {
+    ok: false,
+    reason: "profile",
+  });
+  assert.deepEqual(profileFromGoogleIdentity({ email: "ada@example.com" }), {
+    ok: false,
+    reason: "profile",
+  });
 });
 
 test("createdMasterToken only accepts a 24-character token path", () => {
