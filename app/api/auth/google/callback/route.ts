@@ -25,6 +25,25 @@ function fail(message: string): never {
   redirect(`/account?${params.toString()}`);
 }
 
+function googleSignInFailure(
+  reason: "token" | "profile" | "client" | "redirect" | "grant",
+  origin: string,
+) {
+  if (reason === "client") {
+    return "Google rejected the app credentials. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET on Vercel.";
+  }
+  if (reason === "redirect") {
+    return `Google rejected the redirect URI. Add ${origin}/api/auth/google/callback in Google Cloud.`;
+  }
+  if (reason === "grant") {
+    return "Google sign-in expired. Try again.";
+  }
+  if (reason === "profile") {
+    return "Google did not share an email. In Google Cloud, add the Email scope, then try again.";
+  }
+  return "Could not finish Google sign-in. Try again.";
+}
+
 export async function GET(request: NextRequest) {
   const origin = appOrigin(request);
   const params = request.nextUrl.searchParams;
@@ -48,11 +67,7 @@ export async function GET(request: NextRequest) {
 
   const profile = await googleProfileFromCode(origin, code, start.verifier);
   if (!profile.ok) {
-    fail(
-      profile.reason === "token"
-        ? "Could not finish Google sign-in. Try again."
-        : "Google did not share an email. In Google Cloud, add the Email scope, then try again.",
-    );
+    fail(googleSignInFailure(profile.reason, origin));
   }
 
   const organizerId = await upsertOrganizerFromGoogle(
