@@ -95,7 +95,7 @@ export default function ComposeDesktop({
                 autoComplete="off"
                 placeholder="Whose birthday is it?"
                 aria-invalid={alert === MISSING_NAME || undefined}
-                className="os-field compose-name"
+                className="os-header-field compose-name"
               />
               <span className="compose-label" aria-hidden="true">
                 Subject

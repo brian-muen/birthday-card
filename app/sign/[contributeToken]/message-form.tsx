@@ -391,7 +391,7 @@ export default function MessageForm({
               disabled={pending}
               aria-invalid={errorField === "name"}
               aria-describedby={describedBy}
-              className="os-field reply-name"
+              className="os-header-field reply-name"
             />
 
             <span className="reply-label">Subject</span>

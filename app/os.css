@@ -541,6 +541,35 @@
   outline-offset: 1px;
 }
 
+/* A header line in a message (To, From, Sign as): you type straight onto the
+   row, so the caret is the only focus mark. */
+.os-header-field {
+  width: calc(100% + 0.7rem);
+  min-width: 0;
+  margin: -0.2rem -0.35rem;
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--os-ink);
+  caret-color: var(--os-accent);
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1rem;
+}
+
+.os-header-field::placeholder {
+  color: color-mix(in oklab, var(--os-ink) 40%, transparent);
+}
+
+.os-header-field:focus,
+.os-header-field:focus-visible {
+  outline: none;
+}
+
+.os-header-field[aria-invalid="true"] {
+  background: color-mix(in oklab, var(--os-candle) 26%, transparent);
+}
+
 .os-button:focus-visible,
 .os-close:focus-visible,
 .os-menu-trigger:focus-visible,

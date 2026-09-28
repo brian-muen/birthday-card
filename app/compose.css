@@ -52,33 +52,38 @@
 
 .compose-headers {
   display: grid;
-  grid-template-columns: 4.25rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-  padding: 0.8rem 0.9rem;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: baseline;
+  padding-inline: 0.9rem;
   border-bottom: 1px solid var(--os-ink);
   background: var(--os-chrome);
 }
 
+.compose-headers > * {
+  padding-block: 0.6rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--os-ink) 16%, transparent);
+}
+
+.compose-headers > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
 .compose-label {
+  padding-right: 0.75rem;
   font-family: var(--font-pixel), var(--font-ui), sans-serif;
   font-size: 0.9375rem;
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
   text-align: right;
 }
 
 .compose-name {
+  margin-block: 0;
   font-size: 1.0625rem;
-}
-
-.compose-name[aria-invalid="true"] {
-  border-color: var(--os-accent);
-  box-shadow: inset 1px 1px 0 var(--os-shade), 0 0 0 1px var(--os-accent);
 }
 
 .compose-subject {
   min-width: 0;
   margin: 0;
-  padding: 0.2rem 0.55rem;
   overflow: hidden;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -110,8 +115,7 @@
 }
 
 .compose-body:focus-visible {
-  outline: 2px solid var(--os-ink);
-  outline-offset: -4px;
+  outline: none;
 }
 
 /* ---------- Stationery ---------- */
@@ -258,6 +262,7 @@
 }
 
 .compose-preview .card-scrub {
+  --scrub-gap: var(--stage);
   margin-top: 1rem;
 }
 

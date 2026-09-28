@@ -206,6 +206,7 @@
 }
 
 .outbox-preview .card-scrub {
+  --scrub-gap: var(--stage);
   margin-top: 0.9rem;
 }
 
