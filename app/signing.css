@@ -1,0 +1,497 @@
+/* Signing sits on the same liner as the finished interior.
+   Scoped to the signing route so card-book materials stay with paper/motion. */
+
+.signing-page {
+  --signing-ink: var(--ink-pen, #2a231c);
+  --signing-liner: var(--paper-liner, #fffdf8);
+  --signing-fiber: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='fiber'><feTurbulence type='fractalNoise' baseFrequency='1.35' numOctaves='5' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23fiber)'/></svg>");
+  box-sizing: border-box;
+  width: min(100%, 64rem);
+  min-height: 100svh;
+  margin-inline: auto;
+  padding: 1.5rem 1.15rem 3.5rem;
+  color: var(--ink);
+}
+
+.signing-page *,
+.signing-page *::before,
+.signing-page *::after {
+  box-sizing: border-box;
+}
+
+.signing-page ::selection {
+  background: color-mix(in oklab, var(--signing-ink) 18%, transparent);
+}
+
+.signing-heading {
+  max-width: 36rem;
+}
+
+.signing-heading h1 {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--font-headline);
+  font-size: 2.1rem;
+  font-variation-settings: "SOFT" 100;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.signing-heading p {
+  margin: 0.65rem 0 0;
+  max-width: 42ch;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.signing-intro {
+  max-width: 40rem;
+  margin: 1.75rem 0 0;
+  padding: 0.15rem 0 0;
+  border: 0;
+  color: var(--signing-ink);
+  font-family: var(--font-caveat), var(--cjk-hand), cursive;
+  font-size: 1.35rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.signing-form {
+  margin-top: 1.75rem;
+}
+
+.signing-pens {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.signing-pens legend {
+  padding: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.signing-pen-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.15rem;
+  align-items: flex-end;
+  margin-top: 0.55rem;
+}
+
+.signing-page .pen-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 3.4rem;
+  padding: 0.2rem 0.4rem 0.15rem;
+  color: color-mix(in oklab, var(--muted) 70%, var(--ink));
+  font-size: 0.75rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.signing-page .pen-choice-mark {
+  display: flex;
+  width: auto;
+  height: auto;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.15rem 0.1rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 0;
+  transition: color 160ms var(--ease-out, ease);
+}
+
+.signing-page .pen-choice:active .pen-choice-mark {
+  transform: none;
+}
+
+.signing-page .pen-choice:has(input:checked) {
+  color: var(--signing-ink);
+  font-weight: 400;
+}
+
+.signing-page .pen-choice:has(input:checked) .pen-choice-mark {
+  border: 0;
+  background: transparent;
+}
+
+.signing-page .pen-choice:has(input:checked) .pen-choice-label {
+  text-decoration: none;
+  box-shadow: 0 1px 0 var(--signing-ink);
+}
+
+.signing-page .pen-choice-label {
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-underline-offset: 0;
+}
+
+.signing-page .pen-choice:has(input:focus-visible) .pen-choice-mark {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.signing-pen-glyph {
+  display: block;
+  width: 1.55rem;
+  height: 4.15rem;
+}
+
+.signing-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.35rem;
+  align-items: start;
+  margin-top: 1.35rem;
+}
+
+.signing-page .signing-sheet {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  padding: 1.65rem 1.4rem 1.5rem 1.7rem;
+  overflow: hidden;
+  border-radius: 0;
+  background-color: color-mix(in oklab, var(--card-stock) 8%, var(--signing-liner));
+  background-image: linear-gradient(
+    var(--paper-gutter, to right),
+    rgb(35 32 28 / 0.1),
+    rgb(35 32 28 / 0.025) 3px,
+    transparent 12px
+  );
+  color: var(--signing-ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.58),
+    inset 0 0 0 1px rgb(27 36 64 / 0.04),
+    0 1px 0 color-mix(in oklab, var(--card-stock) 55%, #bdb5a7),
+    1px 2px 0 color-mix(in oklab, var(--card-stock) 32%, #d6cfc1),
+    0 16px 28px -18px rgb(27 36 64 / 0.22);
+}
+
+.signing-page .signing-sheet.paper-surface::before {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.55);
+}
+
+.signing-page .signing-sheet.paper-surface::after {
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  background-image: var(--signing-fiber);
+  background-size: 140px 140px;
+}
+
+.signing-sheet-spine {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 1;
+  width: 5px;
+  pointer-events: none;
+  background: var(--card-stock);
+}
+
+.signing-ink {
+  position: relative;
+  z-index: 2;
+  color: var(--signing-ink);
+}
+
+.signing-ink[data-pen="fountain"] {
+  font-family: var(--font-caveat), var(--cjk-hand), cursive;
+  font-size: 1.28rem;
+  line-height: 1.72;
+}
+
+.signing-ink[data-pen="marker"] {
+  font-family: var(--font-caveat-brush), var(--cjk-hand), cursive;
+  font-size: 1.3rem;
+  line-height: 1.55;
+}
+
+.signing-ink[data-pen="pencil"] {
+  font-family: var(--font-caveat), var(--cjk-hand), cursive;
+  font-size: 1.25rem;
+  line-height: 1.65;
+}
+
+.signing-ink[data-pen="ballpoint"] {
+  font-family: var(--font-source-sans), var(--cjk-sans), sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.65;
+}
+
+.signing-ink[data-pen="brush"] {
+  font-family: var(--font-caveat-brush), var(--cjk-hand), cursive;
+  font-size: 1.22rem;
+  line-height: 1.68;
+}
+
+.signing-page .signing-sheet textarea {
+  font: inherit;
+  color: inherit;
+  caret-color: var(--signing-ink);
+}
+
+.signing-page .signing-sheet input[type="text"] {
+  color: inherit;
+  caret-color: var(--signing-ink);
+}
+
+.signing-page .signing-sheet textarea {
+  display: block;
+  width: 100%;
+  min-height: 14.5rem;
+  padding: 0;
+  resize: none;
+  border: 0;
+  background: transparent;
+  outline: none;
+}
+
+.signing-page .signing-sheet textarea::placeholder,
+.signing-page .signing-sheet input::placeholder {
+  color: color-mix(in oklab, var(--signing-ink) 68%, var(--signing-liner));
+  opacity: 1;
+}
+
+.signing-page .signing-sheet textarea:disabled,
+.signing-page .signing-sheet input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.signing-page .signing-sheet input[type="text"] {
+  width: 100%;
+  padding: 0.35rem 0 0.4rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--signing-ink) 28%, transparent);
+  background: transparent;
+  text-align: right;
+}
+
+.signing-page .signing-sheet input[type="text"]:focus {
+  border-bottom-width: 2px;
+  border-bottom-color: var(--signing-ink);
+  padding-bottom: calc(0.4rem - 1px);
+  outline: none;
+}
+
+.signing-page .signing-sheet:focus-within {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.58),
+    inset 0 0 0 1px rgb(27 36 64 / 0.04),
+    0 1px 0 color-mix(in oklab, var(--card-stock) 55%, #bdb5a7),
+    1px 2px 0 color-mix(in oklab, var(--card-stock) 32%, #d6cfc1),
+    0 16px 28px -18px rgb(27 36 64 / 0.22),
+    0 0 0 2px var(--ink);
+}
+
+.signing-write {
+  min-height: min(32rem, calc(100svh - 8.5rem));
+}
+
+.signing-photo {
+  margin-bottom: 1.1rem;
+}
+
+.signing-photo img {
+  display: block;
+  width: min(100%, 11rem);
+  max-height: 8.5rem;
+  margin-bottom: 0.45rem;
+  object-fit: contain;
+  object-position: left top;
+}
+
+.signing-signoff {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.signing-counter {
+  min-height: 1.25rem;
+  padding-bottom: 0.35rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.signing-name {
+  width: min(100%, 14rem);
+  margin-left: auto;
+}
+
+.signing-preview {
+  min-width: 0;
+}
+
+.signing-preview-label {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.signing-page .note-preview {
+  min-height: 26rem;
+}
+
+.signing-page .note-preview .signing-ink,
+.signing-page .note-preview .note-reader {
+  height: 26rem;
+}
+
+.signing-error {
+  margin: 1.15rem 0 0;
+  max-width: 40rem;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.signing-submit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.35rem;
+  margin-top: 1.5rem;
+}
+
+.signing-submit p {
+  margin: 0;
+  max-width: 40ch;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.signing-success {
+  max-width: 36rem;
+  margin-top: 2.25rem;
+  padding-top: 0.15rem;
+}
+
+.signing-success h2 {
+  margin: 0;
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1.7rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.signing-success h2:focus {
+  outline: none;
+}
+
+.signing-success h2:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+
+.signing-success p {
+  margin: 0.85rem 0 0;
+  max-width: 48ch;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.signing-success .ui-button {
+  margin-top: 1.35rem;
+}
+
+.note-continue-dialog {
+  width: min(100% - 2rem, 28rem);
+  max-height: min(80svh, 42rem);
+  margin: auto;
+  padding: 1.6rem 1.45rem 1.35rem;
+  overflow: auto;
+  border: 0;
+  background: var(--signing-liner, var(--paper-liner, #fffdf8));
+  color: var(--signing-ink, var(--ink-pen, #2a231c));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    0 1px 0 #ded8ca,
+    0 18px 40px -20px rgb(27 36 64 / 0.35);
+}
+
+.note-continue-dialog::backdrop {
+  background: rgb(26 34 40 / 0.3);
+}
+
+.note-continue-dialog .note-copy {
+  margin: 0;
+}
+
+.note-continue-close {
+  margin-top: 1.25rem;
+}
+
+.signing-page a:focus-visible,
+.signing-page button:focus-visible,
+.signing-page [type="button"]:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (min-width: 40rem) {
+  .signing-page {
+    padding: 2.25rem 1.75rem 4rem;
+  }
+
+  .signing-heading h1 {
+    font-size: 2.4rem;
+  }
+
+  .signing-page .signing-sheet {
+    padding: 2rem 1.85rem 1.75rem 2.15rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .signing-workspace {
+    grid-template-columns: minmax(22rem, 32rem) minmax(16rem, 22rem);
+  }
+
+  .signing-preview {
+    position: sticky;
+    top: 1.25rem;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  .signing-page {
+    padding-top: 1.15rem;
+  }
+
+  .signing-heading h1 {
+    font-size: 1.85rem;
+  }
+
+  .signing-write {
+    min-height: calc(100svh - 9.5rem);
+  }
+
+  .signing-submit .ui-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signing-page .pen-choice-mark,
+  .signing-page .ui-button {
+    transition: none;
+  }
+}

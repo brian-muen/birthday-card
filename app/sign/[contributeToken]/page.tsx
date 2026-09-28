@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
 import { parseStock } from "@/lib/stock";
 import MessageForm from "./message-form";
+import "../../signing.css";
 
 export default async function SignPage({
   params,
@@ -22,21 +23,18 @@ export default async function SignPage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-12 sm:px-8 sm:py-16">
-      <div className="max-w-2xl">
-        <h1 className="font-serif text-[2.15rem] leading-[1.15] tracking-[-0.015em] sm:text-[2.45rem]">
-          A note for {card.recipientName}
-        </h1>
-        <p className="mt-3 max-w-[42ch] text-[1rem] leading-relaxed text-muted">
-          Private. Only they and the organizer will read it.
+    <main className="signing-page">
+      <header className="signing-heading">
+        <h1>A note for {card.recipientName}</h1>
+        <p>
+          Private. Only they and the organizer will read it. The organizer
+          shares the card when they are ready — nothing is held for a date.
         </p>
-      </div>
+      </header>
 
-      {card.intro && (
-        <blockquote className="mt-10 max-w-2xl border-l border-rule pl-5 font-hand text-xl leading-[1.6] whitespace-pre-wrap">
-          {card.intro}
-        </blockquote>
-      )}
+      {card.intro ? (
+        <p className="signing-intro">{card.intro}</p>
+      ) : null}
 
       <MessageForm
         contributeToken={card.contributeToken}

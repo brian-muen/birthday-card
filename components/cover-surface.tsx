@@ -1,7 +1,9 @@
 import BoxCover from "@/components/box-cover";
 import CoverArt from "@/components/cover-art";
+import PaperCutCover from "@/components/paper-cut-cover";
 import { isBoxDesign } from "@/lib/box-art/recipes";
 import { parseDesign } from "@/lib/design";
+import { isPaperCut } from "@/lib/paper-cut";
 
 function nameLength(name: string): "short" | "medium" | "long" {
   if (name.length > 24) return "long";
@@ -17,6 +19,9 @@ export default function CoverSurface({
   recipientName: string;
 }) {
   const id = parseDesign(design);
+  if (isPaperCut(id)) {
+    return <PaperCutCover design={id} recipientName={recipientName} />;
+  }
   if (isBoxDesign(id)) {
     return <BoxCover design={id} recipientName={recipientName} />;
   }

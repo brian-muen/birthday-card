@@ -5,13 +5,24 @@ import { count, eq } from "drizzle-orm";
 import { notifySlack } from "@/app/actions/notify-slack";
 import { claimCard } from "@/app/actions/claim-card";
 import ActionButton from "@/components/action-button";
+import CardPreview from "@/components/card-preview";
 import OrganizerBar from "@/components/organizer-bar";
-import { ShareLink } from "@/components/share-link";
+import LinkPicker from "@/components/link-picker";
 import { ensureGiftToken } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
+import { parseDesign } from "@/lib/design";
+import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
+import { parseStock } from "@/lib/stock";
 import "@/app/organizer.css";
+import "@/app/handoff.css";
+
+function noteCountLabel(n: number) {
+  if (n === 0) return "No notes yet.";
+  if (n === 1) return "1 note so far.";
+  return `${n} notes so far.`;
+}
 
 export default async function CardCreated({
   params,
@@ -56,210 +67,186 @@ export default async function CardCreated({
   const claimedBySomeoneElse =
     card.organizerId != null && card.organizerId !== organizer?.id;
   const accountHref = `/account?next=${encodeURIComponent(`/created/${masterToken}`)}`;
+  const design = parseDesign(card.design);
+  const stage = isPaperCut(design) ? paperCut(design).stage : "#e4dcd2";
 
   return (
     <>
       <OrganizerBar />
       <main className="handoff">
-      <header className="handoff-head">
-        <h1>{card.recipientName}&rsquo;s card.</h1>
-        <p>
-          {noteCount === 0
-            ? "No notes yet."
-            : noteCount === 1
-              ? "1 note so far."
-              : `${noteCount} notes so far.`}
-        </p>
-      </header>
+        <header className="handoff-head">
+          <h1>{card.recipientName}&rsquo;s card</h1>
+          <p>{noteCountLabel(noteCount)}</p>
+        </header>
 
-      <ol className="handoff-list">
-        <li>
-          <h2>Signing</h2>
-          <p>For everyone writing.</p>
-          <ShareLink
-            path={signingPath}
-            copyLabel="Copy"
-            shareLabel="Share"
-            openHref={signingPath}
-            openLabel="Open"
-            shareTitle={`Sign ${card.recipientName}'s birthday card`}
-            shareText={`Write a private note in ${card.recipientName}'s birthday card.`}
+        <div className="handoff-desk">
+          <LinkPicker
+            links={[
+              {
+                id: "sign",
+                label: "Sign",
+                hint: "For the group",
+                description: `Send this to everyone who should write in ${card.recipientName}’s card. Each person sees only their own note.`,
+                path: signingPath,
+                openLabel: "Open the signing page",
+                shareTitle: `Sign ${card.recipientName}'s birthday card`,
+                shareText: `Write a private note in ${card.recipientName}'s birthday card.`,
+              },
+              {
+                id: "gift",
+                label: "Gift",
+                hint: `For ${card.recipientName}`,
+                description: `When the card is ready, send this to ${card.recipientName}. Sharing it is how they receive the card.`,
+                path: giftPath,
+                openLabel: "Open the card",
+                shareTitle: `${card.recipientName}'s birthday card`,
+                shareText: `A birthday card for ${card.recipientName}.`,
+              },
+              {
+                id: "organizer",
+                label: "Organizer",
+                hint: "Just for you",
+                description: savedToThisAccount
+                  ? "Keep this one private. It lets you read and remove notes, and the card is also saved to your account."
+                  : "Keep this one private. It lets you read and remove notes, and a lost organizer link can’t be recovered.",
+                path: organizerPath,
+                openLabel: "Open as organizer",
+                shareTitle: `${card.recipientName}'s card (organizer)`,
+                shareText: `Your organizer link for ${card.recipientName}'s card. Keep this private.`,
+              },
+            ]}
           />
-        </li>
-        <li>
-          <h2>Gift</h2>
-          <p>How the card reaches {card.recipientName}.</p>
-          <ShareLink
-            path={giftPath}
-            copyLabel="Copy"
-            shareLabel="Share"
-            openHref={giftPath}
-            openLabel="Open"
-            shareTitle={`${card.recipientName}'s birthday card`}
-            shareText={`A birthday card for ${card.recipientName}.`}
-          />
-        </li>
-        <li>
-          <h2>Organizer</h2>
-          <p>
-            {savedToThisAccount
-              ? "Saved to your account. You can also keep this private link."
-              : "Keep this. A lost link can't be recovered unless you save the card to an account."}
+
+          <div className="handoff-object" style={{ ["--stage" as string]: stage }}>
+            <CardPreview
+              name={card.recipientName}
+              stock={parseStock(card.stock)}
+              design={design}
+              compact
+            />
+          </div>
+        </div>
+
+        {claimedBySomeoneElse ? null : (
+          <section className="handoff-save" aria-labelledby="save-heading">
+            <h2 id="save-heading">Save this card</h2>
+            {savedToThisAccount ? (
+              <p>
+                {slack.saved
+                  ? "Saved to your account. Find it again in "
+                  : "This card is in "}
+                <Link href="/cards" className="handoff-open">
+                  your cards
+                </Link>
+                .
+              </p>
+            ) : organizer ? (
+              <>
+                <p>
+                  Save it to {organizer.email} so you can find these links
+                  later. A lost organizer link cannot be recovered on its own.
+                </p>
+                {slack.saveError === "taken" ? (
+                  <p role="alert" className="form-error">
+                    This card is already saved to another account.
+                  </p>
+                ) : null}
+                <form action={claimCard}>
+                  <input type="hidden" name="masterToken" value={masterToken} />
+                  <ActionButton
+                    pendingLabel="Saving…"
+                    className="ui-button ui-button-primary"
+                  >
+                    Save to my account
+                  </ActionButton>
+                </form>
+              </>
+            ) : (
+              <>
+                <p>
+                  Optional: save this card with Google. A lost organizer link
+                  cannot be recovered.
+                </p>
+                <Link href={accountHref} className="ui-button">
+                  Save with Google
+                </Link>
+              </>
+            )}
+          </section>
+        )}
+
+        {slack.slackError ? (
+          <p role="alert" className="form-error handoff-slack-status">
+            {slack.slackError}
           </p>
-          <ShareLink
-            path={organizerPath}
-            copyLabel="Copy"
-            shareLabel="Share"
-            openHref={organizerPath}
-            openLabel="Open"
-            shareTitle={`${card.recipientName}'s card (organizer)`}
-            shareText={`Your organizer link for ${card.recipientName}'s card. Keep this private.`}
-          />
-        </li>
-      </ol>
-
-      {claimedBySomeoneElse ? null : (
-        <section className="handoff-save" aria-labelledby="save-heading">
-          <h2 id="save-heading" className="sr-only">
-            Save this card
-          </h2>
-          {savedToThisAccount ? (
+        ) : null}
+        {slack.slackSent ? (
+          <div role="status" className="handoff-slack-status">
             <p>
-              This card is in{" "}
-              <Link href="/cards" className="handoff-open">
-                your cards
-              </Link>
-              .
+              Messaged {slack.slackSent}{" "}
+              {slack.slackSent === "1" ? "person" : "people"}
+              {slack.slackSkipped ? `. Skipped ${slack.slackSkipped}` : ""}.
             </p>
-          ) : organizer ? (
-            <>
-              <p>Save it to {organizer.email} so you can find these links later.</p>
-              {slack.saveError === "taken" ? (
-                <p role="alert" className="form-error">
-                  This card is already saved to another account.
-                </p>
-              ) : null}
-              <form action={claimCard}>
-                <input type="hidden" name="masterToken" value={masterToken} />
-                <ActionButton
-                  pendingLabel="Saving…"
-                  className="ui-button ui-button-primary"
-                >
-                  Save to my account
-                </ActionButton>
-              </form>
-            </>
-          ) : (
-            <>
-              <p>
-                Optional: save this card with Google so a lost organizer link
-                is not the end of it.
-              </p>
-              <Link href={accountHref} className="handoff-open">
-                Save with Google
-              </Link>
-            </>
-          )}
-        </section>
-      )}
+            {slack.slackTo ? (
+              <ul>
+                {slack.slackTo.split("|").map((name) => (
+                  <li key={name}>{name}</li>
+                ))}
+              </ul>
+            ) : null}
+            {slack.slackFailed ? (
+              <p>Did not go through: {slack.slackFailed.split("|").join(", ")}</p>
+            ) : null}
+          </div>
+        ) : null}
 
-      <details className="handoff-slack">
-        <summary>Invite people in Slack</summary>
-        <section>
-          <h2 className="font-serif text-[1.35rem] leading-tight">
-            Text everyone except {card.recipientName}
-          </h2>
-          <p className="mt-2 max-w-[56ch] leading-relaxed text-muted">
-            Slack DMs the signing link to the workspace. {card.recipientName}{" "}
-            is skipped, so the card stays a surprise.
-          </p>
-          {slack.slackError ? (
-            <p
-              role="alert"
-              className="mt-5 max-w-[56ch] text-[0.9375rem] leading-relaxed"
-            >
-              {slack.slackError}
+        <details className="handoff-slack">
+          <summary>Invite people in Slack</summary>
+          <section>
+            <h2>Text everyone except {card.recipientName}</h2>
+            <p>
+              Slack DMs the signing link to the workspace. {card.recipientName}{" "}
+              is skipped, so the card stays a surprise.
             </p>
-          ) : null}
-          {slack.slackSent ? (
-            <div
-              role="status"
-              className="mt-5 max-w-[56ch] text-[0.9375rem] leading-relaxed"
-            >
-              <p>
-                Messaged {slack.slackSent}{" "}
-                {slack.slackSent === "1" ? "person" : "people"}
-                {slack.slackSkipped ? `. Skipped ${slack.slackSkipped}` : ""}.
-              </p>
-              {slack.slackTo ? (
-                <ul className="mt-3 list-disc pl-5">
-                  {slack.slackTo.split("|").map((name) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
-              ) : null}
-              {slack.slackFailed ? (
-                <p className="mt-3">
-                  Did not go through: {slack.slackFailed.split("|").join(", ")}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-          <form action={notifySlack} className="mt-6 max-w-md">
-            <input type="hidden" name="masterToken" value={masterToken} />
-            <label
-              htmlFor="exclude"
-              className="block text-[0.9375rem] font-medium"
-            >
-              {card.recipientName}&rsquo;s Slack email or member ID
-            </label>
-            <input
-              id="exclude"
-              name="exclude"
-              type="text"
-              required
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="name@email.com or U01234567"
-              className="field mt-2.5"
-            />
-            <label
-              htmlFor="birthday"
-              className="mt-6 block text-[0.9375rem] font-medium"
-            >
-              Birthday
-            </label>
-            <input
-              id="birthday"
-              name="birthday"
-              type="date"
-              required
-              className="field mt-2.5"
-            />
-            <label
-              htmlFor="password"
-              className="mt-6 block text-[0.9375rem] font-medium"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="field mt-2.5"
-            />
-            <button
-              type="submit"
-              className="ui-button ui-button-primary mt-6"
-            >
-              Send the DMs
-            </button>
-          </form>
-        </section>
-      </details>
-    </main>
+            <form action={notifySlack} className="handoff-slack-form">
+              <input type="hidden" name="masterToken" value={masterToken} />
+              <label htmlFor="exclude">
+                {card.recipientName}&rsquo;s Slack email or member ID
+              </label>
+              <input
+                id="exclude"
+                name="exclude"
+                type="text"
+                required
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="name@email.com or U01234567"
+                className="field"
+              />
+              <label htmlFor="birthday">Birthday</label>
+              <input
+                id="birthday"
+                name="birthday"
+                type="date"
+                required
+                className="field"
+              />
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                className="field"
+              />
+              <button type="submit" className="ui-button ui-button-primary">
+                Send the DMs
+              </button>
+            </form>
+          </section>
+        </details>
+      </main>
     </>
   );
 }

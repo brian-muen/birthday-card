@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { logOut } from "@/app/actions/organizer-auth";
 import ActionButton from "@/components/action-button";
+import { LogoMark } from "@/components/logo";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import "@/app/organizer.css";
 
@@ -11,6 +12,7 @@ export default async function OrganizerBar() {
   return (
     <nav className="organizer-bar" aria-label="Organizer account">
       <Link href="/" className="organizer-home">
+        <LogoMark className="organizer-logo" />
         Birthday card
       </Link>
       {organizer ? (

@@ -25,6 +25,7 @@ import { PIECES } from "@/lib/box-art/pieces";
 import { BOX_RECIPES, STAGE, isBoxDesign } from "@/lib/box-art/recipes";
 import { seigaiha, washi } from "@/lib/box-art/ink";
 import { hasCjk, hasHan, hasHangul } from "@/lib/cjk";
+import { CUT_H, CUT_W, isPaperCut, paperCut, type PaperCutId } from "@/lib/paper-cut";
 import { loadCjkFont, type CjkFaceId } from "@/lib/cjk-font";
 
 const INK = rgb(0.106, 0.141, 0.251); // --ink #1b2440
@@ -509,6 +510,73 @@ async function drawBoxCover(
   });
 }
 
+// Stacked offset copies stand in for the blurred shadow each sheet casts on screen.
+const CUT_SHADOW = {
+  scenery: [
+    [0.35, 0.16],
+    [0.8, 0.1],
+    [1.4, 0.06],
+  ],
+  front: [
+    [0.5, 0.2],
+    [1.2, 0.12],
+    [2.2, 0.07],
+  ],
+} as const;
+
+function drawPaperCutCover(
+  page: PDFPage,
+  input: {
+    design: PaperCutId;
+    greeting: string;
+    nameLayout: ReturnType<typeof layoutFittedText>;
+    printed: Face;
+    printedItalic: Face;
+  },
+) {
+  const art = paperCut(input.design);
+  const scale = PAGE_HEIGHT / CUT_H;
+  const x = (PAGE_WIDTH - CUT_W * scale) / 2;
+  const shadow = rgb(0.1, 0.06, 0.08);
+
+  art.layers.forEach((layer, index) => {
+    if (index > 0) {
+      const passes = layer.frame ? CUT_SHADOW.front : CUT_SHADOW.scenery;
+      for (const [drop, opacity] of passes) {
+        for (const shape of layer.shapes) {
+          page.drawSvgPath(shape.d, { x, y: PAGE_HEIGHT - drop * scale, scale, color: shadow, opacity });
+        }
+      }
+    }
+    for (const shape of layer.shapes) {
+      page.drawSvgPath(shape.d, { x, y: PAGE_HEIGHT, scale, color: hexRgb(shape.fill) });
+    }
+  });
+
+  const text = hexRgb(art.text);
+  const greetingSize = 20;
+  const blockHeight = greetingSize * 1.25 + input.nameLayout.lines.length * input.nameLayout.lineHeight;
+  let y = PAGE_HEIGHT - 114 * scale + blockHeight / 2;
+  y -= greetingSize;
+  drawCentered(page, input.greeting, {
+    face: input.printedItalic,
+    size: greetingSize,
+    y,
+    color: text,
+    opacity: 0.88,
+  });
+  y -= greetingSize * 0.25;
+  for (const line of input.nameLayout.lines) {
+    y -= input.nameLayout.lineHeight;
+    drawCentered(page, line, {
+      face: input.printed,
+      size: input.nameLayout.size,
+      y,
+      color: text,
+    });
+  }
+}
+
 async function drawCoverPage(
   doc: PDFDocument,
   input: {
@@ -545,6 +613,17 @@ async function drawCoverPage(
   const greetingHeight = greetingSize * 1.3;
   const nameHeight = nameLayout.lines.length * nameLayout.lineHeight;
   const designId = parseDesign(input.design);
+
+  if (isPaperCut(designId)) {
+    drawPaperCutCover(page, {
+      design: designId,
+      greeting,
+      nameLayout,
+      printed: input.printed,
+      printedItalic: input.printedItalic,
+    });
+    return;
+  }
 
   if (isBoxDesign(designId)) {
     await drawBoxCover(doc, page, {

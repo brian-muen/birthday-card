@@ -21,8 +21,8 @@ export default async function AccountPage({
       <main className="account-page">
         <h1>Keep the cards you start</h1>
         <p className="account-lede">
-          Anyone can make a card without signing in. Google is only so you can
-          find the organizer link later.
+          Anyone can make a card without signing in. Google is only so a lost
+          organizer link is not the end of it.
         </p>
         {error ? (
           <p role="alert" className="form-error">

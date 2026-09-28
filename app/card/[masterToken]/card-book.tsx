@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,9 +13,19 @@ import {
 import { deleteMessage } from "@/app/actions/delete-message";
 import { resolveDedication } from "@/lib/dedication";
 import { penVar, type PenId } from "@/lib/pen";
-import { stockHex } from "@/lib/stock";
 import CoverSurface from "@/components/cover-surface";
 import MessageReader from "@/components/message-reader";
+import {
+  CardObject,
+  CardSheet,
+  FaceChrome,
+  getReducedMotion,
+  getServerFalse,
+  getSpread,
+  subscribeToMotion,
+  subscribeToSpread,
+} from "@/components/folded-card";
+import { useCardTurn } from "@/components/use-card-turn";
 
 type Note = {
   id: number;
@@ -29,7 +40,8 @@ type Face =
   | { kind: "cover" }
   | { kind: "dedication" }
   | { kind: "note"; note: Note }
-  | { kind: "empty" };
+  | { kind: "empty" }
+  | { kind: "back" };
 
 type Leaf = { front: Face; back: Face };
 
@@ -37,36 +49,6 @@ type View =
   | { kind: "cover" }
   | { kind: "dedication" }
   | { kind: "note"; id: number };
-
-/**
- * Below this the open card is a single panel. Above it, a greeting-card
- * bifold with a note on each side. Keep in sync with the 52rem layout
- * query in card-motion.css so the first paint already matches.
- */
-const SPREAD_QUERY = "(min-width: 52rem)";
-const MOTION_QUERY = "(prefers-reduced-motion: reduce)";
-/** Keep in sync with --card-* durations in card-motion.css. */
-const COVER_MS = 780;
-const CLOSE_MS = 680;
-const TURN_MS = 540;
-const SETTLE_BUFFER_MS = 80;
-
-function subscribeTo(query: string) {
-  return (onChange: () => void) => {
-    const list = window.matchMedia(query);
-    list.addEventListener("change", onChange);
-    window.addEventListener("resize", onChange);
-    return () => {
-      list.removeEventListener("change", onChange);
-      window.removeEventListener("resize", onChange);
-    };
-  };
-}
-const subscribeToSpread = subscribeTo(SPREAD_QUERY);
-const subscribeToMotion = subscribeTo(MOTION_QUERY);
-const getSpread = () => window.matchMedia(SPREAD_QUERY).matches;
-const getReducedMotion = () => window.matchMedia(MOTION_QUERY).matches;
-const getServerFalse = () => false;
 
 function hashOf(value: string) {
   let hash = 0;
@@ -90,6 +72,21 @@ function isChromeTarget(target: EventTarget | null) {
 function hasTextSelection() {
   const selection = window.getSelection();
   return Boolean(selection && !selection.isCollapsed && selection.toString().trim());
+}
+
+function withBackCover(leaves: Leaf[]): Leaf[] {
+  const last = leaves[leaves.length - 1];
+  if (!last) {
+    return [{ front: { kind: "cover" }, back: { kind: "back" } }];
+  }
+  if (last.back.kind === "back") return leaves;
+  if (last.front.kind === "empty" && last.back.kind === "empty") {
+    return [
+      ...leaves.slice(0, -1),
+      { front: { kind: "empty" }, back: { kind: "back" } },
+    ];
+  }
+  return [...leaves, { front: { kind: "empty" }, back: { kind: "back" } }];
 }
 
 /**
@@ -117,7 +114,7 @@ function buildLeaves(
         back: { kind: "empty" as const },
       })),
     );
-    return leaves;
+    return withBackCover(leaves);
   }
 
   const coverBack: Face = hasDedication
@@ -125,10 +122,10 @@ function buildLeaves(
     : { kind: "empty" };
 
   if (notes.length === 0) {
-    return [
+    return withBackCover([
       { front: { kind: "cover" }, back: coverBack },
       { front: { kind: "empty" }, back: { kind: "empty" } },
-    ];
+    ]);
   }
 
   const leaves: Leaf[] = [
@@ -146,7 +143,7 @@ function buildLeaves(
         : { kind: "empty" },
     });
   }
-  return leaves;
+  return withBackCover(leaves);
 }
 
 function lastPlace(
@@ -211,7 +208,7 @@ function describeFace(face: Face | undefined) {
 }
 
 function faceStock(face: Face) {
-  if (face.kind === "cover") return "cover";
+  if (face.kind === "cover" || face.kind === "back") return "cover";
   return "liner";
 }
 
@@ -252,195 +249,89 @@ export default function CardBook({
   );
   const last = lastPlace(leaves, spread, notes.length, hasDedication);
 
-  // Viewed face is the source of truth so a resize can remount the same note
-  // on the other leaf model. Place is derived from that view.
-  type Action = { kind: "turn"; delta: 1 | -1 } | { kind: "close" };
-  type Nav = {
-    view: View;
-    moving: number | null;
-    touched: boolean;
-    closing: boolean;
-    pending: Action | null;
-    spread: boolean;
-    tuck: number | null;
-  };
-
-  const applyAction = useCallback((previous: Nav, action: Action): Nav => {
-    const currentPlace = placeForView(leaves, spread, previous.view, last);
-    if (action.kind === "close") {
-      if (currentPlace === 0) {
-        return {
-          ...previous,
-          spread,
-          pending: null,
-          moving: null,
-          closing: false,
-          tuck: null,
-        };
-      }
-      if (reducedMotion) {
-        return {
-          ...previous,
-          spread,
-          view: { kind: "cover" },
-          moving: null,
-          closing: false,
-          pending: null,
-          touched: true,
-          tuck: null,
-        };
-      }
-      return {
-        ...previous,
-        spread,
-        view: { kind: "cover" },
-        moving: 0,
-        closing: true,
-        pending: null,
-        touched: true,
-        tuck: currentPlace,
-      };
-    }
-    const nextPlace = Math.min(last, Math.max(0, currentPlace + action.delta));
-    if (nextPlace === currentPlace) {
-      return {
-        ...previous,
-        spread,
-        pending: null,
-        moving: null,
-        closing: false,
-        tuck: null,
-      };
-    }
-    return {
-      ...previous,
-      spread,
-      view: visibleView(leaves, spread, nextPlace),
-      moving: reducedMotion ? null : action.delta === 1 ? currentPlace : nextPlace,
-      closing: false,
-      pending: null,
-      touched: true,
-      tuck: null,
-    };
-  }, [leaves, last, reducedMotion, spread]);
-
-  const [nav, setNav] = useState<Nav>({
-    view: { kind: "cover" },
-    moving: null,
-    touched: false,
-    closing: false,
-    pending: null,
-    spread,
-    tuck: null,
-  });
-
-  if (nav.spread !== spread) {
-    setNav((previous) => ({
-      ...previous,
-      spread,
-      moving: null,
-      closing: false,
-      pending: null,
-      touched: false,
-      tuck: null,
-    }));
-  }
-
-  const place = placeForView(leaves, spread, nav.view, last);
-  const { moving, touched, closing, tuck } = nav;
+  // The viewed face survives a resize that swaps the leaf model; the
+  // settled place is derived from it.
+  const [view, setView] = useState<View>({ kind: "cover" });
+  const [touched, setTouched] = useState(false);
+  const place = placeForView(leaves, spread, view, last);
   const closed = place === 0;
 
-  const request = useCallback((action: Action) => {
-    setNav((previous) => {
-      if (previous.moving !== null || previous.closing) {
-        return { ...previous, pending: action, touched: true };
-      }
-      return applyAction(previous, action);
+  const { frameRef, sliderRef, goTo, jump, target, frameHandlers, sliderHandlers } =
+    useCardTurn({
+      last,
+      reducedMotion,
+      onRest: (t) => {
+        setTouched(true);
+        if (Number.isInteger(t)) setView(visibleView(leaves, spread, t));
+      },
     });
-  }, [applyAction]);
 
-  const turn = useCallback((delta: 1 | -1) => request({ kind: "turn", delta }), [request]);
-  const closeCard = useCallback(() => request({ kind: "close" }), [request]);
+  const placeRef = useRef(place);
+  useLayoutEffect(() => {
+    placeRef.current = place;
+  });
+  useLayoutEffect(() => {
+    jump(placeRef.current);
+  }, [leaves, jump]);
 
-  const finishMove = useCallback(() => {
-    setNav((previous) => {
-      if (previous.moving === null) return previous;
-      if (previous.pending) return applyAction(previous, previous.pending);
-      return { ...previous, moving: null, closing: false, tuck: null };
-    });
-  }, [applyAction]);
+  const go = useCallback(
+    (next: number) => {
+      setTouched(true);
+      goTo(next > last ? 0 : Math.max(0, next));
+    },
+    [goTo, last, setTouched],
+  );
 
-  useEffect(() => {
-    if (moving === null) return;
-    const duration = closing
-      ? CLOSE_MS
-      : moving === 0
-        ? COVER_MS
-        : TURN_MS;
-    const timeout = window.setTimeout(
-      finishMove,
-      reducedMotion ? 0 : duration + SETTLE_BUFFER_MS,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [moving, closing, reducedMotion, finishMove]);
+  const goForward = useCallback(() => {
+    const at = target();
+    go(at >= last ? 0 : at + 1);
+  }, [go, last, target]);
+
+  const goBack = useCallback(() => {
+    const at = target();
+    go(at <= 1 ? 0 : at - 1);
+  }, [go, target]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return;
-      if (closing) {
-        event.preventDefault();
-        return;
-      }
-      if (event.key === "ArrowRight") {
-        if (place >= last) closeCard();
-        else turn(1);
-      } else if (event.key === "ArrowLeft") {
-        if (place <= 1) closeCard();
-        else turn(-1);
-      } else return;
+      const element = event.target as HTMLElement | null;
+      if (element && /^(input|textarea|select)$/i.test(element.tagName)) return;
+      if (element?.closest("dialog")) return;
+      if (event.key === "ArrowRight") goForward();
+      else if (event.key === "ArrowLeft") goBack();
+      else return;
       event.preventDefault();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [turn, closeCard, place, last, closing]);
+  }, [goForward, goBack]);
 
-  function settle(event: React.TransitionEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget) return;
-    if (event.propertyName !== "transform") return;
-    finishMove();
+  function onScrubKey(event: React.KeyboardEvent<HTMLInputElement>) {
+    const moves: Record<string, () => void> = {
+      ArrowRight: () => go(Math.min(last, target() + 1)),
+      ArrowUp: () => go(Math.min(last, target() + 1)),
+      ArrowLeft: () => go(target() - 1),
+      ArrowDown: () => go(target() - 1),
+      Home: () => go(0),
+      End: () => go(last),
+    };
+    const move = moves[event.key];
+    if (!move) return;
+    event.preventDefault();
+    event.stopPropagation();
+    move();
   }
 
   const leftFace = spread && place > 0 ? leaves[place - 1]?.back : undefined;
   const rightFace = closed ? leaves[0]?.front : leaves[place]?.front;
-  const announcement = closing
-    ? "Closing the card"
-    : closed
-      ? `Birthday card for ${recipientName}, closed`
-      : [describeFace(leftFace), describeFace(rightFace)]
-          .filter(Boolean)
-          .filter((item, index, all) => all.indexOf(item) === index)
-          .join(". ") || `Inside ${recipientName}'s card`;
-
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-  const suppressClick = useRef(false);
-
-  function goForward() {
-    if (place >= last) closeCard();
-    else turn(1);
-  }
-
-  function goBack() {
-    if (place <= 1) closeCard();
-    else turn(-1);
-  }
+  const announcement = closed
+    ? `Birthday card for ${recipientName}, closed`
+    : [describeFace(leftFace), describeFace(rightFace)]
+        .filter(Boolean)
+        .filter((item, index, all) => all.indexOf(item) === index)
+        .join(". ") || `Inside ${recipientName}'s card`;
 
   function activatePage(direction: 1 | -1) {
-    if (closing) return;
-    if (suppressClick.current) {
-      suppressClick.current = false;
-      return;
-    }
     if (direction === 1) goForward();
     else goBack();
   }
@@ -452,149 +343,86 @@ export default function CardBook({
         ? "One note"
         : `${notes.length} notes`;
 
+  const pageLabel = closed ? "Cover" : `Page ${place} of ${last}`;
+
   return (
-    <div>
+    <div className="card-book">
       <div className="sr-only" aria-hidden>
         {notes.map((note) =>
           note.image ? <img key={note.id} src={note.image} alt="" /> : null,
         )}
       </div>
-      <div
-        className="card-frame"
-        data-spread={spread}
-        data-animate={touched}
-        onPointerDown={(event) => {
-          pointerStart.current = { x: event.clientX, y: event.clientY };
-        }}
-        onPointerUp={(event) => {
-          const start = pointerStart.current;
-          pointerStart.current = null;
-          if (!start || closing) return;
-          const dx = event.clientX - start.x;
-          const dy = event.clientY - start.y;
-          if (event.pointerType === "mouse") return;
-          if (Math.hypot(dx, dy) > 14) suppressClick.current = true;
-          if (Math.abs(dx) < 44 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-          if (dx < 0) goForward();
-          else goBack();
-        }}
-        onPointerCancel={() => {
-          pointerStart.current = null;
-        }}
-        style={{
-          ["--card-stock" as string]: stockHex(stock),
-        }}
+      <CardObject
+        stock={stock}
+        spread={spread}
+        frameRef={frameRef}
+        handlers={frameHandlers}
       >
-        <div className="card-seat">
-          <div
-            className="card-stage"
-            data-closed={closed}
-            data-closing={closing}
-          >
-            <div className="card-world">
-              <div aria-hidden className="card-panel" data-half="right">
-                <span className="card-crease" data-side="right" />
-                <span className="card-fold-shade" />
-              </div>
+        {leaves.map((leaf, index) => {
+          const facingFront = closed ? index === 0 : index === place;
+          const facingBack = Boolean(spread && place > 0 && index === place - 1);
 
-              {spread ? (
-                <div aria-hidden className="card-panel" data-half="left">
-                  <span className="card-crease" data-side="left" />
-                  <span className="card-fold-shade" />
-                </div>
-              ) : null}
-
-              {leaves.map((leaf, index) => {
-              const tucked = tuck ?? 0;
-              const turned = closing
-                ? index > 0 && index < tucked
-                : index < place;
-              const facingFront = closed ? index === 0 : index === place;
-              const facingBack = Boolean(spread && place > 0 && index === place - 1);
-              const inMotion = moving === index;
-              const painted =
-                closing || closed
-                  ? index === 0
-                  : inMotion || index === place || index === place - 1;
-
-              return (
-                <div
-                  key={index}
-                  className="card-leaf"
-                  data-cover={index === 0}
-                  data-turned={turned}
-                  data-moving={inMotion}
-                  onTransitionEnd={settle}
-                  style={{
-                    visibility: painted ? "visible" : "hidden",
-                    zIndex: inMotion
-                      ? leaves.length + 20
-                      : turned
-                        ? index + 1
-                        : leaves.length - index,
-                  }}
-                >
-                  <LeafFace
-                    face={leaf.front}
-                    side="right"
-                    facing={facingFront}
-                    turning={inMotion}
-                    masterToken={masterToken}
-                    canManage={canManage}
-                    recipientName={recipientName}
-                    dedication={dedicationText}
-                    design={design}
-                    onOpen={index === 0 ? () => turn(1) : undefined}
-                    onPageTurn={index === 0 ? undefined : () => activatePage(1)}
-                  />
-                  <LeafFace
-                    face={leaf.back}
-                    side="left"
-                    facing={facingBack}
-                    turning={inMotion}
-                    masterToken={masterToken}
-                    canManage={canManage}
-                    recipientName={recipientName}
-                    dedication={dedicationText}
-                    design={design}
-                    onPageTurn={() => activatePage(-1)}
-                  />
-                </div>
-              );
-            })}
-            </div>
-          </div>
-        </div>
-      </div>
+          return (
+            <CardSheet key={index} cover={index === 0}>
+              <LeafFace
+                face={leaf.front}
+                side="right"
+                facing={facingFront}
+                masterToken={masterToken}
+                canManage={canManage}
+                recipientName={recipientName}
+                dedication={dedicationText}
+                design={design}
+                onOpen={index === 0 ? () => go(1) : undefined}
+                onPageTurn={index === 0 ? undefined : () => activatePage(1)}
+              />
+              <LeafFace
+                face={leaf.back}
+                side="left"
+                facing={facingBack}
+                masterToken={masterToken}
+                canManage={canManage}
+                recipientName={recipientName}
+                dedication={dedicationText}
+                design={design}
+                onPageTurn={() => activatePage(-1)}
+              />
+            </CardSheet>
+          );
+        })}
+      </CardObject>
 
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>
 
-      <nav aria-label="Card" className="card-nav">
-        {canManage ? (
-          <p className="card-nav-meta">
-            {notes.length === 0
-              ? closed
-                ? "Nothing inside yet"
-                : `Nobody has signed ${recipientName}’s card yet. Share the signing link and every note will land in here.`
-              : noteCountLabel}
-          </p>
-        ) : null}
-        {closed || closing ? null : (
-          <div className="card-nav-row">
-            <button type="button" onClick={goBack} className="card-nav-link">
-              {place <= 1 ? "Close" : "Previous"}
-            </button>
-            <button type="button" onClick={goForward} className="card-nav-link">
-              {place >= last ? "Close" : "Next"}
-            </button>
-          </div>
-        )}
-      </nav>
-      <div className="card-progress" aria-label={`Page ${place} of ${last}`} role="group">
-        <span>{closed ? "Cover" : `Page ${place} of ${last}`}</span>
+      <div className="card-scrub">
+        <input
+          ref={sliderRef}
+          type="range"
+          min={0}
+          max={last}
+          step="any"
+          defaultValue={0}
+          className="card-scrub-range"
+          aria-label={`Turn the pages of ${recipientName}'s card`}
+          aria-valuetext={pageLabel}
+          onInputCapture={() => setTouched(true)}
+          onKeyDown={onScrubKey}
+          {...sliderHandlers}
+        />
+        <p className="card-scrub-caption" aria-hidden>
+          {closed && !touched ? "Drag the cover open, or tap it" : pageLabel}
+        </p>
       </div>
+
+      {canManage ? (
+        <p className="card-nav-meta">
+          {notes.length === 0
+            ? `Nobody has signed ${recipientName}’s card yet. Share the signing link and every note will land in here.`
+            : noteCountLabel}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -604,7 +432,6 @@ function LeafFace({
   face,
   side,
   facing,
-  turning,
   masterToken,
   canManage,
   recipientName,
@@ -616,7 +443,6 @@ function LeafFace({
   face: Face;
   side: "left" | "right";
   facing: boolean;
-  turning: boolean;
   masterToken: string;
   canManage: boolean;
   recipientName: string;
@@ -624,16 +450,13 @@ function LeafFace({
   onOpen?: () => void;
   onPageTurn?: () => void;
 }) {
-  const towardReader = facing || turning;
-  const crease = <span className="card-crease" data-side={side} aria-hidden />;
   const photo = face.kind === "note" ? face.note.image : null;
   const faceStyle = photo
     ? { ["--note-photo" as string]: `url(${JSON.stringify(photo)})` }
     : undefined;
   const contents = (
     <>
-      {crease}
-      <span className="card-light" aria-hidden />
+      <FaceChrome side={side} />
       <FaceContents
         design={design}
         face={face}
@@ -652,18 +475,26 @@ function LeafFace({
     onPageTurn();
   }
 
+  function handleCoverKey(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (!facing || !onOpen) return;
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onOpen();
+  }
+
   if (face.kind === "cover") {
     return (
       <button
         type="button"
         onClick={facing ? onOpen : undefined}
+        onKeyDown={handleCoverKey}
         className="card-face"
         data-face="front"
         data-stock="cover"
         aria-label={`Open ${recipientName}'s birthday card`}
-        aria-hidden={!towardReader}
+        aria-hidden={!facing}
         tabIndex={facing ? 0 : -1}
-        inert={!facing}
+        inert={!facing || undefined}
       >
         {contents}
       </button>
@@ -677,8 +508,9 @@ function LeafFace({
       data-stock={faceStock(face)}
       data-photo={photo ? "true" : undefined}
       style={faceStyle}
-      aria-hidden={!towardReader}
-      inert={!towardReader}
+      aria-hidden={!facing}
+      tabIndex={-1}
+      inert={!facing || undefined}
       onClick={handlePageClick}
     >
       {contents}
@@ -722,6 +554,7 @@ function FaceContents({
         />
       );
     case "empty":
+    case "back":
       return <div className="card-body" />;
   }
 }

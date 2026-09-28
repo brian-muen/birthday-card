@@ -1,0 +1,93 @@
+/* Layered paper-cut covers. The art is one SVG of stacked sheets; the type
+   sits on the lower band of the front sheet like a pressed foil stamp. */
+.cut-cover {
+  position: relative;
+  display: block;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+/* Parallax: deeper sheets slide further as the cover turns on its spine. */
+.cut-cover {
+  --cut-x: calc(sin(var(--turn, 0) * 180deg) * 1.4cqw);
+}
+
+.cut-layer {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: translate3d(calc(var(--cut-x) * var(--depth)), 0, 0);
+}
+
+/* Fibre in the paper, so flat fills read as sheets rather than vectors. */
+.cut-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.28 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: multiply;
+  opacity: 0.22;
+}
+
+.cut-type {
+  position: absolute;
+  top: 69.5%;
+  right: 9%;
+  bottom: 6.5%;
+  left: 9%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6cqw;
+  color: var(--cut-text);
+  text-align: center;
+  pointer-events: none;
+}
+
+.cut-greeting {
+  font-family: var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-size: 6.2cqw;
+  font-style: italic;
+  line-height: 1.1;
+  opacity: 0.86;
+}
+
+.cut-name {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-family: var(--font-cormorant), var(--font-garamond), var(--cjk-serif), ui-serif, Georgia, serif;
+  font-size: 12.5cqw;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 0.35cqw 0 rgb(0 0 0 / 0.22);
+}
+
+.cut-name[data-length="medium"] {
+  font-size: 9cqw;
+}
+
+.cut-name[data-length="long"] {
+  font-size: 6.6cqw;
+  line-height: 1.1;
+}
+
+.cut-name[data-empty="true"] {
+  opacity: 0.5;
+}
+
+.design-thumbnail .cut-cover {
+  position: absolute;
+  inset: 0;
+}
