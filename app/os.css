@@ -1,0 +1,803 @@
+/* Birthday Mail: a small late-90s desktop that fills the browser window.
+   Hard outlines, offset shadows, a pixel face for chrome; everything a
+   person reads or writes stays in the interface sans. */
+
+/* Only the wallpaper follows a card's paper. Window chrome, sheets and the
+   highlight are the system's own and read the same on every stock. */
+:root {
+  --os-ink: #1f1b2e;
+  --os-chrome: #f1ede4;
+  --os-sheet: #ffffff;
+  --os-shade: #d3ccbd;
+  --os-select: #cdd0f5;
+  --os-candle: #f5cf4b;
+  --os-accent: var(--cinnabar);
+  --os-desk: var(--paper);
+  --os-radius: 6px;
+  --os-floor: 0 36px 60px -40px rgb(31 27 46 / 0.4);
+  --os-shadow: 3px 3px 0 var(--os-ink), var(--os-floor);
+  --os-menu-height: 1.75rem;
+  /* Where the desktop starts: under the menu bar and any notch above it. */
+  --os-top: calc(var(--os-menu-height) + env(safe-area-inset-top, 0px));
+  --os-icon-rail: 6.25rem;
+  --wallpaper: #e3e8ef;
+}
+
+/* ---------- Screen ---------- */
+
+.computer {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='.8'/%3E%3C/svg%3E");
+  --os-pattern-size: 4px 4px;
+  --os-pattern-opacity: 1;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  background-color: oklch(from var(--wallpaper) calc(l - 0.1) min(calc(c * 3.2 + 0.015), 0.085) h);
+  font-family: var(--font-pixel), var(--font-ui), var(--cjk-sans), sans-serif;
+  color: var(--os-ink);
+  transition: background-color 400ms var(--ease-out);
+}
+
+.computer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: oklch(from var(--wallpaper) calc(l - 0.22) min(calc(c * 3.2 + 0.03), 0.1) h);
+  mask: var(--os-pattern) 0 0 / var(--os-pattern-size) repeat;
+  opacity: var(--os-pattern-opacity);
+  transition: background-color 400ms var(--ease-out);
+}
+
+.computer[data-stock="ivory"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6' shape-rendering='crispEdges'%3E%3Cpath d='M0 5h1v1H0zM1 4h1v1H1zM2 3h1v1H2zM3 2h1v1H3zM4 1h1v1H4zM5 0h1v1H5z'/%3E%3C/svg%3E");
+  --os-pattern-size: 6px 6px;
+  --os-pattern-opacity: 0.4;
+}
+
+.computer[data-stock="white"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M4 3h1v1H4zM3 4h3v1H3zM4 5h1v1H4z'/%3E%3C/svg%3E");
+  --os-pattern-size: 8px 8px;
+  --os-pattern-opacity: 0.6;
+}
+
+.computer[data-stock="blush"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' shape-rendering='crispEdges'%3E%3Cpath d='M3 3h1v1H3zM5 3h1v1H5zM2 4h5v1H2zM3 5h3v1H3zM4 6h1v1H4z'/%3E%3C/svg%3E");
+  --os-pattern-size: 10px 10px;
+  --os-pattern-opacity: 0.55;
+}
+
+.computer[data-stock="sage"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M4 0h1v1H4zM3 1h1v1H3zM5 1h1v1H5zM2 2h1v1H2zM6 2h1v1H6zM1 3h1v1H1zM7 3h1v1H7zM0 4h1v1H0zM1 5h1v1H1zM7 5h1v1H7zM2 6h1v1H2zM6 6h1v1H6zM3 7h1v1H3zM5 7h1v1H5z'/%3E%3C/svg%3E");
+  --os-pattern-size: 8px 8px;
+  --os-pattern-opacity: 0.35;
+}
+
+.computer[data-stock="sky"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6' shape-rendering='crispEdges'%3E%3Cpath d='M0 3h1v1H0zM1 2h2v1H1zM3 1h2v1H3zM5 2h1v1H5zM6 3h1v1H6zM7 4h2v1H7zM9 5h2v1H9zM11 4h1v1h-1z'/%3E%3C/svg%3E");
+  --os-pattern-size: 12px 6px;
+  --os-pattern-opacity: 0.45;
+}
+
+.computer[data-stock="butter"] {
+  --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h4v8H0z' opacity='.5'/%3E%3Cpath d='M0 0h8v4H0z' opacity='.5'/%3E%3C/svg%3E");
+  --os-pattern-size: 8px 8px;
+  --os-pattern-opacity: 0.8;
+}
+
+/* Windows float over the icons. The desktop layer only catches clicks on
+   what it holds, so the wallpaper and icons stay clickable around them. */
+.os-desktop {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0.75rem max(2rem, env(safe-area-inset-bottom));
+  /* A dragged window is only translated, so without this it sticks out of the
+     desktop and the page grows a scrollbar on the right. Hidden also zeroes
+     the flex item's automatic minimum, so min-height keeps a tall window
+     scrolling with the page instead of being clipped. */
+  min-height: min-content;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.os-desktop > * {
+  pointer-events: auto;
+}
+
+/* One app's windows; the wrapper stays out of layout. */
+.os-app {
+  display: contents;
+}
+
+@media (min-width: 48rem) {
+  /* Room for the icon column on both sides keeps windows centred. */
+  .os-desktop {
+    padding: 2rem calc(var(--os-icon-rail) + 1rem) 2.5rem;
+  }
+}
+
+/* ---------- Menu bar ---------- */
+
+.os-menubar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: stretch;
+  height: var(--os-top);
+  padding: env(safe-area-inset-top, 0px) max(0.5rem, env(safe-area-inset-right)) 0
+    max(0.5rem, env(safe-area-inset-left));
+  background: var(--os-chrome);
+  border-bottom: 1px solid var(--os-ink);
+  font-size: 0.9375rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.os-menubar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.5rem;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.os-menubar-logo svg {
+  width: 16px;
+  height: 16px;
+}
+
+.os-menubar-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  margin-left: auto;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+}
+
+.os-menubar-birthday {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.os-menubar-birthday span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-menubar-birthday svg,
+.os-menubar-sound svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.os-menubar-sound {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.4rem;
+  margin: 0 -0.3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: inherit;
+}
+
+.os-menubar-sound:active {
+  background: var(--os-ink);
+}
+
+.os-menubar-sound:active svg {
+  filter: invert(1);
+}
+
+.os-menubar-sound:focus-visible {
+  outline: 2px solid var(--os-ink);
+  outline-offset: -1px;
+}
+
+.os-help {
+  width: min(34rem, calc(100vw - 1.5rem));
+  max-width: none;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  color: var(--os-ink);
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: normal;
+  user-select: text;
+}
+
+/* A 50% dither rather than a blur: the desktop stays legible behind it, the
+   way a modal greyed out the screen on a 1-bit display. */
+.os-help::backdrop {
+  background:
+    repeating-conic-gradient(rgb(31 27 46 / 0.3) 0 25%, transparent 0 50%) 0 0 / 2px 2px,
+    rgb(31 27 46 / 0.08);
+}
+
+.os-help .os-window {
+  max-width: none;
+}
+
+.os-help-body {
+  max-height: min(70dvh, 34rem);
+  overflow-y: auto;
+  padding: 0.35rem 0;
+  background: var(--os-sheet);
+}
+
+.os-help-item {
+  border-bottom: 1px solid var(--os-shade);
+}
+
+.os-help-item:last-child {
+  border-bottom: 0;
+}
+
+.os-help-item summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.os-help-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.os-help-item summary::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;
+  border-left: 0.4rem solid var(--os-ink);
+  transition: rotate 120ms var(--ease-out);
+}
+
+.os-help-item[open] summary::before {
+  rotate: 90deg;
+}
+
+.os-help-item summary:hover {
+  background: color-mix(in oklab, var(--os-select) 35%, transparent);
+}
+
+.os-help-item summary:focus-visible {
+  outline: 2px solid var(--os-ink);
+  outline-offset: -2px;
+}
+
+.os-help-item p {
+  max-width: 62ch;
+  margin: 0;
+  padding: 0 1rem 0.9rem 1.95rem;
+  line-height: 1.55;
+  color: color-mix(in oklab, var(--os-ink) 82%, var(--os-sheet));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-help-item summary::before {
+    transition: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  .os-menubar-name,
+  .os-menubar-date {
+    display: none;
+  }
+}
+
+/* ---------- Windows ---------- */
+
+.os-window {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--window-width, 40rem);
+  background: var(--os-chrome);
+  border: 1px solid var(--os-ink);
+  border-radius: var(--os-radius) var(--os-radius) 3px 3px;
+  box-shadow: var(--os-shadow);
+  touch-action: auto;
+}
+
+.os-window:focus {
+  outline: none;
+}
+
+.os-window:focus-visible {
+  outline: 2px dotted var(--os-ink);
+  outline-offset: 3px;
+}
+
+.os-window[data-dragging="true"] {
+  box-shadow:
+    5px 5px 0 var(--os-ink),
+    0 48px 70px -40px rgb(31 27 46 / 0.45);
+}
+
+.os-titlebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.6rem;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--os-ink);
+  border-radius: var(--os-radius) var(--os-radius) 0 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      var(--os-ink) 0 1px,
+      transparent 1px 3px
+    )
+    center / calc(100% - 0.8rem) 0.75rem no-repeat,
+    var(--os-chrome);
+  font-size: 0.9375rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.os-window-title {
+  margin: 0;
+  padding: 0 0.6rem;
+  background: var(--os-chrome);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.os-close {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  translate: 0 -50%;
+  padding: 0;
+  border: 1px solid var(--os-ink);
+  background: var(--os-chrome);
+  box-shadow: 0 0 0 2px var(--os-chrome);
+  color: inherit;
+}
+
+.os-close:hover::after,
+.os-close:active::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  background:
+    linear-gradient(45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%),
+    linear-gradient(-45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%);
+}
+
+.os-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid var(--os-ink);
+}
+
+.os-window-body {
+  flex: 1;
+  min-height: 0;
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+}
+
+.os-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0.75rem;
+  border-top: 1px solid var(--os-ink);
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+}
+
+/* ---------- Controls ---------- */
+
+/* Buttons carry a one-pixel bevel (light top-left, shade bottom-right) that
+   flips when pressed, on top of the hard offset shadow. */
+.os-button {
+  --os-bevel-light: rgb(255 255 255 / 0.9);
+  --os-bevel-shade: color-mix(in oklab, var(--os-chrome) 72%, var(--os-ink));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.95rem;
+  border: 1px solid var(--os-ink);
+  border-radius: var(--os-radius);
+  background: var(--os-chrome);
+  box-shadow:
+    inset -1px -1px 0 var(--os-bevel-shade),
+    inset 1px 1px 0 var(--os-bevel-light),
+    2px 2px 0 var(--os-ink);
+  color: var(--os-ink);
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    translate 90ms var(--ease-out),
+    box-shadow 90ms var(--ease-out);
+}
+
+.os-button:active:not(:disabled) {
+  translate: 2px 2px;
+  box-shadow:
+    inset 1px 1px 0 var(--os-bevel-shade),
+    inset -1px -1px 0 var(--os-bevel-light),
+    0 0 0 var(--os-ink);
+}
+
+.os-button:disabled {
+  color: color-mix(in oklab, var(--os-ink) 45%, var(--os-chrome));
+  border-color: color-mix(in oklab, var(--os-ink) 45%, var(--os-chrome));
+  box-shadow: 2px 2px 0 color-mix(in oklab, var(--os-ink) 45%, var(--os-chrome));
+}
+
+.os-button[data-variant="accent"] {
+  --os-bevel-light: rgb(255 255 255 / 0.35);
+  --os-bevel-shade: color-mix(in oklab, var(--os-accent) 65%, var(--os-ink));
+  background: var(--os-accent);
+  color: var(--os-sheet);
+}
+
+.os-button[data-variant="quiet"] {
+  box-shadow: none;
+  background: transparent;
+}
+
+.os-button[data-variant="quiet"]:active:not(:disabled) {
+  translate: 0 0;
+  background: var(--os-ink);
+  color: var(--os-chrome);
+}
+
+.os-field {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--os-ink);
+  border-radius: 2px;
+  background: var(--os-sheet);
+  box-shadow: inset 1px 1px 0 var(--os-shade);
+  color: var(--os-ink);
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1rem;
+}
+
+.os-field::placeholder {
+  color: color-mix(in oklab, var(--os-ink) 40%, transparent);
+}
+
+.os-field:focus-visible {
+  outline: 2px solid var(--os-ink);
+  outline-offset: 1px;
+}
+
+/* A header line in a message (To, From, Sign as): you type straight onto the
+   row, so the caret is the only focus mark. */
+.os-header-field {
+  width: calc(100% + 0.7rem);
+  min-width: 0;
+  margin: -0.2rem -0.35rem;
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--os-ink);
+  caret-color: var(--os-accent);
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1rem;
+}
+
+.os-header-field::placeholder {
+  color: color-mix(in oklab, var(--os-ink) 40%, transparent);
+}
+
+.os-header-field:focus,
+.os-header-field:focus-visible {
+  outline: none;
+}
+
+.os-header-field[aria-invalid="true"] {
+  background: color-mix(in oklab, var(--os-candle) 26%, transparent);
+}
+
+.os-button:focus-visible,
+.os-close:focus-visible {
+  outline: 2px solid var(--os-ink);
+  outline-offset: 2px;
+}
+
+/* ---------- Desktop icons ---------- */
+
+/* Icons sit on the wallpaper in a column down the right of the screen,
+   wrapping leftward when the screen is short, with Help last. They stay put
+   while the desktop scrolls, under every window. */
+.os-icons {
+  position: fixed;
+  z-index: 0;
+  top: calc(var(--os-top) + 0.75rem);
+  right: max(0.5rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(auto-fill, 5.25rem);
+  grid-auto-columns: 5.5rem;
+  align-content: start;
+  justify-items: center;
+  column-gap: 0.25rem;
+  direction: rtl;
+}
+
+.os-icons > * {
+  direction: ltr;
+}
+
+.os-icon-form {
+  display: contents;
+}
+
+.os-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  width: 5rem;
+  padding: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--os-ink);
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.os-icon svg {
+  width: 2rem;
+  height: 2rem;
+  image-rendering: pixelated;
+}
+
+.os-icon-label {
+  padding: 0.1rem 0.3rem;
+  background: var(--os-chrome);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* A clicked icon stays selected until something else on the screen is. */
+.os-icon:active .os-icon-label,
+.os-icon[data-selected] .os-icon-label {
+  background: var(--os-ink);
+  color: var(--os-chrome);
+}
+
+.os-icon:active svg,
+.os-icon[data-selected] svg {
+  filter: brightness(0.6);
+}
+
+/* An app with its window open shows a greyed icon, as a classic desktop did. */
+.os-icon[data-open] svg {
+  opacity: 0.55;
+}
+
+.os-icon:focus-visible {
+  outline: none;
+}
+
+.os-icon:focus-visible .os-icon-label {
+  background: var(--os-select);
+  color: var(--os-ink);
+  box-shadow: 0 0 0 1px var(--os-ink);
+}
+
+/* Phones: the icons are a home screen on the wallpaper. An open app fills
+   the screen over them, and its close box brings them back. */
+@media (max-width: 47.99rem) {
+  .os-icons {
+    position: absolute;
+    top: var(--os-top);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    grid-auto-flow: row;
+    grid-template-rows: none;
+    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
+    row-gap: 1.25rem;
+    padding: 1.5rem max(0.75rem, env(safe-area-inset-right)) 1.5rem
+      max(0.75rem, env(safe-area-inset-left));
+    direction: ltr;
+  }
+
+  .os-icons .os-icon svg {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .computer:has(.os-app) .os-icons {
+    display: none;
+  }
+
+  .os-desktop {
+    padding: 0;
+    gap: 0;
+  }
+
+  .os-app .os-window {
+    flex: 1 0 auto;
+    max-width: none;
+    padding-bottom: env(safe-area-inset-bottom);
+    border-inline: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .os-app .os-window > .os-titlebar {
+    height: 2.5rem;
+    border-radius: 0;
+    padding-inline: 3rem;
+  }
+
+  .os-app .os-window > .os-titlebar .os-close {
+    left: max(0.75rem, env(safe-area-inset-left));
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .os-app .os-window > .os-titlebar .os-close::after {
+    content: "";
+    width: 0.7rem;
+    height: 0.7rem;
+    background:
+      linear-gradient(45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%),
+      linear-gradient(-45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%);
+  }
+}
+
+.os-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border: 1px solid var(--os-ink);
+  border-radius: 999px;
+  background: var(--os-candle);
+  font-family: var(--font-pixel), sans-serif;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+/* ---------- Zoom rects ---------- */
+
+.os-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.os-zoom-rect {
+  position: fixed;
+  border: 1px dotted var(--os-ink);
+  opacity: 0;
+}
+
+/* ---------- Working… ---------- */
+
+.os-dots span {
+  animation: os-dot 1s steps(2, start) infinite;
+}
+
+.os-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.os-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes os-dot {
+  to {
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .os-dots span {
+    animation: none;
+  }
+}
+
+/* ---------- Scrollbars ---------- */
+
+/* The screen scrolls as the page, so the viewport's bar is styled too. */
+@media (pointer: fine) {
+  .computer ::-webkit-scrollbar,
+  :root:has(.computer)::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+  }
+
+  .computer ::-webkit-scrollbar-track,
+  :root:has(.computer)::-webkit-scrollbar-track {
+    background:
+      repeating-conic-gradient(var(--os-shade) 0 25%, var(--os-sheet) 0 50%) 0 0 / 2px 2px;
+    box-shadow: inset 1px 0 0 var(--os-ink);
+  }
+
+  .computer ::-webkit-scrollbar-track:horizontal,
+  :root:has(.computer)::-webkit-scrollbar-track:horizontal {
+    box-shadow: inset 0 1px 0 var(--os-ink);
+  }
+
+  .computer ::-webkit-scrollbar-thumb,
+  :root:has(.computer)::-webkit-scrollbar-thumb {
+    border: 1px solid var(--os-ink);
+    border-radius: 2px;
+    background: var(--os-chrome);
+    box-shadow:
+      inset -1px -1px 0 color-mix(in oklab, var(--os-chrome) 72%, var(--os-ink)),
+      inset 1px 1px 0 rgb(255 255 255 / 0.9);
+  }
+
+  .computer ::-webkit-scrollbar-thumb:active,
+  :root:has(.computer)::-webkit-scrollbar-thumb:active {
+    background: var(--os-shade);
+  }
+
+  .computer ::-webkit-scrollbar-corner,
+  :root:has(.computer)::-webkit-scrollbar-corner {
+    background: var(--os-chrome);
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .computer,
+  :root:has(.computer) {
+    scrollbar-color: var(--os-ink) var(--os-shade);
+  }
+}

@@ -358,17 +358,14 @@ const sky: Window = (inset) => {
   return hole(points);
 };
 
-function frame(window: Window, inset: number, ornament: boolean) {
-  const cuts = ornament
-    ? diamond(50, 133.2, 1.5) + diamond(44.5, 133.2, 0.8) + diamond(55.5, 133.2, 0.8)
-    : "";
-  return `${sheet()}${window(inset)}${cuts}`;
+function frame(window: Window, inset: number) {
+  return `${sheet()}${window(inset)}`;
 }
 
 function framed(window: Window, mat: string, front: string): CutLayer[] {
   return [
-    { frame: true, shapes: [{ d: frame(window, 2.6, false), fill: mat }] },
-    { frame: true, shapes: [{ d: frame(window, 0, true), fill: front }] },
+    { frame: true, shapes: [{ d: frame(window, 2.6), fill: mat }] },
+    { frame: true, shapes: [{ d: frame(window, 0), fill: front }] },
   ];
 }
 

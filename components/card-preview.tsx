@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import CoverSurface from "@/components/cover-surface";
 import {
   CardObject,
@@ -15,8 +15,6 @@ import {
 import { useCardTurn } from "@/components/use-card-turn";
 import { DEFAULT_DESIGN } from "@/lib/design";
 import type { StockId } from "@/lib/stock";
-
-const PEEK = 0.14;
 
 function Face({
   side,
@@ -62,7 +60,6 @@ export default function CardPreview({
   const [settled, setSettled] = useState({ place: 0, spread });
   const place = settled.spread === spread ? settled.place : 0;
   const [touched, setTouched] = useState(false);
-  const peeking = useRef<"out" | "back" | null>(null);
   const trimmed = name.trim();
 
   const { frameRef, sliderRef, goTo, jump, target, frameHandlers, sliderHandlers } =
@@ -70,14 +67,6 @@ export default function CardPreview({
       last,
       reducedMotion,
       onRest: (t) => {
-        const phase = peeking.current;
-        peeking.current = null;
-        if (phase === "out" && t === PEEK) {
-          peeking.current = "back";
-          goTo(0);
-          return;
-        }
-        if (phase === "back" && t === 0) return;
         setTouched(true);
         if (Number.isInteger(t)) setSettled({ place: t, spread });
       },
@@ -87,19 +76,8 @@ export default function CardPreview({
     jump(0);
   }, [spread, jump]);
 
-  useEffect(() => {
-    if (reducedMotion) return;
-    const timer = window.setTimeout(() => {
-      if (target() !== 0) return;
-      peeking.current = "out";
-      goTo(PEEK);
-    }, 900);
-    return () => window.clearTimeout(timer);
-  }, [reducedMotion, goTo, target]);
-
   const go = useCallback(
     (next: number) => {
-      peeking.current = null;
       setTouched(true);
       goTo(next > last ? 0 : Math.max(0, next));
     },
@@ -114,7 +92,7 @@ export default function CardPreview({
     : "Drag the cover open";
 
   return (
-    <div className="home-card" aria-label="Card preview" role="group">
+    <div className="card-preview" aria-label="Card preview" role="group">
       <CardObject
         stock={stock}
         spread={spread}
@@ -167,9 +145,6 @@ export default function CardPreview({
           }}
           {...sliderHandlers}
         />
-        <p className="card-scrub-caption" aria-hidden>
-          {caption}
-        </p>
       </div>
     </div>
   );

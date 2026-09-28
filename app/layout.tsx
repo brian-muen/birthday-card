@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import {
   Caveat,
@@ -15,14 +15,15 @@ import {
   Noto_Serif_SC,
   Noto_Serif_TC,
   Bricolage_Grotesque,
-  Fraunces,
+  Pixelify_Sans,
   Satisfy,
+  Sono,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
 
-// Bricolage Grotesque is the interface and Fraunces its headlines.
-// Garamond is only printed on the card.
+// Bricolage Grotesque is the interface sans outside a letter.
+// Sono is mail typed on this screen. Garamond is only printed on the card.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
@@ -35,11 +36,19 @@ const ui = Bricolage_Grotesque({
   axes: ["opsz"],
 });
 
-const display = Fraunces({
-  variable: "--font-display",
+// The computer's chrome: menu bar, window titles, buttons, header labels.
+const pixel = Pixelify_Sans({
+  variable: "--font-pixel",
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["SOFT", "opsz"],
+});
+
+// Mail typed on this screen. Sono is a soft monospace made to be read in
+// paragraphs, so a letter looks like the computer's own face. The mono axis
+// stays at its default. Pixelify is chrome; pens stay on the card.
+const mail = Sono({
+  variable: "--font-mail",
+  subsets: ["latin"],
+  weight: "variable",
 });
 
 // Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
@@ -138,7 +147,8 @@ const maShan = Ma_Shan_Zheng({
 
 const fontVariables = [
   ui.variable,
-  display.variable,
+  pixel.variable,
+  mail.variable,
   garamond.variable,
   caveat.variable,
   greatVibes.variable,
@@ -157,10 +167,13 @@ const fontVariables = [
 ].join(" ");
 
 export const metadata: Metadata = {
-  title: "Birthday card",
+  title: { default: "Birthday Mail", template: "%s · Birthday Mail" },
   description:
     "Start a birthday card and collect private messages from everyone. Share the finished card with the birthday person when you are ready.",
 };
+
+// The screen runs edge to edge; the menu bar and windows pad for the notch.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({
   children,

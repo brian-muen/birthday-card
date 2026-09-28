@@ -1,4 +1,5 @@
 import {
+  date,
   integer,
   pgTable,
   serial,
@@ -28,6 +29,7 @@ export const cards = pgTable("cards", {
   occasion: text("occasion").notNull(),
   intro: text("intro"),
   dedication: text("dedication"),
+  birthday: date("birthday", { mode: "string" }),
   stock: text("stock").notNull().default("red"),
   design: text("design").notNull().default("plain"),
   font: text("font").notNull().default("hand"),

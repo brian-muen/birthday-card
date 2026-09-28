@@ -1,0 +1,116 @@
+/* Home desktop: mail from gift links this browser has opened. */
+
+.home-mail-icon-art {
+  position: relative;
+  display: grid;
+}
+
+.home-mail-badge {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.7rem;
+}
+
+/* Phones: a banner along the bottom, clear of the full-screen window's close box. */
+.home-mail {
+  position: fixed;
+  z-index: 25;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  left: 50%;
+  width: min(24rem, calc(100% - 1.5rem));
+  translate: -50% 0;
+  transform-origin: 50% 100%;
+  animation: home-mail-in 260ms var(--ease-out) 450ms both;
+}
+
+@media (min-width: 48rem) {
+  /* Stacks with the compose windows: whichever was clicked last is on top. */
+  .home-mail {
+    z-index: auto;
+    right: calc(var(--os-icon-rail) + 1rem);
+    bottom: 1.5rem;
+    left: auto;
+    width: 23rem;
+    translate: none;
+    transform-origin: 100% 100%;
+  }
+}
+
+@keyframes home-mail-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+
+.home-mail-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+  padding: 1.05rem 1.1rem 0.35rem;
+}
+
+.home-mail-art {
+  width: 2.5rem;
+  height: 2.5rem;
+  image-rendering: pixelated;
+}
+
+.home-mail-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.home-mail-detail {
+  margin: 0.3rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+  text-wrap: pretty;
+}
+
+.home-mail-more {
+  margin: 0.5rem 1.1rem 0;
+  padding-top: 0.55rem;
+  border-top: 1px dashed color-mix(in oklab, var(--os-ink) 35%, var(--os-chrome));
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.home-mail-more p {
+  margin: 0;
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+}
+
+.home-mail-more ul {
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.home-mail-more a {
+  color: var(--os-ink);
+  font-weight: 600;
+}
+
+.home-mail-more span {
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+}
+
+.home-mail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.8rem 1.1rem 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-mail {
+    animation: none;
+  }
+}

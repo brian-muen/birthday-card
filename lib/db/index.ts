@@ -56,6 +56,7 @@ const ENSURE_TABLES = [
   `ALTER TABLE organizers DROP COLUMN IF EXISTS password_hash`,
   `ALTER TABLE cards ADD COLUMN IF NOT EXISTS organizer_id integer REFERENCES organizers(id) ON DELETE SET NULL`,
   `CREATE INDEX IF NOT EXISTS cards_organizer_id_idx ON cards (organizer_id)`,
+  `ALTER TABLE cards ADD COLUMN IF NOT EXISTS birthday date`,
 ];
 
 async function createDb(): Promise<Db> {

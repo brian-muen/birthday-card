@@ -1,8 +1,14 @@
-import OrganizerBar from "@/components/organizer-bar";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
+import { OrganizerIcons } from "@/components/mail/organizer-icons";
+import SignInWindow from "@/components/mail/sign-in-window";
+import Computer from "@/components/os/computer";
+import { AppIcon, AppWindow } from "@/components/os/desktop";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { safeNextPath } from "@/lib/safe-next-path";
-import { redirect } from "next/navigation";
-import "@/app/organizer.css";
+
+export const metadata: Metadata = { title: "Sign in" };
 
 export default async function AccountPage({
   searchParams,
@@ -16,26 +22,16 @@ export default async function AccountPage({
   }
 
   return (
-    <>
-      <OrganizerBar />
-      <main className="account-page">
-        <h1>Keep the cards you start</h1>
-        <p className="account-lede">
-          Anyone can make a card without signing in. Google is only so a lost
-          organizer link is not the end of it.
-        </p>
-        {error ? (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        ) : null}
-        <form action="/api/auth/google" method="get" className="account-google">
-          <input type="hidden" name="next" value={nextPath} />
-          <button type="submit" className="ui-button ui-button-primary">
-            Continue with Google
-          </button>
-        </form>
-      </main>
-    </>
+    <Computer
+      icons={
+        <OrganizerIcons signedIn={false} current="sign-in">
+          <AppIcon app="sign-in" icon="person" label="Sign in" />
+        </OrganizerIcons>
+      }
+    >
+      <AppWindow app="sign-in">
+        <SignInWindow next={nextPath} error={error} />
+      </AppWindow>
+    </Computer>
   );
 }

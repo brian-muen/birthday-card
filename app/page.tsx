@@ -1,7 +1,12 @@
+import ComposeDesktop from "@/components/mail/compose-desktop";
+import { DEFAULT_DESIGN, PICKER_DESIGNS, parseDesign } from "@/lib/design";
+import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parseStock } from "@/lib/stock";
-import { DEFAULT_DESIGN, parseDesign } from "@/lib/design";
-import CreateCardForm from "@/components/create-card-form";
-import OrganizerBar from "@/components/organizer-bar";
+
+function pickerDesign(value: string | undefined) {
+  const id = parseDesign(value);
+  return PICKER_DESIGNS.some((option) => option.id === id) ? id : DEFAULT_DESIGN;
+}
 
 export default async function Home({
   searchParams,
@@ -9,22 +14,21 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
+    birthday?: string;
     stock?: string;
     design?: string;
   }>;
 }) {
-  const { error, recipientName, stock, design } = await searchParams;
+  const { error, recipientName, birthday, stock, design } = await searchParams;
+  const organizer = await getCurrentOrganizer();
   return (
-    <>
-      <OrganizerBar />
-      <main className="home-page">
-        <CreateCardForm
-          error={error}
-          initialName={recipientName}
-          initialStock={parseStock(stock)}
-          initialDesign={design === undefined ? DEFAULT_DESIGN : parseDesign(design)}
-        />
-      </main>
-    </>
+    <ComposeDesktop
+      signedIn={organizer != null}
+      error={error}
+      initialName={recipientName ?? ""}
+      initialBirthday={birthday ?? ""}
+      initialStock={parseStock(stock)}
+      initialDesign={pickerDesign(design)}
+    />
   );
 }

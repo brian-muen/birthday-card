@@ -13,23 +13,31 @@ send it to the recipient when you're ready.
   - `masterToken` → `/card/[masterToken]` — view all messages, delete messages
 - `/` — landing page with a create-card form. After creating, you're shown
   the links at `/created/[masterToken]`.
-- Organizer accounts are optional. Anyone can create a card without signing
-  in. Google sign-in saves that card to `/cards` so a lost organizer link can
-  be found later. Contributors never need an account.
+- A card can carry an optional birthday (`cards.birthday`, a Postgres `date`).
+  It's only shown: a label in `/cards`, a suggested send day on the links page,
+  and a sign-by date (the birthday itself) in the signing invitation. Nothing is
+  scheduled or locked; sharing the gift link is still the delivery.
+- Organizers sign in with Google to start a card. Every card they start is
+  saved to `/cards`, so its links can be found later. Cards started before
+  sign-in was required can still be saved from their links page. Contributors
+  and the birthday person never need an account.
 
 ## Tech
 
 - Next.js (App Router) + TypeScript + Tailwind CSS v4
 - Drizzle ORM. Local dev uses an embedded PGlite database (`.pglite/`,
   gitignored, zero setup). Production uses hosted Postgres via `DATABASE_URL`
-  (e.g. Neon on Vercel). Tables are auto-created on first use.
+  (e.g. Neon on Vercel). Tables are auto-created on first use: the idempotent
+  `ENSURE_TABLES` statements in `lib/db/index.ts` run on the first `getDb()`
+  of each server process, so schema changes go there as `ADD COLUMN IF NOT
+  EXISTS` lines.
 
 ## Shared modules (the contract)
 
 - `lib/db/schema.ts` — `organizers`, `organizer_sessions`, `cards`, and `messages` tables
 - `lib/db/index.ts` — `getDb(): Promise<Db>` returns the Drizzle instance
 - `lib/tokens.ts` — `generateToken()` for URL tokens
-- `lib/organizer-auth.ts` — optional organizer session cookie
+- `lib/organizer-auth.ts` — organizer session cookie
 
 Example usage in a server action:
 
@@ -44,28 +52,43 @@ const card = await db.query.cards.findFirst({
 });
 ```
 
-## Slack DMs
+## Birthday message
 
-After you create a card, the created page can DM everyone in the Slack
-workspace except the birthday person, with the signing link.
+`scripts/birthday_message.py` prints the usual nudge for a signing link and
+copies it to the clipboard, ready to paste wherever the group talks:
 
-1. Create an app from `slack-app-manifest.yaml` at [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**.
-2. Install it to the workspace.
-3. Set `SLACK_BOT_TOKEN` (`xoxb-…`), `SLACK_SIGNING_SECRET`, and
-   `SLACK_NOTIFY_PASSWORD` in `.env.local` and on Vercel.
-4. Optional: `APP_URL` if the signing links should use a host other than `https://manna-birthday-card.vercel.app`.
+```bash
+python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc
+```
 
-Sending DMs requires that password (created page field, or the last word of
-`/card`). Sign and gift links stay public.
+Run it with no arguments to be asked for the name, date, and link.
 
-From Slack:
+Add `--except` with the birthday person's Slack email or member ID to DM
+everyone else in the workspace instead. It lists who will get it and asks
+before sending; `--dry-run` stops after the list. It reads `SLACK_BOT_TOKEN`
+from `.env.local`, and the bot needs `chat:write`, `im:write`, `users:read`, and
+`users:read.email`.
 
-`/card except @name https://manna-birthday-card.vercel.app/sign/… PASSWORD`
+```bash
+python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc --except sarah@example.com
+```
+
+## Demo data
+
+`scripts/seed-demo.mjs` fills the local PGlite database with three cards
+(many notes, one note, none). Stop `next dev` first, then:
+
+```bash
+node scripts/seed-demo.mjs
+```
+
+It prints each card's gift, organizer, and signing paths.
 
 ## Organizer Google sign-in
 
-Create and sign a card with no account. Google is only for organizers who want
-to find those links later.
+Starting a card requires Google sign-in, including locally: without these
+settings, `/` still renders but Send can't go through. Signing and opening a
+card never need an account.
 
 1. In [Google Cloud](https://console.cloud.google.com/apis/credentials), create
    an OAuth client of type **Web application**.

@@ -1,0 +1,113 @@
+/* Sign in: the same window on every desktop. It floats over whatever is
+   already open. Continue with Google is what leaves the page. */
+
+.signin {
+  margin-block: auto;
+}
+
+@media (min-width: 48rem) {
+  .signin.os-window {
+    position: fixed;
+    top: max(calc(var(--os-top) + 1.5rem), calc(50vh - 11rem));
+    left: 50%;
+    width: min(27rem, calc(100vw - var(--os-icon-rail) * 2 - 2rem));
+    max-width: none;
+    margin: 0;
+    margin-left: calc(min(27rem, calc(100vw - var(--os-icon-rail) * 2 - 2rem)) / -2);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .signin.os-window {
+    position: fixed;
+    z-index: 30;
+    inset: var(--os-top) 0 0 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+.signin-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.signin-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  image-rendering: pixelated;
+}
+
+.signin-copy :is(h1, h2) {
+  margin: 0.15rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.signin-copy p {
+  margin: 0.45rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.signin-error {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.6rem;
+  margin: 1rem 1.25rem 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--os-ink);
+  background: var(--os-candle);
+}
+
+.signin-error-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.signin-error p {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.signin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
+@media (max-width: 26rem) {
+  .signin-actions > * {
+    flex: 1;
+  }
+}
+
+.signed-in-done {
+  display: grid;
+  place-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.signed-in-done h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.signed-in-done p {
+  margin: 0.6rem 0 0;
+  line-height: 1.45;
+}

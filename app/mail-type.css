@@ -1,0 +1,31 @@
+/* Letters typed on the computer. Chrome stays pixel; the paper card keeps
+   its pen. Sono is a soft screen monospace, readable at paragraph length.
+   Korean and Chinese notes fall through --cjk-sans. */
+
+:root {
+  --font-mail-stack: var(--font-mail), var(--cjk-sans), sans-serif;
+}
+
+.computer :is(
+  .inbox-row-from,
+  .inbox-row-subject,
+  .inbox-row-preview,
+  .inbox-reader-subject,
+  .inbox-reader-meta dd,
+  .inbox-reader-body,
+  .compose-name,
+  .compose-date,
+  .compose-subject,
+  .compose-body,
+  .reply-row-from,
+  .reply-row-subject,
+  .reply-letter-head h3,
+  .reply-letter-head dd,
+  .reply-letter-body,
+  .reply-quote,
+  .reply-static,
+  .reply-name,
+  .reply-body
+) {
+  font-family: var(--font-mail-stack);
+}

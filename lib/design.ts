@@ -1,13 +1,13 @@
 // Archived designs stay renderable so cards already made with them still
 // open, but they are not offered when starting a new card.
 export const DESIGNS = [
-  { id: "cut-cake", label: "Cake" },
   { id: "cut-balloons", label: "Balloons" },
   { id: "moon", label: "Moon" },
   { id: "plum", label: "Plum blossom" },
   { id: "koi", label: "Koi" },
-  { id: "lanterns", label: "Lanterns" },
-  { id: "leaves", label: "Maple and birds" },
+  { id: "cut-cake", label: "Cake", archived: true },
+  { id: "lanterns", label: "Lanterns", archived: true },
+  { id: "leaves", label: "Maple and birds", archived: true },
   { id: "cake", label: "Cake", archived: true },
   { id: "balloons", label: "Balloons", archived: true },
   { id: "flowers", label: "Flowers", archived: true },
@@ -29,7 +29,7 @@ const RETIRED_IDS = ["plain"] as const;
 export type PickerDesignId = (typeof DESIGNS)[number]["id"];
 export type DesignId = PickerDesignId | (typeof RETIRED_IDS)[number];
 
-export const DEFAULT_DESIGN: PickerDesignId = "cut-cake";
+export const DEFAULT_DESIGN: PickerDesignId = "cut-balloons";
 
 export const PICKER_DESIGNS = DESIGNS.filter((design) => !("archived" in design));
 
