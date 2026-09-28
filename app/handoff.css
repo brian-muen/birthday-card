@@ -1,0 +1,390 @@
+/* Created-card handoff: the three links are the task; the card sits nearby. */
+
+main.handoff {
+  width: min(100%, 54rem);
+  margin-inline: auto;
+  padding: 1.75rem clamp(1.25rem, 4vw, 2rem) 4rem;
+}
+
+.handoff .handoff-head {
+  display: grid;
+  align-items: start;
+  justify-content: start;
+  gap: 0.4rem;
+  margin: 0 0 1.75rem;
+}
+
+.handoff .handoff-head h1 {
+  margin: 0;
+  max-width: 22ch;
+  font-family: var(--font-headline);
+  font-size: clamp(2.1rem, 4vw, 2.75rem);
+  font-variation-settings: "SOFT" 100;
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.handoff .handoff-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.handoff-desk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 2rem 2.5rem;
+  align-items: start;
+}
+
+.link-picker {
+  min-width: 0;
+}
+
+.link-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  box-shadow: inset 0 -1px 0 var(--rule);
+}
+
+.link-tab {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "icon label"
+    "icon hint";
+  align-items: center;
+  column-gap: 0.6rem;
+  min-height: 3.6rem;
+  padding: 0.55rem 0.9rem 0.7rem 0.1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.link-tab svg {
+  grid-area: icon;
+}
+
+.link-tab-label {
+  grid-area: label;
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.link-tab-hint {
+  grid-area: hint;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-tab[aria-selected="true"] {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+}
+
+.link-tab[aria-selected="true"] svg {
+  color: var(--cinnabar);
+}
+
+.link-tab:focus-visible {
+  outline: 2px solid var(--cinnabar);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link-tab:not([aria-selected="true"]):hover {
+    color: var(--ink);
+  }
+}
+
+.link-panel {
+  padding: 1.25rem 0 0;
+}
+
+.link-description {
+  max-width: 48ch;
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.975rem;
+  line-height: 1.5;
+}
+
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent);
+  border-radius: 0.5rem;
+  background: var(--raised);
+}
+
+.link-address {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.link-address:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}
+
+.link-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.2rem;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.icon-button:active {
+  transform: translateY(1px);
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.icon-button[data-copied] {
+  color: #2f6b45;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:hover {
+    background: color-mix(in oklab, var(--rule) 60%, transparent);
+  }
+}
+
+.link-status {
+  min-height: 1.35rem;
+  margin: 0.5rem 0 0 0.85rem;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.handoff-object {
+  position: sticky;
+  top: 4.25rem;
+  min-width: 0;
+  padding: 1.5rem 1.5rem 1.1rem;
+  border-radius: 1.25rem;
+  background: var(--stage);
+}
+
+.handoff-object .home-card .card-frame {
+  width: 100%;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+.handoff-object .card-scrub {
+  margin-top: 1.1rem;
+}
+
+.handoff-save {
+  margin-top: 1.75rem;
+  padding-top: 1.35rem;
+  box-shadow: inset 0 1px 0 var(--rule);
+}
+
+.handoff-save h2 {
+  margin: 0;
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.handoff-save p {
+  margin: 0.45rem 0 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.handoff-save .form-error {
+  color: #6b3a3a;
+}
+
+.handoff-save .ui-button {
+  margin-top: 0.85rem;
+}
+
+.handoff .form-error,
+.handoff-slack-status {
+  border: 0;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  color: #6b3a3a;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.handoff-slack-status {
+  color: var(--ink);
+}
+
+.handoff-slack-status ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.handoff-slack-status p + p {
+  margin-top: 0.5rem;
+}
+
+.handoff-slack {
+  margin-top: 1.5rem;
+}
+
+.handoff-slack summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.2em;
+}
+
+.handoff-slack summary:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .handoff-slack summary:hover {
+    color: var(--ink);
+    text-decoration-color: var(--ink);
+  }
+}
+
+.handoff-slack section {
+  margin-top: 0.75rem;
+  max-width: 36rem;
+}
+
+.handoff-slack h2 {
+  margin: 0;
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.handoff-slack section > p {
+  margin: 0.45rem 0 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.handoff-slack-form {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1.25rem;
+}
+
+.handoff-slack-form label {
+  margin-top: 0.85rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.handoff-slack-form label:first-of-type {
+  margin-top: 0;
+}
+
+.handoff-slack-form .ui-button {
+  justify-self: start;
+  margin-top: 1.15rem;
+}
+
+@media (max-width: 44rem) {
+  main.handoff {
+    padding-top: 1.25rem;
+  }
+
+  .handoff-desk {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .handoff-object {
+    position: static;
+    order: -1;
+    width: min(100%, 14rem);
+    justify-self: center;
+    padding: 1.1rem 1.1rem 0.8rem;
+  }
+
+  .link-tab {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "icon"
+      "label";
+    justify-items: center;
+    row-gap: 0.3rem;
+    text-align: center;
+  }
+
+  .link-tab-hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handoff-slack summary,
+  .link-tab,
+  .icon-button {
+    transition: none;
+    transform: none;
+    filter: none;
+  }
+}

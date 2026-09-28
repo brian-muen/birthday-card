@@ -41,6 +41,7 @@ export default function BoxCover({
         ["--paint-zoom" as string]: String(recipe.painting?.zoom ?? 1),
       }}
     >
+      {compact ? null : <span className="card-cover-mark" aria-hidden="true" />}
       <span className="box-stage">
         <span
           className="box-well"

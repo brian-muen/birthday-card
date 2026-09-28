@@ -10,6 +10,7 @@ import {
   PENS,
   parsePen,
   penBodyClass,
+  penBodyVar,
   penSignatureClass,
   penVar,
   type PenId,
@@ -19,8 +20,6 @@ import { stockHex } from "@/lib/stock";
 const MAX_NAME_LENGTH = 80;
 const MAX_BODY_LENGTH = 2000;
 const COUNTER_THRESHOLD = MAX_BODY_LENGTH * 0.75;
-const LINER = "var(--paper-liner, #fffdf8)";
-const WRITING_INK = "var(--ink-pen, #2a241c)";
 
 type Draft = { authorName: string; body: string; pen: PenId };
 type ErrorField = "name" | "body" | "form";
@@ -68,15 +67,10 @@ function PaperSheet({
     <div
       className={`signing-sheet paper-surface relative isolate overflow-hidden ${className ?? ""}`}
       style={{
-        backgroundColor: LINER,
         ["--card-stock" as string]: stockHex(stock),
       }}
     >
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 w-[5px]"
-        style={{ backgroundColor: "var(--card-stock)" }}
-      />
+      <span aria-hidden="true" className="signing-sheet-spine" />
       <div className="relative">{children}</div>
     </div>
   );
@@ -237,33 +231,22 @@ export default function MessageForm({
 
   if (sentBy) {
     return (
-      <section
-        className="mt-12 max-w-2xl border-t border-rule pt-10"
-        aria-labelledby="signing-success"
-      >
-        <h2
-          id="signing-success"
-          ref={successRef}
-          tabIndex={-1}
-          className="font-serif text-[1.75rem] leading-tight outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
-        >
+      <section className="signing-success" aria-labelledby="signing-success">
+        <h2 id="signing-success" ref={successRef} tabIndex={-1}>
           Your note is in the card.
         </h2>
-        <p className="mt-4 max-w-[52ch] leading-relaxed text-muted">
+        <p>
           It is signed{" "}
           <span
-            className={`text-[color:var(--ink-pen,var(--ink))] ${penSignatureClass(sentPen)}`}
+            className={`font-card ${penSignatureClass(sentPen)}`}
             style={{ ["--card-face" as string]: penVar(sentPen) }}
           >
             {sentBy}
           </span>
-          . Only {recipientName} and the organizer can read it.
+          . Only {recipientName} and the organizer can read it. It reaches them
+          when the organizer shares the card.
         </p>
-        <button
-          type="button"
-          onClick={writeAnother}
-          className="ui-button mt-6"
-        >
+        <button type="button" onClick={writeAnother} className="ui-button">
           Write another message
         </button>
       </section>
@@ -272,16 +255,13 @@ export default function MessageForm({
 
   const previewBody = body.trim() || "Your message will appear here.";
   const previewName = authorName.trim() || "Your name";
+  const inkStyle = { ["--card-face" as string]: penBodyVar(pen) };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      aria-busy={pending}
-      className="mt-10"
-    >
-      <fieldset className="max-w-2xl">
-        <legend className="text-[0.9375rem] font-medium">Your pen</legend>
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-3">
+    <form onSubmit={handleSubmit} aria-busy={pending} className="signing-form">
+      <fieldset className="signing-pens">
+        <legend>Choose a pen</legend>
+        <div className="signing-pen-tray">
           {PENS.map((option) => (
             <label key={option.id} className="pen-choice">
               <input
@@ -301,18 +281,10 @@ export default function MessageForm({
         </div>
       </fieldset>
 
-      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,32rem)_minmax(16rem,22rem)]">
-        <PaperSheet
-          stock={stock}
-          className="px-6 py-7 pl-8 sm:px-9 sm:py-9 sm:pl-10 focus-within:shadow-[inset_0_1px_0_rgb(255_255_255_/_0.72),0_0_0_1px_var(--ink)]"
-        >
-          <div
-            style={{
-              ["--card-face" as string]: penVar(pen),
-              color: WRITING_INK,
-            }}
-          >
-            <div className="mb-5">
+      <div className="signing-workspace">
+        <PaperSheet stock={stock} className="signing-write">
+          <div className="signing-ink" data-pen={pen} style={inkStyle}>
+            <div className="signing-photo">
               {image ? (
                 <div>
                   <img src={image} alt="" className="note-photo note-photo-pick" />
@@ -326,7 +298,7 @@ export default function MessageForm({
                   </button>
                 </div>
               ) : (
-                <label className="quiet-link inline-flex text-[0.8125rem] text-muted">
+                <label className="quiet-link signing-photo-control inline-flex text-[0.8125rem] text-muted">
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
@@ -366,17 +338,17 @@ export default function MessageForm({
               disabled={pending}
               aria-invalid={errorField === "body"}
               aria-describedby={error ? "signing-error" : undefined}
-              className={`min-h-44 w-full resize-none border-0 bg-transparent outline-none placeholder:text-muted/45 font-card disabled:cursor-not-allowed disabled:opacity-60 ${penBodyClass(pen)}`}
+              className={`font-card ${penBodyClass(pen)}`}
             />
 
-            <div className="mt-8 flex items-end justify-between gap-6">
-              <span className="pb-2 text-sm tabular-nums text-muted">
+            <div className="signing-signoff">
+              <span className="signing-counter">
                 {body.length > COUNTER_THRESHOLD
                   ? `${MAX_BODY_LENGTH - body.length} characters left`
                   : null}
               </span>
 
-              <div className="w-full max-w-56">
+              <div className="signing-name">
                 <label htmlFor="authorName" className="sr-only">
                   Your name
                 </label>
@@ -400,27 +372,18 @@ export default function MessageForm({
                   disabled={pending}
                   aria-invalid={errorField === "name"}
                   aria-describedby={error ? "signing-error" : undefined}
-                  className={`w-full border-0 border-b border-rule bg-transparent py-2 text-right font-card outline-none placeholder:text-muted/70 focus:border-b-2 focus:border-ink focus:pb-[7px] disabled:cursor-not-allowed disabled:text-muted ${penSignatureClass(pen)}`}
+                  className={`font-card ${penSignatureClass(pen)}`}
+                  style={{ ["--card-face" as string]: penVar(pen) }}
                 />
               </div>
             </div>
           </div>
         </PaperSheet>
 
-        <aside
-          aria-label="Preview of your note"
-          className="lg:sticky lg:top-8"
-        >
-          <p className="text-[0.8125rem] text-muted">
-            How your note will look on the card
-          </p>
-          <PaperSheet stock={stock} className="note-preview mt-3 px-6 py-6 pl-8 sm:px-7">
-            <div
-              style={{
-                ["--card-face" as string]: penVar(pen),
-                color: WRITING_INK,
-              }}
-            >
+        <aside className="signing-preview" aria-label="Preview of your note">
+          <p className="signing-preview-label">How your note will look in the card</p>
+          <PaperSheet stock={stock} className="note-preview">
+            <div className="signing-ink" data-pen={pen} style={inkStyle}>
               <MessageReader
                 body={previewBody}
                 authorName={previewName}
@@ -439,16 +402,12 @@ export default function MessageForm({
       ) : null}
 
       {error ? (
-        <p
-          id="signing-error"
-          role="alert"
-          className="mt-6 max-w-2xl border-l-2 border-brass pl-4 text-[0.9375rem] leading-relaxed"
-        >
+        <p id="signing-error" role="alert" className="signing-error">
           {error}
         </p>
       ) : null}
 
-      <div className="mt-8 flex max-w-2xl flex-wrap items-center gap-x-6 gap-y-3">
+      <div className="signing-submit">
         <button
           type="submit"
           disabled={pending || imageBusy}
@@ -456,8 +415,9 @@ export default function MessageForm({
         >
           {pending ? "Adding your message…" : "Add my message"}
         </button>
-        <p className="max-w-[40ch] text-sm leading-relaxed text-muted">
-          Only {recipientName} and the organizer will see this.
+        <p>
+          Only {recipientName} and the organizer will see this. They read it
+          when the organizer shares the card.
         </p>
       </div>
     </form>

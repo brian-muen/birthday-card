@@ -2,11 +2,21 @@ import { count, desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import CoverSurface from "@/components/cover-surface";
 import OrganizerBar from "@/components/organizer-bar";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
+import { stockHex } from "@/lib/stock";
 import "@/app/organizer.css";
+
+function noteLabel(n: number) {
+  if (n === 0) return "No notes yet";
+  if (n === 1) return "1 note";
+  return `${n} notes`;
+}
+
+const started = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" });
 
 export default async function CardsPage() {
   const organizer = await getCurrentOrganizer();
@@ -39,47 +49,45 @@ export default async function CardsPage() {
     <>
       <OrganizerBar />
       <main className="cards-page">
-        <h1>Your cards</h1>
-        <p className="cards-lede">
-          Cards you saved to {organizer.email}. Signing still works from the
-          invitation link, with no account.
-        </p>
-        {owned.length === 0 ? (
-          <p className="cards-empty">
-            None saved yet.{" "}
-            <Link href="/" className="handoff-open">
-              Make a card
-            </Link>
-            , then save it to this account.
+        <header className="cards-head">
+          <h1>Your cards</h1>
+          <p className="cards-lede">
+            {owned.length === 0
+              ? `Cards you save to ${organizer.email} will show up here.`
+              : `Saved to ${organizer.email}.`}
           </p>
-        ) : (
-          <ul className="cards-list">
-            {owned.map((card) => {
-              const notes = notesByCard.get(card.id) ?? 0;
-              return (
-                <li key={card.id}>
-                  <h2>{card.recipientName}</h2>
-                  <p>
-                    {notes === 0
-                      ? "No notes yet"
-                      : notes === 1
-                        ? "1 note"
-                        : `${notes} notes`}
-                    {card.createdAt
-                      ? ` · ${card.createdAt.toLocaleDateString()}`
-                      : ""}
-                  </p>
-                  <div className="cards-list-actions">
-                    <Link href={`/created/${card.masterToken}`}>Manage</Link>
-                    {card.giftToken ? (
-                      <Link href={`/card/${card.giftToken}`}>Open card</Link>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        </header>
+
+        <ul className="cards-gallery">
+          <li>
+            <Link href="/" className="gallery-card gallery-new">
+              <span className="gallery-cover gallery-new-cover" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </span>
+              <span className="gallery-name">New card</span>
+            </Link>
+          </li>
+          {owned.map((card) => (
+            <li key={card.id}>
+              <Link href={`/created/${card.masterToken}`} className="gallery-card">
+                <span
+                  className="gallery-cover"
+                  style={{ ["--card-stock" as string]: stockHex(card.stock) }}
+                  aria-hidden="true"
+                >
+                  <CoverSurface design={card.design} recipientName={card.recipientName} />
+                </span>
+                <span className="gallery-name">{card.recipientName}</span>
+                <span className="gallery-meta">
+                  {noteLabel(notesByCard.get(card.id) ?? 0)}
+                  {card.createdAt ? ` · ${started.format(card.createdAt)}` : ""}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </main>
     </>
   );

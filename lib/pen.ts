@@ -81,40 +81,55 @@ export function penIsLively(value: unknown): boolean {
 }
 
 /**
- * Paragraph metrics for the writing field. Fountain and brush keep their
- * font ids; size and line-height keep them readable as body text.
+ * Body face for a note. Fountain and brush keep their pen ids; Great Vibes
+ * and Satisfy stay on the signature line, not in the paragraph.
  */
-export function penBodyClass(value: unknown): string {
+export function penBodyVar(value: unknown): string {
   switch (parsePen(value)) {
     case "fountain":
-      return "text-[1.25rem] leading-[1.95]";
-    case "marker":
-      return "text-[1.3rem] leading-[1.55]";
+      return "var(--font-caveat)";
     case "brush":
-      return "text-[1.2rem] leading-[1.85]";
-    case "ballpoint":
-      return "text-[1.125rem] leading-[1.65]";
+      return "var(--font-caveat-brush)";
     default:
-      return "text-[1.25rem] leading-[1.65]";
+      return penVar(value);
   }
 }
 
 /**
- * Paragraph metrics for a finished note. Same font ids as the pen; script
- * pens stay at reading size so Great Vibes / Satisfy are not body display.
+ * Paragraph metrics for the writing field. Fountain and brush stay those
+ * pens; size, line-height, and a readable hand keep the body legible.
+ */
+export function penBodyClass(value: unknown): string {
+  switch (parsePen(value)) {
+    case "fountain":
+      return "font-hand text-[1.28rem] leading-[1.72]";
+    case "marker":
+      return "font-face-marker text-[1.3rem] leading-[1.55]";
+    case "brush":
+      return "font-face-marker text-[1.22rem] leading-[1.68]";
+    case "ballpoint":
+      return "font-face-ballpoint text-[1.125rem] leading-[1.65]";
+    default:
+      return "font-face-pencil text-[1.25rem] leading-[1.65]";
+  }
+}
+
+/**
+ * Paragraph metrics for a finished note. Same pen ids; fountain / brush
+ * bodies use a readable hand so Great Vibes and Satisfy are not paragraphs.
  */
 export function penNoteClass(value: unknown): string {
   switch (parsePen(value)) {
     case "fountain":
-      return "text-[1.1875rem] leading-[2] sm:text-[1.25rem]";
+      return "font-hand text-[1.2rem] leading-[1.75] sm:text-[1.28rem]";
     case "marker":
-      return "text-[1.2rem] leading-[1.55] sm:text-[1.3rem]";
+      return "font-face-marker text-[1.2rem] leading-[1.55] sm:text-[1.3rem]";
     case "brush":
-      return "text-[1.125rem] leading-[1.85] sm:text-[1.2rem]";
+      return "font-face-marker text-[1.125rem] leading-[1.7] sm:text-[1.22rem]";
     case "ballpoint":
-      return "text-[1.0625rem] leading-[1.65] sm:text-[1.125rem]";
+      return "font-face-ballpoint text-[1.0625rem] leading-[1.65] sm:text-[1.125rem]";
     default:
-      return "text-[1.1875rem] leading-[1.65] sm:text-[1.25rem]";
+      return "font-face-pencil text-[1.1875rem] leading-[1.65] sm:text-[1.25rem]";
   }
 }
 

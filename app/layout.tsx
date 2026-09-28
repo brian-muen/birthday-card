@@ -6,7 +6,6 @@ import {
   Cormorant_Garamond,
   EB_Garamond,
   Great_Vibes,
-  Karla,
   Ma_Shan_Zheng,
   Nanum_Pen_Script,
   Noto_Sans_KR,
@@ -15,22 +14,32 @@ import {
   Noto_Serif_KR,
   Noto_Serif_SC,
   Noto_Serif_TC,
+  Bricolage_Grotesque,
+  Fraunces,
   Satisfy,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
 
-// Garamond sets site headlines. Karla carries the interface.
-// paper.css loads after card-motion.css from globals.css.
+// Bricolage Grotesque is the interface and Fraunces its headlines.
+// Garamond is only printed on the card.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
   style: ["normal", "italic"],
 });
 
-const karla = Karla({
-  variable: "--font-karla",
+const ui = Bricolage_Grotesque({
+  variable: "--font-ui",
   subsets: ["latin"],
+  axes: ["opsz"],
+});
+
+const display = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["SOFT", "opsz"],
 });
 
 // Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
@@ -91,8 +100,9 @@ const notoSansTC = Noto_Sans_TC({
   variable: "--font-noto-sans-tc",
 });
 
+// Variable axis: Google serves one file for every weight, and listing weights
+// duplicates its URLs, which next/font rejects.
 const notoSerifKR = Noto_Serif_KR({
-  weight: ["400", "500"],
   preload: false,
   adjustFontFallback: false,
   variable: "--font-noto-serif-kr",
@@ -127,7 +137,8 @@ const maShan = Ma_Shan_Zheng({
 });
 
 const fontVariables = [
-  karla.variable,
+  ui.variable,
+  display.variable,
   garamond.variable,
   caveat.variable,
   greatVibes.variable,
@@ -146,7 +157,7 @@ const fontVariables = [
 ].join(" ");
 
 export const metadata: Metadata = {
-  title: "Birthday Card",
+  title: "Birthday card",
   description:
     "Start a birthday card and collect private messages from everyone. Share the finished card with the birthday person when you are ready.",
 };

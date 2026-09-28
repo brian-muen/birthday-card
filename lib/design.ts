@@ -1,25 +1,37 @@
+// Archived designs stay renderable so cards already made with them still
+// open, but they are not offered when starting a new card.
 export const DESIGNS = [
-  { id: "cake", label: "Cake", group: "classic" },
-  { id: "balloons", label: "Balloons", group: "classic" },
-  { id: "flowers", label: "Flowers", group: "classic" },
-  { id: "recital", label: "Piano", group: "window" },
-  { id: "goldfish", label: "Goldfish", group: "window" },
-  { id: "loquat", label: "Loquat", group: "window" },
-  { id: "cats", label: "Cats", group: "window" },
-  { id: "mimosa", label: "Mimosa", group: "window" },
-  { id: "leaves", label: "Leaves", group: "window" },
-  { id: "recital-cut", label: "Piano", group: "stickers" },
-  { id: "goldfish-cut", label: "Goldfish", group: "stickers" },
-  { id: "loquat-cut", label: "Loquat", group: "stickers" },
-  { id: "cats-cut", label: "Cats", group: "stickers" },
-  { id: "mimosa-cut", label: "Mimosa", group: "stickers" },
-  { id: "leaves-cut", label: "Leaves", group: "stickers" },
+  { id: "cut-cake", label: "Cake" },
+  { id: "cut-balloons", label: "Balloons" },
+  { id: "moon", label: "Moon" },
+  { id: "plum", label: "Plum blossom" },
+  { id: "koi", label: "Koi" },
+  { id: "lanterns", label: "Lanterns" },
+  { id: "leaves", label: "Maple and birds" },
+  { id: "cake", label: "Cake", archived: true },
+  { id: "balloons", label: "Balloons", archived: true },
+  { id: "flowers", label: "Flowers", archived: true },
+  { id: "recital", label: "Piano", archived: true },
+  { id: "goldfish", label: "Goldfish", archived: true },
+  { id: "mimosa", label: "Mimosa", archived: true },
+  { id: "loquat", label: "Loquat", archived: true },
+  { id: "cats", label: "Cats", archived: true },
+  { id: "recital-cut", label: "Piano", archived: true },
+  { id: "goldfish-cut", label: "Goldfish", archived: true },
+  { id: "loquat-cut", label: "Loquat", archived: true },
+  { id: "cats-cut", label: "Cats", archived: true },
+  { id: "mimosa-cut", label: "Mimosa", archived: true },
+  { id: "leaves-cut", label: "Leaves", archived: true },
 ] as const;
 
 const RETIRED_IDS = ["plain"] as const;
 
 export type PickerDesignId = (typeof DESIGNS)[number]["id"];
 export type DesignId = PickerDesignId | (typeof RETIRED_IDS)[number];
+
+export const DEFAULT_DESIGN: PickerDesignId = "cut-cake";
+
+export const PICKER_DESIGNS = DESIGNS.filter((design) => !("archived" in design));
 
 export function parseDesign(value: unknown): DesignId {
   const id = String(value ?? "");

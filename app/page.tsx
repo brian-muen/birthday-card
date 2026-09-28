@@ -1,5 +1,5 @@
 import { parseStock } from "@/lib/stock";
-import { parseDesign } from "@/lib/design";
+import { DEFAULT_DESIGN, parseDesign } from "@/lib/design";
 import CreateCardForm from "@/components/create-card-form";
 import OrganizerBar from "@/components/organizer-bar";
 
@@ -17,12 +17,12 @@ export default async function Home({
   return (
     <>
       <OrganizerBar />
-      <main className="paper-home">
+      <main className="home-page">
         <CreateCardForm
           error={error}
           initialName={recipientName}
           initialStock={parseStock(stock)}
-          initialDesign={design === undefined ? "cake" : parseDesign(design)}
+          initialDesign={design === undefined ? DEFAULT_DESIGN : parseDesign(design)}
         />
       </main>
     </>

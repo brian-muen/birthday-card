@@ -1,7 +1,13 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
-import { penNoteClass, penSignatureClass, type PenId } from "@/lib/pen";
+import { useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  penBodyVar,
+  penNoteClass,
+  penSignatureClass,
+  penVar,
+  type PenId,
+} from "@/lib/pen";
 import { paginateNote } from "@/lib/paginate-note";
 
 /** Page at the actual font and available space; never shrink the handwriting. */
@@ -19,23 +25,29 @@ export default function MessageReader({
   const areaRef = useRef<HTMLDivElement>(null);
   const probeRef = useRef<HTMLParagraphElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const dialogTitleId = useId();
   const [layout, setLayout] = useState({ body, pen, image, pages: [body] });
-  const [position, setPosition] = useState({ body, pen, image, index: 0 });
+  const [onCardFace, setOnCardFace] = useState(false);
+  const [open, setOpen] = useState(false);
   const pages =
     layout.body === body && layout.pen === pen && layout.image === image
       ? layout.pages
       : [body];
-  const index =
-    position.body === body && position.pen === pen && position.image === image
-      ? Math.min(position.index, pages.length - 1)
-      : 0;
+  const opening = pages[0] ?? body;
   const noteClass = `note-copy whitespace-pre-wrap font-card ${penNoteClass(pen)}`;
+  const bodyFace = { ["--card-face" as string]: penBodyVar(pen) };
+  const signFace = { ["--card-face" as string]: penVar(pen) };
+  const remainder = pages.slice(1).join("");
+  const hasMore = pages.length > 1;
 
   useLayoutEffect(() => {
     const area = areaRef.current;
     const probe = probeRef.current;
     if (!area || !probe) return;
     let cancelled = false;
+    setOnCardFace(Boolean(area.closest(".card-face")));
     function measure() {
       if (cancelled || !area || !probe || !area.clientHeight) return;
       probe.style.width = `${area.clientWidth}px`;
@@ -60,12 +72,12 @@ export default function MessageReader({
       const faceBox = face.getBoundingClientRect();
       const slot = spacer.getBoundingClientRect();
       if (!faceBox.width || !slot.width) return;
-      const probe = new Image();
-      probe.onload = () => {
+      const probeImage = new Image();
+      probeImage.onload = () => {
         if (cancelled) return;
         const slotW = slot.width;
         const slotH = slot.height;
-        const aspect = probe.naturalWidth / probe.naturalHeight || 1;
+        const aspect = probeImage.naturalWidth / probeImage.naturalHeight || 1;
         let width = slotW;
         let height = slotW / aspect;
         if (height > slotH) {
@@ -79,7 +91,7 @@ export default function MessageReader({
         face.style.setProperty("--note-photo-w", `${width}px`);
         face.style.setProperty("--note-photo-h", `${height}px`);
       };
-      probe.src = image;
+      probeImage.src = image;
     }
     const observer = new ResizeObserver(() => {
       measure();
@@ -100,6 +112,15 @@ export default function MessageReader({
     };
   }, [body, pen, authorName, image]);
 
+  function openRemainder() {
+    dialogRef.current?.showModal();
+    setOpen(true);
+  }
+
+  function closeRemainder() {
+    dialogRef.current?.close();
+  }
+
   return (
     <div className="note-reader" data-photo={image ? "true" : undefined}>
       {image ? (
@@ -108,30 +129,92 @@ export default function MessageReader({
           role="img"
           aria-label={`Photo from ${authorName}`}
           className="note-photo"
-          data-hidden={index === 0 ? undefined : "true"}
-          style={{ visibility: index === 0 ? "visible" : "hidden" }}
-        />
+        >
+          {onCardFace ? null : (
+            <img
+              src={image}
+              alt=""
+              className="h-full w-full object-contain object-top"
+            />
+          )}
+        </div>
       ) : null}
       <div ref={areaRef} className="note-page">
-        <p className={noteClass}>{pages[index]}</p>
-        <p ref={probeRef} aria-hidden="true" className={`note-probe ${noteClass}`} />
+        <p className={noteClass} style={bodyFace}>
+          {opening}
+        </p>
+        <p
+          ref={probeRef}
+          aria-hidden="true"
+          className={`note-probe ${noteClass}`}
+          style={bodyFace}
+        />
       </div>
-      <div className="note-signature" style={{ visibility: index === pages.length - 1 ? "visible" : "hidden" }}>
-        <p className={`text-right font-card ${penSignatureClass(pen)}`}>{authorName}</p>
+      <div
+        className="note-signature"
+        style={{ visibility: hasMore ? "hidden" : "visible" }}
+      >
+        <p
+          className={`text-right font-card ${penSignatureClass(pen)}`}
+          style={signFace}
+        >
+          {authorName}
+        </p>
       </div>
       <div className="note-pagination">
-        {pages.length > 1 ? (
+        {hasMore ? (
           <>
-            <button type="button" className="ui-button" disabled={index === 0}
-              aria-label={`Previous page of ${authorName}'s note`}
-              onClick={() => setPosition({ body, pen, image, index: index - 1 })}>Back</button>
-            <span role="status" aria-live="polite">Note page {index + 1} of {pages.length}</span>
-            <button type="button" className="ui-button" disabled={index === pages.length - 1}
-              aria-label={`Next page of ${authorName}'s note`}
-              onClick={() => setPosition({ body, pen, image, index: index + 1 })}>Next</button>
+            <button
+              ref={continueRef}
+              type="button"
+              className="ui-button"
+              aria-haspopup="dialog"
+              aria-expanded={open}
+              aria-label={`Continue ${authorName}'s note`}
+              onClick={openRemainder}
+            >
+              Continue
+            </button>
+            <span role="status" aria-live="polite">
+              Note continues
+            </span>
+            <span />
           </>
         ) : null}
       </div>
+      {hasMore ? (
+        <dialog
+          ref={dialogRef}
+          className="note-continue-dialog max-h-[min(80svh,42rem)] w-[min(calc(100%-2rem),28rem)] border-0 bg-[var(--paper-liner,#fffdf8)] p-6 text-[color:var(--ink-pen,#2a231c)]"
+          aria-labelledby={dialogTitleId}
+          onClose={() => {
+            setOpen(false);
+            continueRef.current?.focus();
+          }}
+        >
+          <h2 id={dialogTitleId} className="sr-only">
+            The rest of {authorName}&apos;s note
+          </h2>
+          <p className={noteClass} style={bodyFace}>
+            {remainder}
+          </p>
+          <div className="note-signature">
+            <p
+              className={`text-right font-card ${penSignatureClass(pen)}`}
+              style={signFace}
+            >
+              {authorName}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="ui-button note-continue-close"
+            onClick={closeRemainder}
+          >
+            Close
+          </button>
+        </dialog>
+      ) : null}
     </div>
   );
 }

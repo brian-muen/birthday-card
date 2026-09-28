@@ -1,16 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #c8d2d6;
+  --paper: #f1ebe7;
   --paper-liner: #fffdf8;
-  --raised: #e8eef1;
-  --ink: #1a2228;
+  --raised: #fbf8f5;
+  --ink: #2a2127;
   --ink-pen: #2a231c;
-  --muted: #545d64;
-  --rule: #a8b2b8;
-  --brass: #1a2228;
+  --muted: #74676d;
+  --rule: #dccfca;
+  --brass: #7c5416;
+  --cinnabar: #b33a2e;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
   --cjk-sans: var(--font-noto-sans-kr), var(--font-noto-sans-sc),
     var(--font-noto-sans-tc), "Apple SD Gothic Neo", "Malgun Gothic",
     "PingFang SC", "PingFang TC", "Microsoft YaHei", "Microsoft JhengHei";
@@ -29,7 +31,8 @@
   --color-muted: var(--muted);
   --color-rule: var(--rule);
   --color-brass: var(--brass);
-  --font-sans: var(--font-karla), var(--cjk-sans);
+  --font-sans: var(--font-ui), var(--cjk-sans);
+  --font-headline: var(--font-display), var(--font-garamond), var(--cjk-serif);
   --font-serif: var(--font-garamond), var(--cjk-serif);
   --font-hand: var(--font-caveat), var(--cjk-hand);
   --font-face-hand: var(--font-caveat);
@@ -46,14 +49,14 @@
 body {
   background-color: var(--paper);
   color: var(--ink);
-  font-family: var(--font-karla), var(--cjk-sans), ui-sans-serif, system-ui,
+  font-family: var(--font-ui), var(--cjk-sans), ui-sans-serif, system-ui,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgb(26 34 40 / 0.16);
+  background: rgb(179 58 46 / 0.18);
 }
 
 /* Fields already have their own focus (a ruled line, or the paper sheet).
@@ -110,4 +113,6 @@ select:focus-visible {
 
 @import "./card-motion.css";
 @import "./paper.css";
+@import "./paper-cut.css";
 @import "./page-polish.css";
+@import "./landing.css";
