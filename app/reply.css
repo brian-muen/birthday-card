@@ -7,16 +7,9 @@
 
 .reply-window .os-toolbar {
   position: sticky;
-  top: var(--os-menu-height);
+  top: var(--os-top);
   z-index: 5;
   background: var(--os-chrome);
-}
-
-/* The desktop scroller's top padding counts toward sticky offsets. */
-@media (min-width: 48rem) {
-  .reply-window .os-toolbar {
-    top: -2rem;
-  }
 }
 
 .reply-window .os-statusbar {
@@ -457,7 +450,7 @@
   gap: 1rem;
   width: min(100%, 22rem, calc(100vw - 3rem));
   margin: 0;
-  scroll-margin-top: calc(var(--os-menu-height) + 1rem);
+  scroll-margin-top: calc(var(--os-top) + 1rem);
 }
 
 .reply-paper-stack {
@@ -623,8 +616,20 @@
 
   .reply-desk[data-preview] .reply-paper {
     position: sticky;
-    top: 0.5rem;
+    top: calc(var(--os-top) + 0.5rem);
     padding-top: 0.5rem;
+  }
+}
+
+/* Phones: the reply window fills the screen and the page lies under it. */
+@media (max-width: 47.99rem) {
+  .reply-desk,
+  .reply-form {
+    display: contents;
+  }
+
+  .reply-paper {
+    margin: 2rem auto;
   }
 }
 

@@ -11,6 +11,7 @@ import {
 import { flushSync } from "react-dom";
 
 import Computer from "@/components/os/computer";
+import { AppWindow, focusDesktop } from "@/components/os/desktop";
 import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
 import { playSound } from "@/components/os/sound";
 import { zoomRects } from "@/components/os/zoom-rects";
@@ -193,7 +194,7 @@ export default function InboxApp({
     const from = document.querySelector(selector)?.getBoundingClientRect();
     flushSync(change);
     zoomRects(from, mailIconRef.current);
-    mailIconRef.current?.focus({ preventScroll: true });
+    focusDesktop(mailIconRef.current);
   }
 
   function turnBack() {
@@ -215,6 +216,8 @@ export default function InboxApp({
         ref={mailIconRef}
         type="button"
         className="os-icon"
+        data-app-icon="mail"
+        data-open={mailOpen || undefined}
         aria-label={unreadNotes.length ? `Mail, ${unreadNotes.length} unread` : "Mail"}
         onClick={(event) => openMail(event.currentTarget)}
       >
@@ -299,7 +302,7 @@ export default function InboxApp({
               />
             ) : null}
 
-            {mailOpen ? (
+            <AppWindow app="mail" open={mailOpen}>
               <InboxMail
                 notes={notes}
                 recipientName={recipientName}
@@ -317,7 +320,7 @@ export default function InboxApp({
                 transformRef={transformRef}
                 focusOnMount={mailFocus}
               />
-            ) : null}
+            </AppWindow>
 
             {arrival === "shown" ? (
               <InboxArrival

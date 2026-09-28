@@ -685,7 +685,8 @@
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem clamp(1rem, 3vw, 2rem);
+  padding: max(1rem, env(safe-area-inset-top)) max(clamp(1rem, 3vw, 2rem), env(safe-area-inset-right)) 1rem
+    max(clamp(1rem, 3vw, 2rem), env(safe-area-inset-left));
   animation: inbox-fade 420ms var(--ease-out) 700ms both;
 }
 

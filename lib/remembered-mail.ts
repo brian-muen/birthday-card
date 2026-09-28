@@ -127,16 +127,6 @@ export function rememberCard(card: {
   notify();
 }
 
-/** Forget a gift link, along with which of its notes were read here. */
-export function forgetCard(token: string) {
-  const rest = parseCards(read(KEY)).filter((saved) => saved.token !== token);
-  write(KEY, rest.length ? JSON.stringify(rest) : null);
-  try {
-    window.localStorage.removeItem(READ_PREFIX + token);
-  } catch {}
-  notify();
-}
-
 /** Hide the home alert for this session, until a different card is opened. */
 export function dismissUntilLater(token: string) {
   write(LATER_KEY, token, "session");

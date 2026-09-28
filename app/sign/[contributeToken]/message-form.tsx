@@ -7,6 +7,7 @@ import ReplyPaper from "@/components/mail/reply-paper";
 import ReplyPenPicker from "@/components/mail/reply-pen-picker";
 import ReplySent from "@/components/mail/reply-sent";
 import BlinkDots from "@/components/os/blink-dots";
+import { AppWindow } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { playSound } from "@/components/os/sound";
 import { prepareNoteImage } from "@/lib/prepare-note-image";
@@ -279,29 +280,33 @@ export default function MessageForm({
 
   if (view === "sent" && sent) {
     return (
-      <ReplySent
-        recipientName={recipientName}
-        authorName={sent.name}
-        pen={sent.pen}
-        headingRef={sentRef}
-        onWriteAnother={writeAnother}
-        onDone={backToInbox}
-      />
+      <AppWindow app="mail">
+        <ReplySent
+          recipientName={recipientName}
+          authorName={sent.name}
+          pen={sent.pen}
+          headingRef={sentRef}
+          onWriteAnother={writeAnother}
+          onDone={backToInbox}
+        />
+      </AppWindow>
     );
   }
 
   if (view === "inbox") {
     return (
-      <ReplyInvitation
-        recipientName={recipientName}
-        intro={intro}
-        birthday={birthday}
-        received={received}
-        hasDraft={Boolean(authorName || body)}
-        replied={replied}
-        replyRef={replyRef}
-        onReply={openReply}
-      />
+      <AppWindow app="mail">
+        <ReplyInvitation
+          recipientName={recipientName}
+          intro={intro}
+          birthday={birthday}
+          received={received}
+          hasDraft={Boolean(authorName || body)}
+          replied={replied}
+          replyRef={replyRef}
+          onReply={openReply}
+        />
+      </AppWindow>
     );
   }
 
@@ -309,181 +314,183 @@ export default function MessageForm({
   const describedBy = error ? "reply-error" : undefined;
 
   return (
-    <div className="reply-desk" data-preview={showPreview || undefined}>
-      <form
-        onSubmit={handleSubmit}
-        aria-busy={pending}
-        noValidate
-        className="reply-form"
-        data-animate={composeMotion || undefined}
-      >
-        <OsWindow
-          title={`Re: ${subject}`}
-          width="40rem"
-          className="reply-window reply-compose"
-          onClose={backToInbox}
-          closeLabel="Close reply and keep the draft"
-          toolbar={
-            <>
-              <button
-                type="submit"
-                className="os-button reply-send"
-                data-variant="accent"
-                disabled={busy}
-              >
-                {pending ? <BlinkDots label="Sending" /> : "Send"}
-              </button>
-              <label className="os-button reply-attach">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                  className="sr-only"
-                  disabled={busy}
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    void handlePhoto(file);
-                  }}
-                />
-                {image ? "Replace photo" : "Attach photo"}
-              </label>
-              <button
-                type="button"
-                className="os-button reply-preview-toggle"
-                aria-pressed={showPreview}
-                onClick={togglePreview}
-              >
-                Preview<span className="reply-wide-only"> on paper</span>
-              </button>
-              {error ? (
-                <p id="reply-error" role="alert" className="reply-error">
-                  {error}
-                </p>
-              ) : null}
-            </>
-          }
-          status={
-            <>
-              <span>{DRAFT_LABEL[draftStatus]}</span>
-              <span className="reply-counter">{counterLabel(body.length)}</span>
-            </>
-          }
+    <AppWindow app="mail">
+      <div className="reply-desk" data-preview={showPreview || undefined}>
+        <form
+          onSubmit={handleSubmit}
+          aria-busy={pending}
+          noValidate
+          className="reply-form"
+          data-animate={composeMotion || undefined}
         >
-          <div className="reply-fields">
-            <span className="reply-label">To</span>
-            <span className="reply-static">
-              {recipientName}&apos;s birthday card
-              <span className="reply-private">Private</span>
-            </span>
+          <OsWindow
+            title={`Re: ${subject}`}
+            width="40rem"
+            className="reply-window reply-compose"
+            onClose={backToInbox}
+            closeLabel="Close reply and keep the draft"
+            toolbar={
+              <>
+                <button
+                  type="submit"
+                  className="os-button reply-send"
+                  data-variant="accent"
+                  disabled={busy}
+                >
+                  {pending ? <BlinkDots label="Sending" /> : "Send"}
+                </button>
+                <label className="os-button reply-attach">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                    className="sr-only"
+                    disabled={busy}
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      void handlePhoto(file);
+                    }}
+                  />
+                  {image ? "Replace photo" : "Attach photo"}
+                </label>
+                <button
+                  type="button"
+                  className="os-button reply-preview-toggle"
+                  aria-pressed={showPreview}
+                  onClick={togglePreview}
+                >
+                  Preview<span className="reply-wide-only"> on paper</span>
+                </button>
+                {error ? (
+                  <p id="reply-error" role="alert" className="reply-error">
+                    {error}
+                  </p>
+                ) : null}
+              </>
+            }
+            status={
+              <>
+                <span>{DRAFT_LABEL[draftStatus]}</span>
+                <span className="reply-counter">{counterLabel(body.length)}</span>
+              </>
+            }
+          >
+            <div className="reply-fields">
+              <span className="reply-label">To</span>
+              <span className="reply-static">
+                {recipientName}&apos;s birthday card
+                <span className="reply-private">Private</span>
+              </span>
 
-            <label htmlFor="authorName" className="reply-label">
-              Sign as
-            </label>
-            <input
-              ref={nameRef}
-              id="authorName"
-              name="authorName"
-              type="text"
-              required
-              maxLength={MAX_NAME_LENGTH}
-              autoComplete="name"
-              placeholder="Your name, as you sign it"
-              value={authorName}
-              onChange={(event) => {
-                const value = event.target.value;
-                setAuthorName(value);
-                saveDraft({ authorName: value, body, pen });
-                clearError("name");
-              }}
+              <label htmlFor="authorName" className="reply-label">
+                Sign as
+              </label>
+              <input
+                ref={nameRef}
+                id="authorName"
+                name="authorName"
+                type="text"
+                required
+                maxLength={MAX_NAME_LENGTH}
+                autoComplete="name"
+                placeholder="Your name, as you sign it"
+                value={authorName}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setAuthorName(value);
+                  saveDraft({ authorName: value, body, pen });
+                  clearError("name");
+                }}
+                disabled={pending}
+                aria-invalid={errorField === "name"}
+                aria-describedby={describedBy}
+                className="os-header-field reply-name"
+              />
+
+              <span className="reply-label">Subject</span>
+              <span className="reply-static">Re: {subject}</span>
+            </div>
+
+            <ReplyPenPicker
+              pen={pen}
+              sample={authorName.trim().split(/\s+/)[0] || "Your name"}
               disabled={pending}
-              aria-invalid={errorField === "name"}
-              aria-describedby={describedBy}
-              className="os-header-field reply-name"
+              onChange={(next) => {
+                setPen(next);
+                saveDraft({ authorName, body, pen: next });
+              }}
             />
 
-            <span className="reply-label">Subject</span>
-            <span className="reply-static">Re: {subject}</span>
-          </div>
+            <label htmlFor="body" className="sr-only">
+              Your note for {recipientName}
+            </label>
+            <textarea
+              ref={bodyRef}
+              id="body"
+              name="body"
+              required
+              rows={1}
+              maxLength={MAX_BODY_LENGTH}
+              placeholder={`Write your note to ${recipientName}. A memory, an inside joke, something you've never got around to saying.`}
+              value={body}
+              onChange={(event) => {
+                const value = event.target.value;
+                setBody(value);
+                saveDraft({ authorName, body: value, pen });
+                clearError("body");
+                fitToContent(event.target);
+              }}
+              disabled={pending}
+              aria-invalid={errorField === "body"}
+              aria-describedby={describedBy}
+              className="reply-body"
+            />
 
-          <ReplyPenPicker
+            {image ? (
+              <div className="reply-attachment">
+                {/* eslint-disable-next-line @next/next/no-img-element -- a local data URL */}
+                <img src={image} alt="Your attached photo" />
+                <span className="reply-attachment-text">
+                  <strong>Photo attached</strong>
+                  <span>It goes above your note on the card.</span>
+                </span>
+                <button
+                  type="button"
+                  className="os-button"
+                  data-variant="quiet"
+                  onClick={() => setImage(null)}
+                  disabled={busy}
+                >
+                  Remove photo
+                </button>
+              </div>
+            ) : imageBusy ? (
+              <p className="reply-attachment" role="status">
+                Preparing photo…
+              </p>
+            ) : null}
+          </OsWindow>
+        </form>
+
+        {showPreview ? (
+          <ReplyPaper
+            recipientName={recipientName}
+            stock={stock}
+            body={body}
+            authorName={authorName}
             pen={pen}
-            sample={authorName.trim().split(/\s+/)[0] || "Your name"}
-            disabled={pending}
-            onChange={(next) => {
-              setPen(next);
-              saveDraft({ authorName, body, pen: next });
-            }}
+            image={image}
+            animate={paperMotion}
+            paperRef={paperRef}
           />
+        ) : null}
 
-          <label htmlFor="body" className="sr-only">
-            Your note for {recipientName}
-          </label>
-          <textarea
-            ref={bodyRef}
-            id="body"
-            name="body"
-            required
-            rows={1}
-            maxLength={MAX_BODY_LENGTH}
-            placeholder={`Write your note to ${recipientName}. A memory, an inside joke, something you've never got around to saying.`}
-            value={body}
-            onChange={(event) => {
-              const value = event.target.value;
-              setBody(value);
-              saveDraft({ authorName, body: value, pen });
-              clearError("body");
-              fitToContent(event.target);
-            }}
-            disabled={pending}
-            aria-invalid={errorField === "body"}
-            aria-describedby={describedBy}
-            className="reply-body"
-          />
-
-          {image ? (
-            <div className="reply-attachment">
-              {/* eslint-disable-next-line @next/next/no-img-element -- a local data URL */}
-              <img src={image} alt="Your attached photo" />
-              <span className="reply-attachment-text">
-                <strong>Photo attached</strong>
-                <span>It goes above your note on the card.</span>
-              </span>
-              <button
-                type="button"
-                className="os-button"
-                data-variant="quiet"
-                onClick={() => setImage(null)}
-                disabled={busy}
-              >
-                Remove photo
-              </button>
-            </div>
-          ) : imageBusy ? (
-            <p className="reply-attachment" role="status">
-              Preparing photo…
-            </p>
-          ) : null}
-        </OsWindow>
-      </form>
-
-      {showPreview ? (
-        <ReplyPaper
-          recipientName={recipientName}
-          stock={stock}
-          body={body}
-          authorName={authorName}
-          pen={pen}
-          image={image}
-          animate={paperMotion}
-          paperRef={paperRef}
-        />
-      ) : null}
-
-      {pending ? (
-        <p className="sr-only" role="status">
-          Sending your note
-        </p>
-      ) : null}
-    </div>
+        {pending ? (
+          <p className="sr-only" role="status">
+            Sending your note
+          </p>
+        ) : null}
+      </div>
+    </AppWindow>
   );
 }

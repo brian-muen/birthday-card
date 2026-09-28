@@ -10,6 +10,7 @@ import { OrganizerIcons, signInHref } from "@/components/mail/organizer-icons";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import OutboxLink from "@/components/mail/outbox-link";
 import Computer from "@/components/os/computer";
+import { AppIcon, AppWindow } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import { birthdayTiming } from "@/lib/birthday";
@@ -22,7 +23,7 @@ import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parseStock } from "@/lib/stock";
 import "@/app/outbox.css";
 
-export const metadata: Metadata = { title: "Sent", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Share links", robots: { index: false, follow: false } };
 
 function noteCountLabel(n: number) {
   if (n === 0) return "No notes yet";
@@ -85,154 +86,172 @@ export default async function CardCreated({
   return (
     <Computer
       stock={card.stock}
-      icons={<OrganizerIcons signedIn={organizer != null} next={herePath} />}
+      icons={
+        <OrganizerIcons signedIn={organizer != null} next={herePath}>
+          <AppIcon app="links" icon="mail" label="Share links" />
+          <AppIcon app="preview" icon="card" label="Preview" />
+          {showSave ? <AppIcon app="save" icon="disk" label="Save card" /> : null}
+        </OrganizerIcons>
+      }
       birthday={card.birthday ? { day: card.birthday, greeting: `It’s ${name}’s birthday!` } : null}
     >
       <div className="outbox">
-        <OsWindow
-          title="Sent"
-          width="42rem"
-          draggable
-          className="outbox-window"
-          status={
-            <>
-              <span>{noteCountLabel(noteCount)}</span>
-              {birthday ? <span>Birthday {birthday.day}</span> : null}
-              {card.createdAt ? <span>Started {startedFormat.format(card.createdAt)}</span> : null}
-            </>
-          }
-        >
-          <header className="outbox-head">
-            <h1>{name}’s card is ready to go around</h1>
-            <p>
-              Birthday Mail doesn’t email anyone. You deliver these two messages
-              yourself: paste each link into an email, a text, or the group chat.
-            </p>
-          </header>
-
-          <ul className="outbox-messages">
-            <li className="outbox-message">
-              <PixelIcon name="mail" className="outbox-message-icon" />
-              <div className="outbox-message-main">
-                <div className="outbox-message-head">
-                  <h3>Sign {name}’s birthday card</h3>
-                  <span className="outbox-when" data-when="now">
-                    Send now
-                  </span>
-                </div>
-                <p className="outbox-to">To everyone signing</p>
-                <p className="outbox-about">
-                  Everyone who opens it can write a note in the card.
-                  {birthday?.signBy ? ` It asks them to sign by ${birthday.signBy}.` : null}
-                </p>
-                <OutboxLink
-                  path={`/sign/${card.contributeToken}`}
-                  label="Signing link"
-                  openLabel="Open the signing page"
-                  shareTitle={`Sign ${name}'s birthday card`}
-                  shareText={
-                    birthday?.signBy
-                      ? `Write a private note in ${name}'s birthday card by ${birthday.signBy}.`
-                      : `Write a private note in ${name}'s birthday card.`
-                  }
-                />
-              </div>
-            </li>
-            <li className="outbox-message">
-              <MailIcon name="gift" className="outbox-message-icon" />
-              <div className="outbox-message-main">
-                <div className="outbox-message-head">
-                  <h3>Happy birthday, {name}</h3>
-                  <span className="outbox-when" data-when="later">
-                    {giftWhen}
-                  </span>
-                </div>
-                <p className="outbox-to">To {name}</p>
-                <p className="outbox-about">
-                  Opens the finished card with every note inside. Hold on to it
-                  until everyone has signed.
-                </p>
-                <OutboxLink
-                  path={`/card/${card.giftToken}`}
-                  label="Gift link"
-                  openLabel="Open the card as the birthday person sees it"
-                  shareTitle={`${name}'s birthday card`}
-                  shareText={`A birthday card for ${name}.`}
-                />
-              </div>
-            </li>
-          </ul>
-
-          <section className="outbox-private" aria-labelledby="organizer-link-heading">
-            <MailIcon name="lock" className="outbox-message-icon" />
-            <div className="outbox-message-main">
-              <div className="outbox-message-head">
-                <h3 id="organizer-link-heading">Your organizer link</h3>
-                <span className="outbox-when" data-when="private">
-                  Private
-                </span>
-              </div>
-              <p className="outbox-about">
-                Keep this one to yourself. Open it to read notes as they come in
-                and remove any you don’t want on the card.
-                {savedToThisAccount ? " It’s also saved to your account." : null}
+        <AppWindow app="links">
+          <OsWindow
+            title="Share links"
+            width="42rem"
+            draggable
+            className="outbox-window"
+            status={
+              <>
+                <span>{noteCountLabel(noteCount)}</span>
+                {birthday ? <span>Birthday {birthday.day}</span> : null}
+                {card.createdAt ? <span>Started {startedFormat.format(card.createdAt)}</span> : null}
+              </>
+            }
+          >
+            <header className="outbox-head">
+              <h1>{name}’s card is ready to go around</h1>
+              <p>
+                Birthday Mail doesn’t email anyone. You deliver these two messages
+                yourself: paste each link into an email, a text, or the group chat.
               </p>
-              <OutboxLink
-                path={`/card/${card.masterToken}`}
-                label="Organizer link"
-                openLabel="Open the organizer view"
-                shareTitle={`${name}'s card (organizer)`}
-                shareText={`Your organizer link for ${name}'s card. Keep this private.`}
-              />
-            </div>
-          </section>
-        </OsWindow>
+            </header>
+
+            <ul className="outbox-messages">
+              <li className="outbox-message">
+                <PixelIcon name="mail" className="outbox-message-icon" />
+                <div className="outbox-message-main">
+                  <div className="outbox-message-head">
+                    <h3>Sign {name}’s birthday card</h3>
+                    <span className="outbox-when" data-when="now">
+                      Send now
+                    </span>
+                  </div>
+                  <p className="outbox-to">To everyone signing</p>
+                  <p className="outbox-about">
+                    Everyone who opens it can write a note in the card.
+                    {birthday?.signBy ? ` It asks them to sign by ${birthday.signBy}.` : null}
+                  </p>
+                  <OutboxLink
+                    path={`/sign/${card.contributeToken}`}
+                    label="Signing link"
+                    openLabel="Open the signing page"
+                    shareTitle={`Sign ${name}'s birthday card`}
+                    shareText={
+                      birthday?.signBy
+                        ? `Write a private note in ${name}'s birthday card by ${birthday.signBy}.`
+                        : `Write a private note in ${name}'s birthday card.`
+                    }
+                  />
+                </div>
+              </li>
+              <li className="outbox-message">
+                <MailIcon name="gift" className="outbox-message-icon" />
+                <div className="outbox-message-main">
+                  <div className="outbox-message-head">
+                    <h3>Happy birthday, {name}</h3>
+                    <span className="outbox-when" data-when="later">
+                      {giftWhen}
+                    </span>
+                  </div>
+                  <p className="outbox-to">To {name}</p>
+                  <p className="outbox-about">
+                    Opens the finished card with every note inside. Hold on to it
+                    until everyone has signed.
+                  </p>
+                  <OutboxLink
+                    path={`/card/${card.giftToken}`}
+                    label="Gift link"
+                    openLabel="Open the card as the birthday person sees it"
+                    shareTitle={`${name}'s birthday card`}
+                    shareText={`A birthday card for ${name}.`}
+                  />
+                </div>
+              </li>
+            </ul>
+
+            <section className="outbox-private" aria-labelledby="organizer-link-heading">
+              <MailIcon name="lock" className="outbox-message-icon" />
+              <div className="outbox-message-main">
+                <div className="outbox-message-head">
+                  <h3 id="organizer-link-heading">Your organizer link</h3>
+                  <span className="outbox-when" data-when="private">
+                    Private
+                  </span>
+                </div>
+                <p className="outbox-about">
+                  Keep this one to yourself. Open it to read notes as they come in
+                  and remove any you don’t want on the card.
+                  {savedToThisAccount ? " It’s also saved to your account." : null}
+                </p>
+                <OutboxLink
+                  path={`/card/${card.masterToken}`}
+                  label="Organizer link"
+                  openLabel="Open the organizer view"
+                  shareTitle={`${name}'s card (organizer)`}
+                  shareText={`Your organizer link for ${name}'s card. Keep this private.`}
+                />
+              </div>
+            </section>
+          </OsWindow>
+        </AppWindow>
 
         <div className="outbox-side">
-          <OsWindow title={`${name}’s card`} width="17rem" className="outbox-preview" draggable>
-            <div className="outbox-preview-stage" style={{ ["--stage" as string]: stage }}>
-              <CardPreview name={name} stock={parseStock(card.stock)} design={design} compact />
-            </div>
-          </OsWindow>
-
-          {showSave ? (
-            <OsWindow title="Save this card" width="17rem" className="outbox-save" draggable>
-              <div className="outbox-save-body">
-                {savedToThisAccount ? (
-                  <p role="status">
-                    Saved. Find it again in <Link href="/cards">Sent cards</Link>.
-                  </p>
-                ) : organizer ? (
-                  <>
-                    <p>
-                      Save it to {organizer.email} so you can find these links
-                      later. A lost organizer link can’t be recovered on its own.
-                    </p>
-                    {status.saveError === "taken" ? (
-                      <p role="alert" className="outbox-error">
-                        This card is already saved to another account.
-                      </p>
-                    ) : null}
-                    <form action={claimCard}>
-                      <input type="hidden" name="masterToken" value={masterToken} />
-                      <ActionButton pendingLabel="Saving…" className="os-button">
-                        Save to my account
-                      </ActionButton>
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      Sign in with Google to keep this card in Sent. A lost
-                      organizer link can’t be recovered.
-                    </p>
-                    <Link href={signInHref(herePath)} className="os-button">
-                      Save with Google
-                    </Link>
-                  </>
-                )}
+          <AppWindow app="preview">
+            <OsWindow
+              title={`${name}’s card`}
+              width="17rem"
+              className="outbox-preview"
+              draggable
+              closeLabel="Close the card preview"
+            >
+              <div className="outbox-preview-stage" style={{ ["--stage" as string]: stage }}>
+                <CardPreview name={name} stock={parseStock(card.stock)} design={design} compact />
               </div>
             </OsWindow>
+          </AppWindow>
+
+          {showSave ? (
+            <AppWindow app="save">
+              <OsWindow title="Save this card" width="17rem" className="outbox-save" draggable>
+                <div className="outbox-save-body">
+                  {savedToThisAccount ? (
+                    <p role="status">
+                      Saved. Find it again in <Link href="/cards">Sent cards</Link>.
+                    </p>
+                  ) : organizer ? (
+                    <>
+                      <p>
+                        Save it to {organizer.email} so you can find these links
+                        later. A lost organizer link can’t be recovered on its own.
+                      </p>
+                      {status.saveError === "taken" ? (
+                        <p role="alert" className="outbox-error">
+                          This card is already saved to another account.
+                        </p>
+                      ) : null}
+                      <form action={claimCard}>
+                        <input type="hidden" name="masterToken" value={masterToken} />
+                        <ActionButton pendingLabel="Saving…" className="os-button">
+                          Save to my account
+                        </ActionButton>
+                      </form>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        Sign in with Google to keep this card in Sent. A lost
+                        organizer link can’t be recovered.
+                      </p>
+                      <Link href={signInHref(herePath)} className="os-button">
+                        Save with Google
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </OsWindow>
+            </AppWindow>
           ) : null}
         </div>
       </div>

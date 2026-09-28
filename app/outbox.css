@@ -53,6 +53,22 @@
     width: min(100%, 60.5rem);
     max-width: none;
   }
+
+  .outbox-side {
+    grid-column: 2;
+  }
+}
+
+/* Phones: each open window fills the screen, one after the other. */
+@media (max-width: 47.99rem) {
+  .outbox,
+  .outbox-side {
+    display: contents;
+  }
+
+  .outbox-window {
+    order: -2;
+  }
 }
 
 .outbox-head {

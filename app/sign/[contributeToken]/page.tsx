@@ -3,6 +3,7 @@ import { cache } from "react";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Computer from "@/components/os/computer";
+import { AppIcon } from "@/components/os/desktop";
 import { DesktopIcon } from "@/components/os/pixel-icon";
 import { birthdayTiming } from "@/lib/birthday";
 import { getDb } from "@/lib/db";
@@ -48,7 +49,12 @@ export default async function SignPage({ params }: PageParams) {
   return (
     <Computer
       stock={stock}
-      icons={<DesktopIcon icon="compose" label="Start a card" href="/" />}
+      icons={
+        <>
+          <AppIcon app="mail" icon="mail" label="Mail" />
+          <DesktopIcon icon="compose" label="Start a card" href="/" />
+        </>
+      }
       birthday={
         card.birthday
           ? { day: card.birthday, greeting: `It’s ${card.recipientName}’s birthday!` }

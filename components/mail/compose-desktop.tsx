@@ -17,6 +17,7 @@ import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import BlinkDots from "@/components/os/blink-dots";
 import Computer from "@/components/os/computer";
+import { AppIcon, AppWindow } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import { playSound } from "@/components/os/sound";
@@ -101,10 +102,11 @@ export default function ComposeDesktop({
       <Computer
         stock={stock}
         icons={
-          <>
-            <OrganizerIcons signedIn={signedIn} next="/" current="new" />
+          <OrganizerIcons signedIn={signedIn} next="/" current="new">
+            <AppIcon app="compose" icon="compose" label="New card" />
+            <AppIcon app="preview" icon="card" label="Preview" />
             <HomeMailIcon />
-          </>
+          </OrganizerIcons>
         }
       >
         <h1 className="sr-only">Start a birthday card</h1>
@@ -128,90 +130,96 @@ export default function ComposeDesktop({
             setAlert(MISSING_NAME);
           }}
         >
-          <OsWindow
-            title="New message"
-            width="38rem"
-            draggable
-            className="compose-window"
-            toolbar={<ComposeToolbar signedIn={signedIn} introLength={intro.length} />}
-          >
-            <div className="compose-headers">
-              <label htmlFor="recipientName" className="compose-label">
-                For
-              </label>
-              <input
-                ref={nameRef}
-                id="recipientName"
-                name="recipientName"
-                type="text"
-                required
-                maxLength={NAME_MAX}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                autoComplete="off"
-                placeholder="Whose birthday is it?"
-                aria-invalid={alert === MISSING_NAME || undefined}
-                className="os-header-field compose-name"
-              />
-              <label htmlFor="birthday" className="compose-label">
-                Birthday
-              </label>
-              <div className="compose-birthday">
+          <AppWindow app="compose">
+            <OsWindow
+              title="New message"
+              width="38rem"
+              draggable
+              className="compose-window"
+              closeLabel="Close New message and keep the draft"
+              toolbar={<ComposeToolbar signedIn={signedIn} introLength={intro.length} />}
+            >
+              <div className="compose-headers">
+                <label htmlFor="recipientName" className="compose-label">
+                  For
+                </label>
                 <input
-                  id="birthday"
-                  name="birthday"
-                  type="date"
-                  value={birthday}
-                  onChange={(event) => setBirthday(event.target.value)}
-                  aria-describedby="birthday-hint"
-                  data-empty={birthday ? undefined : true}
-                  className="os-header-field compose-date"
+                  ref={nameRef}
+                  id="recipientName"
+                  name="recipientName"
+                  type="text"
+                  required
+                  maxLength={NAME_MAX}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="off"
+                  placeholder="Whose birthday is it?"
+                  aria-invalid={alert === MISSING_NAME || undefined}
+                  className="os-header-field compose-name"
                 />
-                <span id="birthday-hint" className="compose-date-hint">
-                  {signBy ? `Signers are asked to sign by ${signBy}.` : "Optional. Signers get a sign-by date."}
+                <label htmlFor="birthday" className="compose-label">
+                  Birthday
+                </label>
+                <div className="compose-birthday">
+                  <input
+                    id="birthday"
+                    name="birthday"
+                    type="date"
+                    value={birthday}
+                    onChange={(event) => setBirthday(event.target.value)}
+                    aria-describedby="birthday-hint"
+                    data-empty={birthday ? undefined : true}
+                    className="os-header-field compose-date"
+                  />
+                  <span id="birthday-hint" className="compose-date-hint">
+                    {signBy ? `Signers are asked to sign by ${signBy}.` : "Optional. Signers get a sign-by date."}
+                  </span>
+                </div>
+                <span className="compose-label" aria-hidden="true">
+                  Subject
                 </span>
+                <p className="compose-subject" data-empty={trimmed ? undefined : true}>
+                  <span className="sr-only">Subject: </span>
+                  {trimmed ? `Sign ${trimmed}’s birthday card` : "Sign their birthday card"}
+                </p>
               </div>
-              <span className="compose-label" aria-hidden="true">
-                Subject
-              </span>
-              <p className="compose-subject" data-empty={trimmed ? undefined : true}>
-                <span className="sr-only">Subject: </span>
-                {trimmed ? `Sign ${trimmed}’s birthday card` : "Sign their birthday card"}
-              </p>
-            </div>
-            <label htmlFor="intro" className="sr-only">
-              Note to everyone signing, optional
-            </label>
-            <textarea
-              id="intro"
-              name="intro"
-              rows={5}
-              maxLength={INTRO_MAX}
-              value={intro}
-              onChange={(event) => setIntro(event.target.value)}
-              className="compose-body"
-              placeholder={
-                "Add a note for everyone signing, if you like.\nIt’s a surprise, so keep it quiet!"
-              }
-            />
-            <ComposeStationery
-              design={design}
-              stock={stock}
-              onDesign={setDesign}
-              onStock={setStock}
-            />
-          </OsWindow>
+              <label htmlFor="intro" className="sr-only">
+                Note to everyone signing, optional
+              </label>
+              <textarea
+                id="intro"
+                name="intro"
+                rows={5}
+                maxLength={INTRO_MAX}
+                value={intro}
+                onChange={(event) => setIntro(event.target.value)}
+                className="compose-body"
+                placeholder={
+                  "Add a note for everyone signing, if you like.\nIt’s a surprise, so keep it quiet!"
+                }
+              />
+              <ComposeStationery
+                design={design}
+                stock={stock}
+                onDesign={setDesign}
+                onStock={setStock}
+              />
+            </OsWindow>
+          </AppWindow>
 
-          <OsWindow
-            title={trimmed ? `${trimmed}’s card` : "The card"}
-            width="19rem"
-            className="compose-preview"
-            draggable
-          >
-            <div className="compose-preview-stage" style={{ ["--stage" as string]: stage }}>
-              <CardPreview name={name} stock={stock} design={design} compact />
-            </div>
-          </OsWindow>
+          <AppWindow app="preview">
+            <OsWindow
+              title={trimmed ? `${trimmed}’s card` : "The card"}
+              width="19rem"
+              className="compose-preview"
+              draggable
+              closeLabel="Close the card preview"
+            >
+              <div className="compose-preview-stage" style={{ ["--stage" as string]: stage }}>
+                <CardPreview name={name} stock={stock} design={design} compact />
+              </div>
+            </OsWindow>
+          </AppWindow>
         </form>
 
         <HomeMailWindow />

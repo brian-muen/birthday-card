@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import {
   Caveat,
@@ -160,6 +160,9 @@ export const metadata: Metadata = {
   description:
     "Start a birthday card and collect private messages from everyone. Share the finished card with the birthday person when you are ready.",
 };
+
+// The screen runs edge to edge; the menu bar and windows pad for the notch.
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({
   children,

@@ -45,6 +45,14 @@ const ICONS = {
       <path d="M12 7h1v1h-1z" fill="#7bc47f" />
     </>
   ),
+  disk: (
+    <>
+      <path d="M1 1h12l2 2v12H1z" fill="#a8c6e8" />
+      <path d="M4 1h7v5H4zM3 9h10v6H3z" fill={SHEET} />
+      <path d="M1.5 1.5h11.3l1.7 1.7v11.3h-13zM4.5 1.5v4h6v-4M3.5 14.5v-5h9v5" fill="none" stroke={INK} />
+      <path d="M8 2h2v3H8zM5 11h6v1H5zM5 13h4v1H5z" fill={INK} />
+    </>
+  ),
   person: (
     <>
       <path d="M5 2h6v6H5zM2 10h12v5H2z" fill="#f2a7b8" />
@@ -120,11 +128,11 @@ export function PixelIcon({
 }
 
 type DesktopIconTarget =
-  | { href: string; download?: boolean; current?: boolean }
+  | { href: string; download?: boolean }
   | { onClick: () => void }
   | { action: (formData: FormData) => void | Promise<void> };
 
-/** A labelled icon on the desktop that opens a page or runs an action. */
+/** A labelled icon on the desktop that opens a page or runs an action; `AppIcon` opens a window. */
 export function DesktopIcon({
   icon,
   label,
@@ -157,11 +165,7 @@ export function DesktopIcon({
       {body}
     </a>
   ) : (
-    <Link
-      href={target.href}
-      className="os-icon"
-      aria-current={target.current ? "page" : undefined}
-    >
+    <Link href={target.href} className="os-icon">
       {body}
     </Link>
   );

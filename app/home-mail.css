@@ -11,14 +11,15 @@
   right: -0.7rem;
 }
 
+/* Phones: a banner along the bottom, clear of the full-screen window's close box. */
 .home-mail {
-  position: absolute;
+  position: fixed;
   z-index: 25;
-  top: 0.75rem;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
   left: 50%;
   width: min(24rem, calc(100% - 1.5rem));
   translate: -50% 0;
-  transform-origin: 50% 0;
+  transform-origin: 50% 100%;
   animation: home-mail-in 260ms var(--ease-out) 450ms both;
 }
 
@@ -26,8 +27,7 @@
   /* Stacks with the compose windows: whichever was clicked last is on top. */
   .home-mail {
     z-index: auto;
-    top: auto;
-    right: 1.5rem;
+    right: calc(var(--os-icon-rail) + 1rem);
     bottom: 1.5rem;
     left: auto;
     width: 23rem;
@@ -107,22 +107,6 @@
   justify-content: flex-end;
   gap: 0.6rem;
   padding: 0.8rem 1.1rem 1rem;
-}
-
-.home-mail-forget {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
-  text-underline-offset: 0.15em;
-  cursor: var(--cursor-arrow, default);
-}
-
-.home-mail-forget:hover {
-  color: var(--os-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -4,12 +4,12 @@ import Link from "next/link";
 import { flushSync } from "react-dom";
 import { useRef } from "react";
 
+import { focusDesktop } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import { zoomRects } from "@/components/os/zoom-rects";
 import {
   dismissUntilLater,
-  forgetCard,
   showAgain,
   useRememberedMail,
   type RememberedMail,
@@ -49,7 +49,7 @@ function detailFor(card: RememberedMail) {
 
 /** The Mail icon on the home desktop, while this browser remembers a gift link. */
 export function HomeMailIcon() {
-  const { cards } = useRememberedMail();
+  const { cards, later } = useRememberedMail();
   if (cards.length === 0) return null;
   const unread = cards.reduce((sum, card) => sum + card.unread, 0);
 
@@ -58,6 +58,7 @@ export function HomeMailIcon() {
       id={ICON_ID}
       type="button"
       className="os-icon"
+      data-open={later !== cards[0].token || undefined}
       aria-label={unread ? `Mail, ${unread} unread` : "Mail"}
       onClick={(event) => {
         const icon = event.currentTarget;
@@ -94,29 +95,13 @@ export function HomeMailWindow() {
   const [top, ...others] = cards;
   const shown = top != null && later !== top.token;
 
-  function hadFocus() {
-    return rootRef.current?.contains(document.activeElement) ?? false;
-  }
-
   function dismiss() {
     if (!top) return;
-    const refocus = hadFocus();
     const from = rootRef.current?.getBoundingClientRect();
     flushSync(() => dismissUntilLater(top.token));
     const icon = document.getElementById(ICON_ID);
     zoomRects(from, icon);
-    if (refocus) icon?.focus({ preventScroll: true });
-  }
-
-  function forget() {
-    if (!top) return;
-    const refocus = hadFocus();
-    flushSync(() => forgetCard(top.token));
-    if (!refocus) return;
-    const next =
-      document.getElementById(OPEN_ID) ??
-      document.querySelector<HTMLElement>(".os-dock .os-icon");
-    next?.focus({ preventScroll: true });
+    focusDesktop(icon);
   }
 
   return (
@@ -138,11 +123,6 @@ export function HomeMailWindow() {
             draggable
             onClose={dismiss}
             closeLabel="Close until later"
-            status={
-              <button type="button" className="home-mail-forget" onClick={forget}>
-                Forget this card on this computer
-              </button>
-            }
           >
             <div className="home-mail-body">
               <PixelIcon name={top.unread ? "unread" : "mail"} className="home-mail-art" />

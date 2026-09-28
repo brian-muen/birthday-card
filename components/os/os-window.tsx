@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  useContext,
   useEffect,
   useId,
   useLayoutEffect,
@@ -12,6 +12,8 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+
+import { AppCloseContext } from "@/components/os/desktop";
 
 const DRAG_QUERY = "(min-width: 48rem) and (pointer: fine)";
 const STACK_QUERY = "(min-width: 48rem)";
@@ -70,14 +72,14 @@ function readOffset(key: string): Offset | null {
  * status bar. On desktop widths, clicking or focusing a window brings it to
  * the front and dims the title bars behind it. With `draggable`, the title
  * bar moves the window on desktop pointers (remembered for the tab);
- * touch screens keep it in the flow.
+ * touch screens keep it in the flow. Inside an `AppWindow`, the close box
+ * closes the app to the desktop unless `onClose` says otherwise.
  */
 export default function OsWindow({
   title,
   width,
   onClose,
-  closeHref,
-  closeLabel = "Close",
+  closeLabel,
   draggable = false,
   toolbar,
   status,
@@ -88,7 +90,6 @@ export default function OsWindow({
   title: ReactNode;
   width?: string;
   onClose?: () => void;
-  closeHref?: string;
   closeLabel?: string;
   draggable?: boolean;
   toolbar?: ReactNode;
@@ -99,6 +100,8 @@ export default function OsWindow({
 }) {
   const titleId = useId();
   const pathname = usePathname();
+  const closeApp = useContext(AppCloseContext);
+  const close = onClose ?? closeApp;
   const ref = useRef<HTMLElement>(null);
   const offset = useRef<Offset>({ x: 0, y: 0 });
   const drag = useRef<{ x: number; y: number; ox: number; oy: number; bounds: Bounds | null } | null>(
@@ -178,15 +181,19 @@ export default function OsWindow({
     } catch {}
   }
 
-  const closeBox = onClose ? (
-    <button type="button" className="os-close" onClick={onClose} aria-label={closeLabel} />
-  ) : closeHref ? (
-    <Link href={closeHref} className="os-close" aria-label={closeLabel} />
+  const closeBox = close ? (
+    <button
+      type="button"
+      className="os-close"
+      onClick={close}
+      aria-label={closeLabel ?? (typeof title === "string" ? `Close ${title}` : "Close")}
+    />
   ) : null;
 
   return (
     <section
       ref={ref}
+      tabIndex={closeApp ? -1 : undefined}
       className={`os-window ${className}`}
       aria-labelledby={titleId}
       data-draggable={draggable || undefined}

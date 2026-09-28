@@ -28,6 +28,17 @@
     width: min(100%, 58.5rem);
     max-width: none;
   }
+
+  .compose-preview {
+    grid-column: 2;
+  }
+}
+
+/* Phones: each open window fills the screen, one after the other. */
+@media (max-width: 47.99rem) {
+  .compose {
+    display: contents;
+  }
 }
 
 /* ---------- Toolbar ---------- */
