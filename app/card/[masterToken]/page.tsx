@@ -9,7 +9,9 @@ import { messages } from "@/lib/db/schema";
 import { parseDesign } from "@/lib/design";
 import { parsePen } from "@/lib/pen";
 import { parseStock } from "@/lib/stock";
-import CardBook from "./card-book";
+import InboxApp from "./inbox-app";
+import { previewFor, subjectFor } from "./inbox-subject";
+import "../../inbox.css";
 
 type PageParams = { params: Promise<{ masterToken: string }> };
 
@@ -17,6 +19,13 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
   day: "numeric",
   year: "numeric",
+  timeZone: "UTC",
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
 });
 
 const getCard = cache(async (token: string) => {
@@ -54,10 +63,10 @@ export default async function CardPage({ params }: PageParams) {
   });
 
   return (
-    <main className="recipient-page">
+    <>
       <h1 className="sr-only">Happy birthday, {card.recipientName}</h1>
-
-      <CardBook
+      <InboxApp
+        token={token}
         masterToken={canManage ? card.masterToken : ""}
         canManage={canManage}
         recipientName={card.recipientName}
@@ -70,20 +79,13 @@ export default async function CardPage({ params }: PageParams) {
           authorName: note.authorName,
           body: note.body,
           date: dateFormatter.format(note.createdAt),
+          shortDate: shortDateFormatter.format(note.createdAt),
+          subject: subjectFor(note.body),
+          preview: previewFor(note.body),
           pen: parsePen(note.pen),
           image: note.image,
         }))}
       />
-
-      <footer className="recipient-keepsake">
-        <a
-          href={`/card/${token}/pdf`}
-          download
-          className="quiet-link text-[0.9375rem] font-medium"
-        >
-          Save a PDF keepsake
-        </a>
-      </footer>
-    </main>
+    </>
   );
 }

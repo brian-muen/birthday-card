@@ -32,7 +32,6 @@
   --color-rule: var(--rule);
   --color-brass: var(--brass);
   --font-sans: var(--font-ui), var(--cjk-sans);
-  --font-headline: var(--font-display), var(--font-garamond), var(--cjk-serif);
   --font-serif: var(--font-garamond), var(--cjk-serif);
   --font-hand: var(--font-caveat), var(--cjk-hand);
   --font-face-hand: var(--font-caveat);
@@ -115,4 +114,4 @@ select:focus-visible {
 @import "./paper.css";
 @import "./paper-cut.css";
 @import "./page-polish.css";
-@import "./landing.css";
+@import "./os.css";

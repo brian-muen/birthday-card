@@ -1,10 +1,17 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import Computer from "@/components/os/computer";
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
 import { parseStock } from "@/lib/stock";
 import MessageForm from "./message-form";
-import "../../signing.css";
+import "../../reply.css";
+
+const receivedFormat = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
 
 export default async function SignPage({
   params,
@@ -22,25 +29,20 @@ export default async function SignPage({
     notFound();
   }
 
+  const stock = parseStock(card.stock);
+
   return (
-    <main className="signing-page">
-      <header className="signing-heading">
-        <h1>A note for {card.recipientName}</h1>
-        <p>
-          Private. Only they and the organizer will read it. The organizer
-          shares the card when they are ready — nothing is held for a date.
-        </p>
-      </header>
-
-      {card.intro ? (
-        <p className="signing-intro">{card.intro}</p>
-      ) : null}
-
+    <Computer
+      stock={stock}
+      menus={[{ label: "File", items: [{ label: "Start your own card", href: "/" }] }]}
+    >
       <MessageForm
         contributeToken={card.contributeToken}
         recipientName={card.recipientName}
-        stock={parseStock(card.stock)}
+        intro={card.intro?.trim() || null}
+        received={receivedFormat.format(card.createdAt)}
+        stock={stock}
       />
-    </main>
+    </Computer>
   );
 }

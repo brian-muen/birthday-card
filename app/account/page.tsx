@@ -1,8 +1,14 @@
-import OrganizerBar from "@/components/organizer-bar";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { organizerMenus } from "@/components/mail/compose-menus";
+import { MailIcon } from "@/components/mail/outbox-icons";
+import Computer from "@/components/os/computer";
+import OsWindow from "@/components/os/os-window";
+import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { safeNextPath } from "@/lib/safe-next-path";
-import { redirect } from "next/navigation";
-import "@/app/organizer.css";
+import "@/app/signin.css";
 
 export default async function AccountPage({
   searchParams,
@@ -16,26 +22,38 @@ export default async function AccountPage({
   }
 
   return (
-    <>
-      <OrganizerBar />
-      <main className="account-page">
-        <h1>Keep the cards you start</h1>
-        <p className="account-lede">
-          Anyone can make a card without signing in. Google is only so a lost
-          organizer link is not the end of it.
-        </p>
+    <Computer menus={organizerMenus({ signedIn: false, next: nextPath })}>
+      <OsWindow title="Sign in" width="27rem" className="signin" draggable closeHref="/" closeLabel="Close sign in">
+        <div className="signin-body">
+          <PixelIcon name="person" className="signin-icon" />
+          <div className="signin-copy">
+            <h1>Keep the cards you start</h1>
+            <p>
+              Anyone can make a card without signing in. Google just keeps your
+              cards in Sent, so a lost organizer link isn’t the end of it.
+            </p>
+          </div>
+        </div>
         {error ? (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
+          <div className="signin-error">
+            <MailIcon name="alert" className="signin-error-icon" />
+            <p role="alert">{error}</p>
+          </div>
         ) : null}
-        <form action="/api/auth/google" method="get" className="account-google">
+        <form action="/api/auth/google" method="get" className="signin-actions">
           <input type="hidden" name="next" value={nextPath} />
-          <button type="submit" className="ui-button ui-button-primary">
+          <Link href="/" className="os-button" data-variant="quiet">
+            Not now
+          </Link>
+          <button type="submit" className="os-button">
             Continue with Google
           </button>
         </form>
-      </main>
-    </>
+      </OsWindow>
+
+      <div className="os-icons">
+        <DesktopIcon icon="compose" label="New card" href="/" />
+      </div>
+    </Computer>
   );
 }

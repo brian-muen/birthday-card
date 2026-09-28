@@ -44,23 +44,37 @@ const card = await db.query.cards.findFirst({
 });
 ```
 
-## Slack DMs
+## Birthday message
 
-After you create a card, the created page can DM everyone in the Slack
-workspace except the birthday person, with the signing link.
+`scripts/birthday_message.py` prints the usual nudge for a signing link and
+copies it to the clipboard, ready to paste wherever the group talks:
 
-1. Create an app from `slack-app-manifest.yaml` at [api.slack.com/apps](https://api.slack.com/apps) → **Create New App** → **From a manifest**.
-2. Install it to the workspace.
-3. Set `SLACK_BOT_TOKEN` (`xoxb-…`), `SLACK_SIGNING_SECRET`, and
-   `SLACK_NOTIFY_PASSWORD` in `.env.local` and on Vercel.
-4. Optional: `APP_URL` if the signing links should use a host other than `https://manna-birthday-card.vercel.app`.
+```bash
+python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc
+```
 
-Sending DMs requires that password (created page field, or the last word of
-`/card`). Sign and gift links stay public.
+Run it with no arguments to be asked for the name, date, and link.
 
-From Slack:
+Add `--except` with the birthday person's Slack email or member ID to DM
+everyone else in the workspace instead. It lists who will get it and asks
+before sending; `--dry-run` stops after the list. It reads `SLACK_BOT_TOKEN`
+from `.env.local`, and the bot needs `chat:write`, `im:write`, `users:read`, and
+`users:read.email`.
 
-`/card except @name https://manna-birthday-card.vercel.app/sign/… PASSWORD`
+```bash
+python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc --except sarah@example.com
+```
+
+## Demo data
+
+`scripts/seed-demo.mjs` fills the local PGlite database with three cards
+(many notes, one note, none). Stop `next dev` first, then:
+
+```bash
+node scripts/seed-demo.mjs
+```
+
+It prints each card's gift, organizer, and signing paths.
 
 ## Organizer Google sign-in
 

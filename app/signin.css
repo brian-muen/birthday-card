@@ -1,0 +1,70 @@
+/* Sign in: a small dialog on the desktop. */
+
+.signin {
+  margin-block: auto;
+}
+
+.signin-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0;
+}
+
+.signin-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  image-rendering: pixelated;
+}
+
+.signin-copy h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.signin-copy p {
+  margin: 0.45rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.signin-error {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.6rem;
+  margin: 1rem 1.25rem 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--os-ink);
+  background: var(--os-candle);
+}
+
+.signin-error-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.signin-error p {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.signin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
+@media (max-width: 26rem) {
+  .signin-actions > * {
+    flex: 1;
+  }
+}

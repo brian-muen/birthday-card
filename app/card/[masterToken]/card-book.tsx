@@ -212,6 +212,8 @@ function faceStock(face: Face) {
   return "liner";
 }
 
+const OPEN_TO_NOTE_DELAY = 900;
+
 export default function CardBook({
   masterToken,
   canManage,
@@ -220,6 +222,7 @@ export default function CardBook({
   notes,
   stock,
   design = "plain",
+  openToNote = null,
 }: {
   masterToken: string;
   canManage: boolean;
@@ -229,6 +232,8 @@ export default function CardBook({
   notes: Note[];
   stock: string;
   design?: string;
+  /** Lands closed, then turns to this note; opens there at once under reduced motion. */
+  openToNote?: number | null;
 }) {
   const dedicationText = resolveDedication(dedication);
   const hasDedication = Boolean(dedicationText);
@@ -251,7 +256,14 @@ export default function CardBook({
 
   // The viewed face survives a resize that swaps the leaf model; the
   // settled place is derived from it.
-  const [view, setView] = useState<View>({ kind: "cover" });
+  const hasOpenNote =
+    openToNote !== null && notes.some((note) => note.id === openToNote);
+  const [view, setView] = useState<View>(() =>
+    hasOpenNote && reducedMotion
+      ? { kind: "note", id: openToNote as number }
+      : { kind: "cover" },
+  );
+  const pendingOpen = useRef(hasOpenNote && !reducedMotion ? openToNote : null);
   const [touched, setTouched] = useState(false);
   const place = placeForView(leaves, spread, view, last);
   const closed = place === 0;
@@ -291,6 +303,20 @@ export default function CardBook({
     const at = target();
     go(at <= 1 ? 0 : at - 1);
   }, [go, target]);
+
+  const turnToNote = useRef<(id: number) => void>(() => {});
+  useLayoutEffect(() => {
+    turnToNote.current = (id) => {
+      if (target() !== 0) return;
+      go(placeForView(leaves, spread, { kind: "note", id }, last));
+    };
+  });
+  useEffect(() => {
+    const id = pendingOpen.current;
+    if (id === null) return;
+    const timer = window.setTimeout(() => turnToNote.current(id), OPEN_TO_NOTE_DELAY);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

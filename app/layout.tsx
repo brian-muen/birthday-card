@@ -15,13 +15,13 @@ import {
   Noto_Serif_SC,
   Noto_Serif_TC,
   Bricolage_Grotesque,
-  Fraunces,
+  Pixelify_Sans,
   Satisfy,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
 
-// Bricolage Grotesque is the interface and Fraunces its headlines.
+// Bricolage Grotesque is everything a person reads or types on the computer.
 // Garamond is only printed on the card.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
@@ -35,11 +35,10 @@ const ui = Bricolage_Grotesque({
   axes: ["opsz"],
 });
 
-const display = Fraunces({
-  variable: "--font-display",
+// The computer's chrome: menu bar, window titles, buttons.
+const pixel = Pixelify_Sans({
+  variable: "--font-pixel",
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["SOFT", "opsz"],
 });
 
 // Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
@@ -138,7 +137,7 @@ const maShan = Ma_Shan_Zheng({
 
 const fontVariables = [
   ui.variable,
-  display.variable,
+  pixel.variable,
   garamond.variable,
   caveat.variable,
   greatVibes.variable,

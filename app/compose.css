@@ -1,0 +1,325 @@
+/* Compose: the organizer writes the invitation as a "New message", picks
+   stationery, and watches the attached card change beside it. */
+
+.compose-screen {
+  display: contents;
+}
+
+.compose {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 38rem;
+  margin-block: auto;
+}
+
+@media (max-width: 71.99rem) {
+  .compose-preview.os-window {
+    max-width: none;
+  }
+}
+
+@media (min-width: 72rem) {
+  .compose {
+    grid-template-columns: minmax(0, 38rem) 19rem;
+    align-items: start;
+    gap: 1.5rem;
+    width: min(100%, 58.5rem);
+    max-width: none;
+  }
+}
+
+/* ---------- Toolbar ---------- */
+
+.compose-send svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.compose-send:disabled {
+  background: color-mix(in oklab, var(--os-accent) 70%, var(--os-chrome));
+  color: var(--os-sheet);
+}
+
+.compose-toolbar-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+}
+
+/* ---------- Headers ---------- */
+
+.compose-headers {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--os-ink);
+  background: var(--os-chrome);
+}
+
+.compose-label {
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.9375rem;
+  text-align: right;
+}
+
+.compose-name {
+  font-size: 1.0625rem;
+}
+
+.compose-name[aria-invalid="true"] {
+  border-color: var(--os-accent);
+  box-shadow: inset 1px 1px 0 var(--os-shade), 0 0 0 1px var(--os-accent);
+}
+
+.compose-subject {
+  min-width: 0;
+  margin: 0;
+  padding: 0.2rem 0.55rem;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compose-subject[data-empty] {
+  font-weight: 400;
+  color: color-mix(in oklab, var(--os-ink) 45%, var(--os-chrome));
+}
+
+/* ---------- Body ---------- */
+
+.compose-body {
+  display: block;
+  width: 100%;
+  min-height: 8.5rem;
+  padding: 0.9rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--os-ink);
+  background: var(--os-sheet);
+  color: var(--os-ink);
+  font: 1rem/1.5 var(--font-ui), var(--cjk-sans), sans-serif;
+  resize: vertical;
+}
+
+.compose-body::placeholder {
+  color: color-mix(in oklab, var(--os-ink) 42%, transparent);
+}
+
+.compose-body:focus-visible {
+  outline: 2px solid var(--os-ink);
+  outline-offset: -4px;
+}
+
+/* ---------- Stationery ---------- */
+
+.compose-stationery {
+  padding: 0.85rem 1rem 1.1rem;
+  background: var(--os-chrome);
+}
+
+.compose-stationery-title {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.compose-set {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.compose-set + .compose-set {
+  margin-top: 0.95rem;
+}
+
+.compose-legend {
+  margin-bottom: 0.5rem;
+  padding: 0;
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.875rem;
+}
+
+.compose-legend span {
+  margin-left: 0.4rem;
+  color: color-mix(in oklab, var(--os-ink) 60%, var(--os-chrome));
+}
+
+.compose-covers {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.6rem;
+  padding: 4px;
+}
+
+.compose-cover {
+  display: block;
+  min-width: 0;
+}
+
+.compose-thumb.design-thumbnail {
+  aspect-ratio: 5 / 7;
+  margin: 0;
+  border: 1px solid var(--os-ink);
+  border-radius: 2px;
+  background: var(--card-stock, var(--os-sheet));
+  transition: none;
+}
+
+.compose-cover:has(input:checked) .compose-thumb,
+.compose-paper:has(input:checked) .compose-swatch {
+  box-shadow:
+    0 0 0 2px var(--os-chrome),
+    0 0 0 4px var(--os-ink);
+}
+
+.compose-cover:has(input:focus-visible) .compose-thumb,
+.compose-paper:has(input:focus-visible) .compose-swatch {
+  outline: 2px dotted var(--os-ink);
+  outline-offset: 6px;
+}
+
+.compose-cover:active .compose-thumb,
+.compose-paper:active .compose-swatch {
+  translate: 1px 1px;
+}
+
+.compose-papers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  padding: 4px;
+}
+
+.compose-paper {
+  display: block;
+}
+
+.compose-swatch {
+  display: block;
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid var(--os-ink);
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 0 rgb(255 255 255 / 0.55);
+}
+
+.compose-count {
+  margin-left: auto;
+  font-size: 0.8125rem;
+}
+
+.compose-progress {
+  display: block;
+  flex: 0 1 9rem;
+  height: 0.75rem;
+  padding: 1px;
+  border: 1px solid var(--os-ink);
+  background: var(--os-sheet);
+}
+
+.compose-progress span {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--os-ink) 0 5px,
+    transparent 5px 7px
+  );
+  animation: compose-progress 1.6s var(--ease-out) forwards;
+}
+
+@keyframes compose-progress {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 6% 0 0);
+  }
+}
+
+/* ---------- Preview ---------- */
+
+.compose-preview-stage {
+  padding: 1.35rem 1.25rem 0.9rem;
+  background: var(--stage);
+  transition: background-color 400ms var(--ease-out);
+}
+
+.compose-preview .card-frame {
+  width: min(13.5rem, 100%);
+  min-width: 0;
+}
+
+.compose-preview .card-scrub {
+  margin-top: 1rem;
+}
+
+/* ---------- Alert ---------- */
+
+.compose-alert {
+  position: fixed;
+  z-index: 60;
+  top: 38%;
+  left: 50%;
+  width: calc(100vw - 2rem);
+  translate: -50% -50%;
+  box-shadow: 5px 5px 0 var(--os-ink);
+}
+
+.compose-alert-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem;
+  padding: 1.1rem 1.1rem 1rem;
+}
+
+.compose-alert-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.compose-alert-body p {
+  margin: 0.3rem 0 0;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.compose-alert-body .os-button {
+  grid-column: 1 / -1;
+  justify-self: end;
+  min-width: 5.5rem;
+}
+
+@media (max-width: 34rem) {
+  .compose-headers {
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    padding-inline: 0.7rem;
+  }
+
+  .compose-covers {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compose-progress {
+    display: none;
+  }
+
+  .compose-preview-stage {
+    transition: none;
+  }
+
+  .compose-cover:active .compose-thumb,
+  .compose-paper:active .compose-swatch {
+    translate: none;
+  }
+}

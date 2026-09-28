@@ -1,15 +1,36 @@
-export function LogoMark({ className = "" }: { className?: string }) {
+const ENVELOPE = "M2 6h12v8H2z";
+const OUTLINE = "M2.5 6.5h11v7h-11z";
+const FLAP = "M3 7h1v1H3zM12 7h1v1h-1zM4 8h1v1H4zM11 8h1v1h-1zM5 9h1v1H5zM10 9h1v1h-1zM6 10h1v1H6zM9 10h1v1H9z";
+const SEAL = "M7 10h2v2H7z";
+const CANDLE = "M7 3h2v3H7z";
+const FLAME = "M7 1h1v1H7zM7 2h2v1H7z";
+
+/**
+ * Birthday Mail: an envelope with a candle tucked in. Drawn on a 16-pixel
+ * grid so it stays crisp in the menu bar; `tile` sets it on the cinnabar
+ * square used for the favicon.
+ */
+export function LogoMark({
+  className = "",
+  tile = false,
+}: {
+  className?: string;
+  tile?: boolean;
+}) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <path d="M17 5.6 26.6 3.7c.8-.15 1.4.4 1.4 1.2v21c0 .7-.5 1.3-1.2 1.4L17 28.6Z" fill="#e7b1a5" />
-      <path d="M7.4 13.4h9.2v8.2H7.4Z" fill="#f8eadc" />
-      <circle cx="12.6" cy="15.6" r="2.1" fill="#e9a23b" />
-      <path d="M7.4 21.6v-2.4c1.6-1.9 3.4-2.1 5.1-.9 1.3.9 2.7.8 4.1-.4v3.7Z" fill="#d97a67" />
-      <path
-        fillRule="evenodd"
-        d="M5.8 5h12.4A1.8 1.8 0 0 1 20 6.8v20.4a1.8 1.8 0 0 1-1.8 1.8H5.8A1.8 1.8 0 0 1 4 27.2V6.8A1.8 1.8 0 0 1 5.8 5ZM7.4 21.6h9.2v-8.1a4.6 4.6 0 0 0-9.2 0Z"
-        fill="#b33a2e"
-      />
+    <svg
+      viewBox="0 0 16 16"
+      className={className}
+      shapeRendering="crispEdges"
+      aria-hidden="true"
+    >
+      {tile ? <rect width="16" height="16" rx="3" fill="#b33a2e" /> : null}
+      <path d={CANDLE} fill="#f2a7b8" />
+      <path d={FLAME} fill={tile ? "#f5cf4b" : "#e9a23b"} />
+      <path d={ENVELOPE} fill="#fffdf8" />
+      <path d={OUTLINE} fill="none" stroke="#1f1b2e" />
+      <path d={FLAP} fill="#1f1b2e" />
+      <path d={SEAL} fill="#b33a2e" />
     </svg>
   );
 }
