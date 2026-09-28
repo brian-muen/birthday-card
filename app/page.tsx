@@ -14,17 +14,19 @@ export default async function Home({
   searchParams: Promise<{
     error?: string;
     recipientName?: string;
+    birthday?: string;
     stock?: string;
     design?: string;
   }>;
 }) {
-  const { error, recipientName, stock, design } = await searchParams;
+  const { error, recipientName, birthday, stock, design } = await searchParams;
   const organizer = await getCurrentOrganizer();
   return (
     <ComposeDesktop
       signedIn={organizer != null}
       error={error}
       initialName={recipientName ?? ""}
+      initialBirthday={birthday ?? ""}
       initialStock={parseStock(stock)}
       initialDesign={pickerDesign(design)}
     />

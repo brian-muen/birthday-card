@@ -7,6 +7,7 @@ import { ensureGiftToken, findCardByToken, isMasterLink } from "@/lib/card-acces
 import { getDb } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
 import { parseDesign } from "@/lib/design";
+import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parsePen } from "@/lib/pen";
 import { parseStock } from "@/lib/stock";
 import InboxApp from "./inbox-app";
@@ -55,6 +56,9 @@ export default async function CardPage({ params }: PageParams) {
   if (!card) notFound();
 
   const canManage = isMasterLink(card, token);
+  // Organizers preview the gift link from their outbox; only the recipient's visits count.
+  const organizer = canManage || card.organizerId == null ? null : await getCurrentOrganizer();
+  const remember = !canManage && organizer?.id !== card.organizerId;
 
   const db = await getDb();
   const notes = await db.query.messages.findMany({
@@ -69,6 +73,7 @@ export default async function CardPage({ params }: PageParams) {
         token={token}
         masterToken={canManage ? card.masterToken : ""}
         canManage={canManage}
+        remember={remember}
         recipientName={card.recipientName}
         design={parseDesign(card.design)}
         intro={card.intro}

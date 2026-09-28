@@ -5,12 +5,20 @@ import { useFormStatus } from "react-dom";
 
 import { createCard } from "@/app/actions/create-card";
 import CardPreview from "@/components/card-preview";
-import { organizerMenus } from "@/components/mail/compose-menus";
+import {
+  saveComposeDraft,
+  takeComposeDraft,
+  type ComposeDraft,
+} from "@/components/mail/compose-draft";
+import { HomeMailIcon, HomeMailWindow } from "@/components/mail/home-mail";
+import { OrganizerIcons } from "@/components/mail/organizer-icons";
+import ComposeSignIn from "@/components/mail/compose-signin";
 import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import Computer from "@/components/os/computer";
 import OsWindow from "@/components/os/os-window";
-import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
+import { PixelIcon } from "@/components/os/pixel-icon";
+import { signByDay } from "@/lib/birthday";
 import type { DesignId } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import { stockHex, type StockId } from "@/lib/stock";
@@ -25,22 +33,27 @@ export default function ComposeDesktop({
   signedIn,
   error,
   initialName,
+  initialBirthday,
   initialStock,
   initialDesign,
 }: {
   signedIn: boolean;
   error?: string;
   initialName: string;
+  initialBirthday: string;
   initialStock: StockId;
   initialDesign: DesignId;
 }) {
   const [name, setName] = useState(initialName);
+  const [birthday, setBirthday] = useState(initialBirthday);
   const [stock, setStock] = useState(initialStock);
   const [design, setDesign] = useState(initialDesign);
   const [intro, setIntro] = useState("");
   const [alert, setAlert] = useState(error ?? null);
   const [shownError, setShownError] = useState(error);
+  const [signInOpen, setSignInOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  const savedDraft = useRef<ComposeDraft | null | undefined>(undefined);
 
   if (error !== shownError) {
     setShownError(error);
@@ -48,6 +61,7 @@ export default function ComposeDesktop({
   }
 
   const trimmed = name.trim();
+  const signBy = birthday ? signByDay(birthday) : "";
   const stage = isPaperCut(design) ? paperCut(design).stage : PAINTING_STAGE;
 
   const dismissAlert = useCallback(() => {
@@ -55,15 +69,53 @@ export default function ComposeDesktop({
     nameRef.current?.focus();
   }, []);
 
+  const dismissSignIn = useCallback(() => {
+    setSignInOpen(false);
+    nameRef.current?.focus();
+  }, []);
+
+  // The ref keeps the draft through Strict Mode's second effect run, after
+  // the save effect below has already cleared storage.
+  useEffect(() => {
+    if (savedDraft.current === undefined) savedDraft.current = takeComposeDraft();
+    const draft = savedDraft.current;
+    if (!draft) return;
+    const restore = window.setTimeout(() => {
+      setName(draft.name);
+      setBirthday(draft.birthday);
+      setIntro(draft.intro);
+      setStock(draft.stock);
+      setDesign(draft.design);
+    }, 0);
+    return () => window.clearTimeout(restore);
+  }, []);
+
+  useEffect(() => {
+    if (!signedIn) saveComposeDraft({ name, birthday, intro, stock, design });
+  }, [signedIn, name, birthday, intro, stock, design]);
+
   return (
     <div className="compose-screen" style={{ ["--wallpaper" as string]: stockHex(stock) }}>
-      <Computer menus={organizerMenus({ signedIn })}>
+      <Computer
+        icons={
+          <>
+            <OrganizerIcons signedIn={signedIn} next="/" current="new" />
+            <HomeMailIcon />
+          </>
+        }
+      >
         <h1 className="sr-only">Start a birthday card</h1>
         <form
           action={createCard}
           noValidate
           className="compose"
           onSubmit={(event) => {
+            if (!signedIn) {
+              event.preventDefault();
+              setAlert(null);
+              setSignInOpen(true);
+              return;
+            }
             if (trimmed) {
               setAlert(null);
               return;
@@ -77,7 +129,7 @@ export default function ComposeDesktop({
             width="38rem"
             draggable
             className="compose-window"
-            toolbar={<ComposeToolbar introLength={intro.length} />}
+            toolbar={<ComposeToolbar signedIn={signedIn} introLength={intro.length} />}
           >
             <div className="compose-headers">
               <label htmlFor="recipientName" className="compose-label">
@@ -97,6 +149,24 @@ export default function ComposeDesktop({
                 aria-invalid={alert === MISSING_NAME || undefined}
                 className="os-header-field compose-name"
               />
+              <label htmlFor="birthday" className="compose-label">
+                Birthday
+              </label>
+              <div className="compose-birthday">
+                <input
+                  id="birthday"
+                  name="birthday"
+                  type="date"
+                  value={birthday}
+                  onChange={(event) => setBirthday(event.target.value)}
+                  aria-describedby="birthday-hint"
+                  data-empty={birthday ? undefined : true}
+                  className="os-header-field compose-date"
+                />
+                <span id="birthday-hint" className="compose-date-hint">
+                  {signBy ? `Signers are asked to sign by ${signBy}.` : "Optional. Signers get a sign-by date."}
+                </span>
+              </div>
               <span className="compose-label" aria-hidden="true">
                 Subject
               </span>
@@ -117,7 +187,7 @@ export default function ComposeDesktop({
               onChange={(event) => setIntro(event.target.value)}
               className="compose-body"
               placeholder={
-                "Add a note for everyone signing, if you like.\nThe party’s on Saturday, so please sign by Friday."
+                "Add a note for everyone signing, if you like.\nIt’s a surprise, so keep it quiet!"
               }
             />
             <ComposeStationery
@@ -140,21 +210,17 @@ export default function ComposeDesktop({
           </OsWindow>
         </form>
 
+        <HomeMailWindow />
         {alert ? <ComposeAlert message={alert} onDismiss={dismissAlert} /> : null}
-
-        <div className="os-icons">
-          {signedIn ? (
-            <DesktopIcon icon="folder" label="Sent" href="/cards" />
-          ) : (
-            <DesktopIcon icon="person" label="Account" href="/account" />
-          )}
-        </div>
+        {signInOpen ? (
+          <ComposeSignIn hasDraft={Boolean(trimmed || birthday || intro.trim())} onDismiss={dismissSignIn} />
+        ) : null}
       </Computer>
     </div>
   );
 }
 
-function ComposeToolbar({ introLength }: { introLength: number }) {
+function ComposeToolbar({ signedIn, introLength }: { signedIn: boolean; introLength: number }) {
   const { pending } = useFormStatus();
   return (
     <>
@@ -165,15 +231,19 @@ function ComposeToolbar({ introLength }: { introLength: number }) {
         disabled={pending}
         aria-busy={pending}
       >
-        <PixelIcon name="mail" />
-        {pending ? "Sending…" : "Send"}
+        <PixelIcon name={signedIn ? "mail" : "person"} />
+        {pending ? "Sending…" : signedIn ? "Send" : "Sign in to send"}
       </button>
       {pending ? (
         <span className="compose-progress" aria-hidden="true">
           <span />
         </span>
       ) : (
-        <p className="compose-toolbar-note">Sending gives you the links to share.</p>
+        <p className="compose-toolbar-note">
+          {signedIn
+            ? "Sending gives you the links to share."
+            : "Organizers sign in with Google first."}
+        </p>
       )}
       {introLength > INTRO_MAX - 100 ? (
         <span className="compose-count">

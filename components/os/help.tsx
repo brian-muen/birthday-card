@@ -3,6 +3,7 @@
 import { useRef } from "react";
 
 import OsWindow from "@/components/os/os-window";
+import { PixelIcon } from "@/components/os/pixel-icon";
 
 const QUESTIONS = [
   {
@@ -11,7 +12,7 @@ const QUESTIONS = [
   },
   {
     q: "How do I start a card?",
-    a: "Write a new message on the home screen: who it’s for, an optional note for the people signing, and a cover and paper. Send gives you the links to share.",
+    a: "Write a new message on the home screen: who it’s for, an optional note for the people signing, and a cover and paper. Sign in with Google if you haven’t, then Send gives you the links to share.",
   },
   {
     q: "What are the three links for?",
@@ -23,7 +24,7 @@ const QUESTIONS = [
   },
   {
     q: "When does the birthday person get the card?",
-    a: "When the organizer sends them the gift link. Nothing is scheduled; sharing the link is the delivery.",
+    a: "When the organizer sends them the gift link. Nothing is scheduled: the birthday on the card only tells signers when to sign by, and sharing the link is the delivery.",
   },
   {
     q: "What can a note include?",
@@ -39,11 +40,11 @@ const QUESTIONS = [
   },
   {
     q: "Can I keep a copy?",
-    a: "Yes. Save PDF keepsake, in the File menu or on the desktop of the card, downloads the whole card.",
+    a: "Yes. The Keepsake icon along the bottom of the card’s screen downloads the whole card as a PDF. On the paper card, it’s Save PDF keepsake.",
   },
   {
     q: "Do I need an account?",
-    a: "No. Signing and reading never need one. Organizers can sign in with Google to save a card and find its links again; otherwise a lost organizer link can’t be recovered.",
+    a: "Only to start a card. Organizers sign in with Google, and every card they start stays in Sent, so its links can always be found again. Signing a card and opening one never need an account.",
   },
 ];
 
@@ -54,12 +55,12 @@ export default function HelpButton() {
     <>
       <button
         type="button"
-        className="os-menu-trigger os-help-trigger"
-        aria-label="Help"
+        className="os-icon os-help-trigger"
         aria-haspopup="dialog"
         onClick={() => dialogRef.current?.showModal()}
       >
-        ?
+        <PixelIcon name="help" />
+        <span className="os-icon-label">Help</span>
       </button>
       <dialog
         ref={dialogRef}

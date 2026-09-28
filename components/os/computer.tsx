@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-import MenuBar, { type Menu } from "@/components/os/menu-bar";
+import HelpButton from "@/components/os/help";
+import MenuBar from "@/components/os/menu-bar";
 import { stockHex } from "@/lib/stock";
 
 /**
@@ -9,17 +10,18 @@ import { stockHex } from "@/lib/stock";
  * screen is the viewport.
  *
  * `stock` tints the wallpaper from the card's paper, so the desktop always
- * belongs to the card being made or read.
+ * belongs to the card being made or read. `icons` are the page's desktop
+ * icons, lined up along the bottom of the screen with Help at the end.
  */
 export default function Computer({
   stock,
-  menus = [],
+  icons,
   status,
   chin = "Birthday Mail",
   children,
 }: {
   stock?: string;
-  menus?: Menu[];
+  icons?: ReactNode;
   status?: ReactNode;
   chin?: ReactNode;
   children: ReactNode;
@@ -31,8 +33,12 @@ export default function Computer({
           className="computer-screen"
           style={stock ? { ["--wallpaper" as string]: stockHex(stock) } : undefined}
         >
-          <MenuBar menus={menus} status={status} />
+          <MenuBar status={status} />
           <main className="os-desktop">{children}</main>
+          <nav className="os-dock" aria-label="Desktop">
+            {icons}
+            <HelpButton />
+          </nav>
         </div>
         <div className="computer-chin" aria-hidden>
           <span>{chin}</span>

@@ -2,11 +2,12 @@ import { count, desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { organizerMenus } from "@/components/mail/compose-menus";
+import { OrganizerIcons } from "@/components/mail/organizer-icons";
 import CoverThumb from "@/components/mail/outbox-thumb";
 import Computer from "@/components/os/computer";
 import OsWindow from "@/components/os/os-window";
-import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
+import { PixelIcon } from "@/components/os/pixel-icon";
+import { formatBirthday } from "@/lib/birthday";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
@@ -54,11 +55,11 @@ export default async function CardsPage() {
   const notesByCard = new Map(tallies.map((row) => [row.cardId, row.n]));
 
   return (
-    <Computer menus={organizerMenus({ signedIn: true })}>
+    <Computer icons={<OrganizerIcons signedIn current="sent" />}>
       <h1 className="sr-only">Sent cards</h1>
       <OsWindow
         title="Sent"
-        width="52rem"
+        width="44rem"
         className="outbox-folder"
         draggable
         toolbar={
@@ -80,10 +81,7 @@ export default async function CardsPage() {
           <div className="outbox-empty">
             <PixelIcon name="folder" className="outbox-empty-icon" />
             <h2>Nothing in Sent yet</h2>
-            <p>
-              Cards you start while signed in land here, along with any you save
-              from a card’s links page.
-            </p>
+            <p>Every card you start lands here, links and all.</p>
             <Link href="/" className="os-button">
               New card
             </Link>
@@ -110,6 +108,11 @@ export default async function CardsPage() {
                       />
                       <span className="outbox-row-name">{card.recipientName}</span>
                       <span className="outbox-row-subject">
+                        {card.birthday ? (
+                          <span className="outbox-row-tag">
+                            Birthday {formatBirthday(card.birthday, "short")}
+                          </span>
+                        ) : null}
                         Sign {card.recipientName}’s birthday card
                       </span>
                       <span className="outbox-row-notes" data-none={notes === 0 || undefined}>
@@ -126,11 +129,6 @@ export default async function CardsPage() {
           </>
         )}
       </OsWindow>
-
-      <div className="os-icons">
-        <DesktopIcon icon="compose" label="New card" href="/" />
-        <DesktopIcon icon="folder" label="Sent" href="/cards" current />
-      </div>
     </Computer>
   );
 }

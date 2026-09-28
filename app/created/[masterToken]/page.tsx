@@ -5,12 +5,13 @@ import { count, eq } from "drizzle-orm";
 import { claimCard } from "@/app/actions/claim-card";
 import ActionButton from "@/components/action-button";
 import CardPreview from "@/components/card-preview";
-import { organizerMenus, signInHref } from "@/components/mail/compose-menus";
+import { OrganizerIcons, signInHref } from "@/components/mail/organizer-icons";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import OutboxLink from "@/components/mail/outbox-link";
 import Computer from "@/components/os/computer";
 import OsWindow from "@/components/os/os-window";
-import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
+import { PixelIcon } from "@/components/os/pixel-icon";
+import { birthdayTiming } from "@/lib/birthday";
 import { ensureGiftToken } from "@/lib/card-access";
 import { getDb } from "@/lib/db";
 import { cards, messages } from "@/lib/db/schema";
@@ -66,14 +67,22 @@ export default async function CardCreated({
   const name = card.recipientName;
   const herePath = `/created/${masterToken}`;
   const savedToThisAccount = organizer != null && card.organizerId === organizer.id;
-  const claimedBySomeoneElse = card.organizerId != null && card.organizerId !== organizer?.id;
+  // Only cards started before sign-in was required can still be saved.
+  const showSave = card.organizerId == null || (savedToThisAccount && status.saved);
   const design = parseDesign(card.design);
   const stage = isPaperCut(design) ? paperCut(design).stage : "#e4dcd2";
+  const birthday = card.birthday ? birthdayTiming(card.birthday) : null;
+  const giftWhen =
+    birthday?.when === "upcoming"
+      ? `Send on ${birthday.day}`
+      : birthday?.when === "today"
+        ? "Send today"
+        : "Send when the card is ready";
 
   return (
     <Computer
       stock={card.stock}
-      menus={organizerMenus({ signedIn: organizer != null, next: herePath })}
+      icons={<OrganizerIcons signedIn={organizer != null} next={herePath} />}
     >
       <div className="outbox">
         <OsWindow
@@ -84,6 +93,7 @@ export default async function CardCreated({
           status={
             <>
               <span>{noteCountLabel(noteCount)}</span>
+              {birthday ? <span>Birthday {birthday.day}</span> : null}
               {card.createdAt ? <span>Started {startedFormat.format(card.createdAt)}</span> : null}
             </>
           }
@@ -109,13 +119,18 @@ export default async function CardCreated({
                 <p className="outbox-to">To everyone signing</p>
                 <p className="outbox-about">
                   Everyone who opens it can write a note in the card.
+                  {birthday?.signBy ? ` It asks them to sign by ${birthday.signBy}.` : null}
                 </p>
                 <OutboxLink
                   path={`/sign/${card.contributeToken}`}
                   label="Signing link"
                   openLabel="Open the signing page"
                   shareTitle={`Sign ${name}'s birthday card`}
-                  shareText={`Write a private note in ${name}'s birthday card.`}
+                  shareText={
+                    birthday?.signBy
+                      ? `Write a private note in ${name}'s birthday card by ${birthday.signBy}.`
+                      : `Write a private note in ${name}'s birthday card.`
+                  }
                 />
               </div>
             </li>
@@ -125,7 +140,7 @@ export default async function CardCreated({
                 <div className="outbox-message-head">
                   <h3>Happy birthday, {name}</h3>
                   <span className="outbox-when" data-when="later">
-                    Send when the card is ready
+                    {giftWhen}
                   </span>
                 </div>
                 <p className="outbox-to">To {name}</p>
@@ -176,13 +191,12 @@ export default async function CardCreated({
             </div>
           </OsWindow>
 
-          {claimedBySomeoneElse ? null : (
+          {showSave ? (
             <OsWindow title="Save this card" width="17rem" className="outbox-save" draggable>
               <div className="outbox-save-body">
                 {savedToThisAccount ? (
-                  <p role={status.saved ? "status" : undefined}>
-                    {status.saved ? "Saved. Find it again in " : "This card is in "}
-                    <Link href="/cards">Sent cards</Link>.
+                  <p role="status">
+                    Saved. Find it again in <Link href="/cards">Sent cards</Link>.
                   </p>
                 ) : organizer ? (
                   <>
@@ -205,8 +219,8 @@ export default async function CardCreated({
                 ) : (
                   <>
                     <p>
-                      Optional: sign in with Google to keep this card in Sent. A
-                      lost organizer link can’t be recovered.
+                      Sign in with Google to keep this card in Sent. A lost
+                      organizer link can’t be recovered.
                     </p>
                     <Link href={signInHref(herePath)} className="os-button">
                       Save with Google
@@ -215,13 +229,8 @@ export default async function CardCreated({
                 )}
               </div>
             </OsWindow>
-          )}
+          ) : null}
         </div>
-      </div>
-
-      <div className="os-icons">
-        <DesktopIcon icon="compose" label="New card" href="/" />
-        {organizer ? <DesktopIcon icon="folder" label="Sent" href="/cards" /> : null}
       </div>
     </Computer>
   );

@@ -51,6 +51,25 @@ const ICONS = {
       <path d="M5.5 2.5h5v5h-5zM2.5 10.5h11v4h-11z" fill="none" stroke={INK} />
     </>
   ),
+  signout: (
+    <>
+      <path d="M2 1h8v14H2z" fill={SHEET} />
+      <path d="M2.5 1.5h7v13h-7z" fill="none" stroke={INK} />
+      <path d="M4 3h4v10H4z" fill="#a8c6e8" />
+      <path d="M6 8h1v1H6z" fill={INK} />
+      <path d="M8 7h4v2H8zM12 5h1v6h-1zM13 6h1v4h-1zM14 7h1v2h-1z" fill="#b33a2e" />
+    </>
+  ),
+  help: (
+    <>
+      <path d="M1 1h14v11H1z" fill="#f5cf4b" />
+      <path d="M1.5 1.5h13v10h-13z" fill="none" stroke={INK} />
+      <path
+        d="M3 12h3v1H3zM3 13h2v1H3zM3 14h1v1H3zM6 3h4v1H6zM5 4h1v1H5zM10 4h1v2h-1zM9 6h1v1H9zM7 7h2v1H7zM7 9h2v1H7z"
+        fill={INK}
+      />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type PixelIconName = keyof typeof ICONS;
@@ -74,32 +93,49 @@ export function PixelIcon({
   );
 }
 
-/** A labelled icon on the desktop that opens a page. */
+type DesktopIconTarget =
+  | { href: string; download?: boolean; current?: boolean }
+  | { onClick: () => void }
+  | { action: (formData: FormData) => void | Promise<void> };
+
+/** A labelled icon on the desktop that opens a page or runs an action. */
 export function DesktopIcon({
   icon,
   label,
-  href,
-  current = false,
-  download = false,
-}: {
-  icon: PixelIconName;
-  label: string;
-  href: string;
-  current?: boolean;
-  download?: boolean;
-}) {
+  ...target
+}: { icon: PixelIconName; label: string } & DesktopIconTarget) {
   const body = (
     <>
       <PixelIcon name={icon} />
       <span className="os-icon-label">{label}</span>
     </>
   );
-  return download ? (
-    <a href={href} download className="os-icon">
+  if ("action" in target) {
+    return (
+      <form action={target.action} className="os-icon-form">
+        <button type="submit" className="os-icon">
+          {body}
+        </button>
+      </form>
+    );
+  }
+  if ("onClick" in target) {
+    return (
+      <button type="button" className="os-icon" onClick={target.onClick}>
+        {body}
+      </button>
+    );
+  }
+  return target.download ? (
+    <a href={target.href} download className="os-icon">
       {body}
     </a>
   ) : (
-    <Link href={href} className="os-icon" aria-current={current ? "page" : undefined}>
+    <Link
+      href={target.href}
+      className="os-icon"
+      aria-current={target.current ? "page" : undefined}
+    >
       {body}
     </Link>
   );

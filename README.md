@@ -13,23 +13,31 @@ send it to the recipient when you're ready.
   - `masterToken` → `/card/[masterToken]` — view all messages, delete messages
 - `/` — landing page with a create-card form. After creating, you're shown
   the links at `/created/[masterToken]`.
-- Organizer accounts are optional. Anyone can create a card without signing
-  in. Google sign-in saves that card to `/cards` so a lost organizer link can
-  be found later. Contributors never need an account.
+- A card can carry an optional birthday (`cards.birthday`, a Postgres `date`).
+  It's only shown: a label in `/cards`, a suggested send day on the links page,
+  and a sign-by date (the day before) in the signing invitation. Nothing is
+  scheduled or locked; sharing the gift link is still the delivery.
+- Organizers sign in with Google to start a card. Every card they start is
+  saved to `/cards`, so its links can be found later. Cards started before
+  sign-in was required can still be saved from their links page. Contributors
+  and the birthday person never need an account.
 
 ## Tech
 
 - Next.js (App Router) + TypeScript + Tailwind CSS v4
 - Drizzle ORM. Local dev uses an embedded PGlite database (`.pglite/`,
   gitignored, zero setup). Production uses hosted Postgres via `DATABASE_URL`
-  (e.g. Neon on Vercel). Tables are auto-created on first use.
+  (e.g. Neon on Vercel). Tables are auto-created on first use: the idempotent
+  `ENSURE_TABLES` statements in `lib/db/index.ts` run on the first `getDb()`
+  of each server process, so schema changes go there as `ADD COLUMN IF NOT
+  EXISTS` lines.
 
 ## Shared modules (the contract)
 
 - `lib/db/schema.ts` — `organizers`, `organizer_sessions`, `cards`, and `messages` tables
 - `lib/db/index.ts` — `getDb(): Promise<Db>` returns the Drizzle instance
 - `lib/tokens.ts` — `generateToken()` for URL tokens
-- `lib/organizer-auth.ts` — optional organizer session cookie
+- `lib/organizer-auth.ts` — organizer session cookie
 
 Example usage in a server action:
 
@@ -78,8 +86,9 @@ It prints each card's gift, organizer, and signing paths.
 
 ## Organizer Google sign-in
 
-Create and sign a card with no account. Google is only for organizers who want
-to find those links later.
+Starting a card requires Google sign-in, including locally: without these
+settings, `/` still renders but Send can't go through. Signing and opening a
+card never need an account.
 
 1. In [Google Cloud](https://console.cloud.google.com/apis/credentials), create
    an OAuth client of type **Web application**.

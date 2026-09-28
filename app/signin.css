@@ -18,7 +18,7 @@
   image-rendering: pixelated;
 }
 
-.signin-copy h1 {
+.signin-copy :is(h1, h2) {
   margin: 0.15rem 0 0;
   font-size: 1.25rem;
   font-weight: 650;

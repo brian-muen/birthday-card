@@ -4,12 +4,6 @@
 
 /* ---------- Desktop ---------- */
 
-.inbox-mail-icon {
-  border: 0;
-  background: transparent;
-  font: inherit;
-}
-
 .inbox-icon-art {
   position: relative;
   display: grid;
@@ -19,21 +13,6 @@
   position: absolute;
   top: -0.35rem;
   right: -0.7rem;
-}
-
-@media (max-width: 47.99rem) {
-  .inbox-icons[data-mail-open] {
-    display: none;
-  }
-}
-
-@media (min-width: 48rem) and (max-width: 74rem) {
-  .inbox-icons {
-    position: static;
-    flex-direction: row;
-    align-self: flex-end;
-    margin: -0.75rem -0.5rem -0.25rem 0;
-  }
 }
 
 /* ---------- Arrival ---------- */
@@ -125,21 +104,15 @@
 
 @media (min-width: 48rem) {
   .inbox-mail {
-    flex: 1 1 auto;
-    min-height: min(24rem, 100%);
-    max-height: 42rem;
+    height: 29rem;
+    min-height: min(18rem, 100%);
+    max-height: 100%;
     margin-block: auto;
   }
 
   .inbox-mail:has(.inbox-empty) {
-    flex: none;
-    max-width: min(var(--window-width), 36rem);
-  }
-}
-
-@media (min-width: 74rem) {
-  .inbox-mail {
-    max-width: min(var(--window-width), calc(100% - 15rem));
+    height: auto;
+    max-width: min(var(--window-width), 34rem);
   }
 }
 
@@ -147,7 +120,7 @@
   display: grid;
   flex: 1;
   min-height: 0;
-  grid-template-columns: minmax(15rem, 21rem) minmax(0, 1fr);
+  grid-template-columns: 15rem minmax(0, 1fr);
   background: var(--os-sheet);
 }
 
@@ -420,6 +393,70 @@
 .inbox-remove-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+/* On desktop Mail is an app-sized window, so the panes run a size smaller
+   than the full-screen phone layout. */
+@media (min-width: 48rem) {
+  .inbox-row {
+    column-gap: 0.45rem;
+    padding: 0.55rem 0.7rem 0.6rem 0.5rem;
+  }
+
+  .inbox-row-from {
+    font-size: 0.875rem;
+  }
+
+  .inbox-row-date {
+    font-size: 0.75rem;
+  }
+
+  .inbox-row-subject {
+    font-size: 0.8125rem;
+  }
+
+  .inbox-row-preview {
+    font-size: 0.75rem;
+  }
+
+  .inbox-reader-head {
+    padding: 0.95rem 1.25rem 0.85rem;
+  }
+
+  .inbox-reader-subject {
+    margin-bottom: 0.6rem;
+    font-size: 1.125rem;
+  }
+
+  .inbox-reader-meta {
+    gap: 0.15rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .inbox-reader-meta dt {
+    font-size: 0.8125rem;
+  }
+
+  .inbox-reader-body {
+    padding: 1.1rem 1.25rem 1.75rem;
+  }
+
+  .inbox-reader-body > p {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .inbox-attachment {
+    margin-top: 1.5rem;
+  }
+
+  .inbox-attachment img {
+    max-height: 12rem;
+  }
+
+  .inbox-remove {
+    margin-top: 1.75rem;
+  }
 }
 
 /* ---------- Empty inbox ---------- */

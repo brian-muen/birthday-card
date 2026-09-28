@@ -265,6 +265,25 @@
 
 /* ---------- Sent folder ---------- */
 
+@media (min-width: 48rem) {
+  .outbox-folder {
+    max-height: min(29rem, 100%);
+    margin-block: auto;
+  }
+
+  .outbox-folder .os-window-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .outbox-folder .outbox-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 .outbox-columns,
 .outbox-row {
   display: grid;
@@ -340,6 +359,20 @@
 
 .outbox-row-subject {
   grid-area: subject;
+}
+
+.outbox-row-tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--os-ink);
+  border-radius: 999px;
+  background: var(--os-candle);
+  color: var(--os-ink);
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  line-height: 1;
+  vertical-align: 0.05em;
 }
 
 .outbox-row-notes {

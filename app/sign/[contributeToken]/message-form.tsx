@@ -8,6 +8,7 @@ import ReplyPenPicker from "@/components/mail/reply-pen-picker";
 import ReplySent from "@/components/mail/reply-sent";
 import OsWindow from "@/components/os/os-window";
 import { prepareNoteImage } from "@/lib/prepare-note-image";
+import type { BirthdayTiming } from "@/lib/birthday";
 import { DEFAULT_PEN, parsePen, type PenId } from "@/lib/pen";
 
 const MAX_NAME_LENGTH = 80;
@@ -71,12 +72,14 @@ export default function MessageForm({
   contributeToken,
   recipientName,
   intro,
+  birthday,
   received,
   stock,
 }: {
   contributeToken: string;
   recipientName: string;
   intro: string | null;
+  birthday: BirthdayTiming | null;
   received: string;
   stock: string;
 }) {
@@ -289,6 +292,7 @@ export default function MessageForm({
       <ReplyInvitation
         recipientName={recipientName}
         intro={intro}
+        birthday={birthday}
         received={received}
         hasDraft={Boolean(authorName || body)}
         replied={replied}

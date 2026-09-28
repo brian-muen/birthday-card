@@ -52,7 +52,7 @@
 
 .compose-headers {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: baseline;
   padding-inline: 0.9rem;
   border-bottom: 1px solid var(--os-ink);
@@ -305,13 +305,60 @@
 
 @media (max-width: 34rem) {
   .compose-headers {
-    grid-template-columns: 3.75rem minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr);
     padding-inline: 0.7rem;
+  }
+
+  .compose-label {
+    padding-right: 0.6rem;
   }
 
   .compose-covers {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+}
+
+/* ---------- Birthday row ---------- */
+
+.compose-birthday {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  min-width: 0;
+}
+
+.compose-date.os-header-field {
+  width: auto;
+  font-variant-numeric: tabular-nums;
+  color-scheme: light;
+}
+
+.compose-date[data-empty]::-webkit-datetime-edit {
+  color: color-mix(in oklab, var(--os-ink) 40%, transparent);
+}
+
+.compose-date::-webkit-datetime-edit-month-field:focus,
+.compose-date::-webkit-datetime-edit-day-field:focus,
+.compose-date::-webkit-datetime-edit-year-field:focus {
+  border-radius: 1px;
+  background: var(--os-ink);
+  color: var(--os-chrome);
+}
+
+.compose-date::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.compose-date:hover::-webkit-calendar-picker-indicator,
+.compose-date:focus-visible::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
+
+.compose-date-hint {
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--os-ink) 58%, var(--os-chrome));
 }
 
 @media (prefers-reduced-motion: reduce) {

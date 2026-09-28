@@ -20,9 +20,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(next, appOrigin(request)));
   }
   if (!googleOAuthConfigured()) {
-    return NextResponse.redirect(
-      new URL("/account?error=Google%20sign-in%20is%20not%20configured.", appOrigin(request)),
-    );
+    const account = new URL("/account", appOrigin(request));
+    account.searchParams.set("error", "Google sign-in is not configured.");
+    account.searchParams.set("next", next);
+    return NextResponse.redirect(account);
   }
 
   const origin = appOrigin(request);

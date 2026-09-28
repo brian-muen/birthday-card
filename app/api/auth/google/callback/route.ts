@@ -20,8 +20,9 @@ async function clearOAuthCookie(origin: string) {
   });
 }
 
-function fail(message: string): never {
+function fail(message: string, next?: string): never {
   const params = new URLSearchParams({ error: message });
+  if (next) params.set("next", next);
   redirect(`/account?${params.toString()}`);
 }
 
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
   await clearOAuthCookie(origin);
 
   if (params.get("error") === "access_denied") {
-    fail("Google sign-in was cancelled.");
+    fail("Google sign-in was cancelled.", start?.next);
   }
   if (!start) {
     fail("Google sign-in expired. Try again.");
@@ -62,12 +63,12 @@ export async function GET(request: NextRequest) {
   const code = params.get("code");
   const state = params.get("state");
   if (!code || !state || !sameOAuthState(state, start.state)) {
-    fail("Could not verify the Google sign-in.");
+    fail("Could not verify the Google sign-in.", start.next);
   }
 
   const profile = await googleProfileFromCode(origin, code, start.verifier);
   if (!profile.ok) {
-    fail(googleSignInFailure(profile.reason, origin));
+    fail(googleSignInFailure(profile.reason, origin), start.next);
   }
 
   const organizerId = await upsertOrganizerFromGoogle(

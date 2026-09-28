@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { organizerMenus } from "@/components/mail/compose-menus";
+import { OrganizerIcons } from "@/components/mail/organizer-icons";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import Computer from "@/components/os/computer";
 import OsWindow from "@/components/os/os-window";
-import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
+import { PixelIcon } from "@/components/os/pixel-icon";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { safeNextPath } from "@/lib/safe-next-path";
 import "@/app/signin.css";
@@ -22,15 +22,17 @@ export default async function AccountPage({
   }
 
   return (
-    <Computer menus={organizerMenus({ signedIn: false, next: nextPath })}>
+    <Computer
+      icons={<OrganizerIcons signedIn={false} next={nextPath} current="sign-in" />}
+    >
       <OsWindow title="Sign in" width="27rem" className="signin" draggable closeHref="/" closeLabel="Close sign in">
         <div className="signin-body">
           <PixelIcon name="person" className="signin-icon" />
           <div className="signin-copy">
-            <h1>Keep the cards you start</h1>
+            <h1>Sign in to start a card</h1>
             <p>
-              Anyone can make a card without signing in. Google just keeps your
-              cards in Sent, so a lost organizer link isn’t the end of it.
+              Every card you start is kept in Sent, so its links are never lost.
+              People signing and the birthday person never need an account.
             </p>
           </div>
         </div>
@@ -50,10 +52,6 @@ export default async function AccountPage({
           </button>
         </form>
       </OsWindow>
-
-      <div className="os-icons">
-        <DesktopIcon icon="compose" label="New card" href="/" />
-      </div>
     </Computer>
   );
 }

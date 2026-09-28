@@ -205,7 +205,7 @@ export default function InboxMail({
   return (
     <OsWindow
       title="Mail"
-      width="64rem"
+      width="43rem"
       draggable
       onClose={onClose}
       closeLabel="Close Mail"

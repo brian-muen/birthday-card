@@ -11,13 +11,13 @@ import {
 import { flushSync } from "react-dom";
 
 import Computer from "@/components/os/computer";
-import type { Menu } from "@/components/os/menu-bar";
 import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
 import {
   getReducedMotion,
   getServerFalse,
   subscribeToMotion,
 } from "@/components/folded-card";
+import { rememberCard } from "@/lib/remembered-mail";
 import CardBook from "./card-book";
 import InboxArrival from "./inbox-arrival";
 import InboxBalloons from "./inbox-balloons";
@@ -34,6 +34,7 @@ export default function InboxApp({
   token,
   masterToken,
   canManage,
+  remember,
   recipientName,
   design,
   intro,
@@ -44,6 +45,7 @@ export default function InboxApp({
   token: string;
   masterToken: string;
   canManage: boolean;
+  remember: boolean;
   recipientName: string;
   design: string;
   intro: string | null;
@@ -111,6 +113,10 @@ export default function InboxApp({
   }, []);
 
   useEffect(() => {
+    if (remember) rememberCard({ token, recipientName, notes });
+  }, [remember, token, recipientName, notes]);
+
+  useEffect(() => {
     if (phase === "card") tableRef.current?.focus({ preventScroll: true });
   }, [phase]);
 
@@ -148,17 +154,30 @@ export default function InboxApp({
     });
   }
 
-  const menus: Menu[] = [
-    {
-      label: "File",
-      items: [
-        { label: "Open Mail", onSelect: openMail },
-        { label: "Transform into card", onSelect: transform },
-        { label: "Save PDF keepsake", href: pdfHref, download: true },
-        ...(canManage ? [{ label: "Share links", href: shareHref }] : []),
-      ],
-    },
-  ];
+  const icons = (
+    <>
+      <button
+        ref={mailIconRef}
+        type="button"
+        className="os-icon"
+        aria-label={unreadNotes.length ? `Mail, ${unreadNotes.length} unread` : "Mail"}
+        onClick={openMail}
+      >
+        <span className="inbox-icon-art">
+          <PixelIcon name={unreadNotes.length ? "unread" : "mail"} />
+          {unreadNotes.length ? (
+            <span className="os-badge inbox-icon-badge" aria-hidden>
+              {unreadNotes.length}
+            </span>
+          ) : null}
+        </span>
+        <span className="os-icon-label">Mail</span>
+      </button>
+      <DesktopIcon icon="card" label="Transform" onClick={transform} />
+      <DesktopIcon icon="keepsake" label="Keepsake" href={pdfHref} download />
+      {canManage ? <DesktopIcon icon="folder" label="Share links" href={shareHref} /> : null}
+    </>
+  );
 
   const openToNote =
     mailOpen && currentId !== null && (wide || pane === "message") ? currentId : null;
@@ -203,33 +222,7 @@ export default function InboxApp({
           data-returned={returned || undefined}
           inert={phase === "leaving" || undefined}
         >
-          <Computer stock={stock} menus={menus}>
-            <div className="os-icons inbox-icons" data-mail-open={mailOpen || undefined}>
-              <button
-                ref={mailIconRef}
-                type="button"
-                className="os-icon inbox-mail-icon"
-                aria-label={
-                  unreadNotes.length ? `Mail, ${unreadNotes.length} unread` : "Mail"
-                }
-                onClick={openMail}
-              >
-                <span className="inbox-icon-art">
-                  <PixelIcon name={unreadNotes.length ? "unread" : "mail"} />
-                  {unreadNotes.length ? (
-                    <span className="os-badge inbox-icon-badge" aria-hidden>
-                      {unreadNotes.length}
-                    </span>
-                  ) : null}
-                </span>
-                <span className="os-icon-label">Mail</span>
-              </button>
-              <DesktopIcon icon="keepsake" label="Keepsake" href={pdfHref} download />
-              {canManage ? (
-                <DesktopIcon icon="folder" label="Share links" href={shareHref} />
-              ) : null}
-            </div>
-
+          <Computer stock={stock} icons={icons}>
             {mailOpen ? (
               <InboxMail
                 notes={notes}

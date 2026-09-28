@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Computer from "@/components/os/computer";
+import { DesktopIcon } from "@/components/os/pixel-icon";
+import { birthdayTiming } from "@/lib/birthday";
 import { getDb } from "@/lib/db";
 import { cards } from "@/lib/db/schema";
 import { parseStock } from "@/lib/stock";
@@ -34,12 +36,13 @@ export default async function SignPage({
   return (
     <Computer
       stock={stock}
-      menus={[{ label: "File", items: [{ label: "Start your own card", href: "/" }] }]}
+      icons={<DesktopIcon icon="compose" label="Start a card" href="/" />}
     >
       <MessageForm
         contributeToken={card.contributeToken}
         recipientName={card.recipientName}
         intro={card.intro?.trim() || null}
+        birthday={card.birthday ? birthdayTiming(card.birthday) : null}
         received={receivedFormat.format(card.createdAt)}
         stock={stock}
       />

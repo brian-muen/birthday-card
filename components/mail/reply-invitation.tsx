@@ -3,10 +3,12 @@
 import type { Ref } from "react";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
+import type { BirthdayTiming } from "@/lib/birthday";
 
 export default function ReplyInvitation({
   recipientName,
   intro,
+  birthday,
   received,
   hasDraft,
   replied,
@@ -15,6 +17,7 @@ export default function ReplyInvitation({
 }: {
   recipientName: string;
   intro: string | null;
+  birthday: BirthdayTiming | null;
   received: string;
   hasDraft: boolean;
   replied: boolean;
@@ -81,6 +84,18 @@ export default function ReplyInvitation({
           ) : (
             <p>You&apos;re invited to sign {recipientName}&apos;s birthday card.</p>
           )}
+          {birthday?.when === "upcoming" ? (
+            <p>
+              {recipientName} turns a year older on {birthday.day}. Please sign by{" "}
+              <strong>{birthday.signBy}</strong>.
+            </p>
+          ) : birthday?.when === "today" ? (
+            <p>It&apos;s {recipientName}&apos;s birthday today, so please sign soon.</p>
+          ) : birthday ? (
+            <p>
+              {recipientName}&apos;s birthday was {birthday.day}, so please sign soon.
+            </p>
+          ) : null}
           <p>
             Reply to this message to write your note. Pick a pen, and your note goes
             into the card in that handwriting. You can add a photo too.
