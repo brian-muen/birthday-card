@@ -44,9 +44,15 @@ export function focusDesktop(icon: HTMLElement | null) {
   windows[windows.length - 1]?.focus({ preventScroll: true });
 }
 
-/** Which app windows are open. Every app starts open; its icon reopens it. */
-export function DesktopProvider({ children }: { children: ReactNode }) {
-  const [closed, setClosed] = useState<ReadonlySet<string>>(() => new Set());
+/** Which app windows are open. Every app starts open, except `initialClosed`; an icon reopens it. */
+export function DesktopProvider({
+  children,
+  initialClosed,
+}: {
+  children: ReactNode;
+  initialClosed?: readonly string[];
+}) {
+  const [closed, setClosed] = useState<ReadonlySet<string>>(() => new Set(initialClosed));
 
   const desktop = useMemo<Desktop>(
     () => ({

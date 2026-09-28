@@ -75,5 +75,8 @@ export async function GET(request: NextRequest) {
     profile.googleSub,
     profile.email,
   );
-  redirect(await finishOrganizerLogin(organizerId, start.next));
+  // Session and any card claim happen here. The new tab stops on a short
+  // note; the desk they left open hears that and refreshes in place.
+  await finishOrganizerLogin(organizerId, start.next);
+  redirect("/signed-in");
 }

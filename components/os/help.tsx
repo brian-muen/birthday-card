@@ -41,7 +41,7 @@ const QUESTIONS = [
   },
   {
     q: "Can I keep a copy?",
-    a: "Yes. The Keepsake icon on the card’s desktop downloads the whole card as a PDF. On the paper card, it’s Save PDF keepsake.",
+    a: "Yes. The Print icon on the card’s desktop downloads the whole card as a PDF. On the paper card, it’s Print.",
   },
   {
     q: "Do I need an account?",

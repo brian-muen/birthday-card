@@ -15,7 +15,7 @@ send it to the recipient when you're ready.
   the links at `/created/[masterToken]`.
 - A card can carry an optional birthday (`cards.birthday`, a Postgres `date`).
   It's only shown: a label in `/cards`, a suggested send day on the links page,
-  and a sign-by date (the day before) in the signing invitation. Nothing is
+  and a sign-by date (the birthday itself) in the signing invitation. Nothing is
   scheduled or locked; sharing the gift link is still the delivery.
 - Organizers sign in with Google to start a card. Every card they start is
   saved to `/cards`, so its links can be found later. Cards started before

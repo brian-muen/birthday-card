@@ -1,7 +1,31 @@
-/* Sign in: a small dialog on the desktop. */
+/* Sign in: the same window on every desktop. It floats over whatever is
+   already open. Continue with Google is what leaves the page. */
 
 .signin {
   margin-block: auto;
+}
+
+@media (min-width: 48rem) {
+  .signin.os-window {
+    position: fixed;
+    top: max(calc(var(--os-top) + 1.5rem), calc(50vh - 11rem));
+    left: 50%;
+    width: min(27rem, calc(100vw - var(--os-icon-rail) * 2 - 2rem));
+    max-width: none;
+    margin: 0;
+    margin-left: calc(min(27rem, calc(100vw - var(--os-icon-rail) * 2 - 2rem)) / -2);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .signin.os-window {
+    position: fixed;
+    z-index: 30;
+    inset: var(--os-top) 0 0 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
 }
 
 .signin-body {
@@ -67,4 +91,23 @@
   .signin-actions > * {
     flex: 1;
   }
+}
+
+.signed-in-done {
+  display: grid;
+  place-content: center;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.signed-in-done h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.signed-in-done p {
+  margin: 0.6rem 0 0;
+  line-height: 1.45;
 }

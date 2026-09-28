@@ -115,3 +115,6 @@ select:focus-visible {
 @import "./paper-cut.css";
 @import "./page-polish.css";
 @import "./os.css";
+@import "./cursors.css";
+@import "./mail-type.css";
+

@@ -145,9 +145,6 @@ export default function CardPreview({
           }}
           {...sliderHandlers}
         />
-        <p className="card-scrub-caption" aria-hidden>
-          {caption}
-        </p>
       </div>
     </div>
   );

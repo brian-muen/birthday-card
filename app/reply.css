@@ -111,7 +111,7 @@
 
 .reply-letter-body {
   padding: 1.25rem 1.25rem 1.6rem;
-  background: var(--os-sheet);
+  background: var(--os-chrome);
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -353,10 +353,14 @@
   display: block;
   width: 100%;
   min-height: 15rem;
+  margin: 0;
   padding: 1rem 1rem 1.4rem;
   border: 0;
-  background: var(--os-sheet);
+  border-radius: 0;
+  background: var(--os-chrome);
+  box-shadow: none;
   color: var(--os-ink);
+  caret-color: var(--os-accent);
   font-family: var(--font-ui), var(--cjk-sans), sans-serif;
   font-size: 1rem;
   line-height: 1.6;
@@ -367,6 +371,7 @@
   color: color-mix(in oklab, var(--os-ink) 42%, transparent);
 }
 
+.reply-body:focus,
 .reply-body:focus-visible {
   outline: none;
 }

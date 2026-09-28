@@ -56,15 +56,14 @@ export function formatBirthday(iso: string, style: "long" | "short" = "long") {
   return (style === "long" ? longFormat : shortFormat).format(time);
 }
 
-/** The day before the birthday, as "Thursday, Oct 2". */
+/** The birthday itself, as "Friday, Oct 3". Signers are asked to sign by this day. */
 export function signByDay(iso: string) {
-  const time = dayStart(iso);
-  return time == null ? "" : longFormat.format(time - DAY_MS);
+  return formatBirthday(iso);
 }
 
 export type BirthdayTiming = {
   day: string;
-  /** The day before the birthday, while that's still ahead. */
+  /** The birthday, while that day is still ahead. */
   signBy: string | null;
   when: "upcoming" | "today" | "past";
 };

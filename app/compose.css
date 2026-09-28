@@ -61,9 +61,19 @@
 
 /* ---------- Headers ---------- */
 
+/* Header labels and the stationery rows share one label column. */
+.compose-window {
+  --compose-label: 5.5rem;
+}
+
+.compose-window .os-window-body {
+  display: flex;
+  flex-direction: column;
+}
+
 .compose-headers {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: minmax(max-content, var(--compose-label)) minmax(0, 1fr);
   align-items: baseline;
   padding-inline: 0.9rem;
   border-bottom: 1px solid var(--os-ink);
@@ -103,47 +113,69 @@
 
 .compose-subject[data-empty] {
   font-weight: 400;
-  color: color-mix(in oklab, var(--os-ink) 45%, var(--os-chrome));
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
 }
 
 /* ---------- Body ---------- */
 
+/* The message is the same sheet as the window around it. The caret is the only focus mark. */
 .compose-body {
   display: block;
+  flex: 1 0 auto;
   width: 100%;
-  min-height: 8.5rem;
-  padding: 0.9rem 1rem;
+  min-height: 10rem;
+  margin: 0;
+  padding: 0.9rem 1rem 1.25rem;
   border: 0;
-  border-bottom: 1px solid var(--os-ink);
-  background: var(--os-sheet);
+  border-radius: 0;
+  background: var(--os-chrome);
+  box-shadow: none;
   color: var(--os-ink);
+  caret-color: var(--os-accent);
   font: 1rem/1.5 var(--font-ui), var(--cjk-sans), sans-serif;
-  resize: vertical;
+  resize: none;
 }
 
 .compose-body::placeholder {
   color: color-mix(in oklab, var(--os-ink) 42%, transparent);
 }
 
+.compose-body:focus,
 .compose-body:focus-visible {
   outline: none;
 }
 
 /* ---------- Stationery ---------- */
 
+/* A pane of the same window under the page, set like more header rows:
+   label on the left, choices on the right. */
 .compose-stationery {
-  padding: 0.85rem 1rem 1.1rem;
+  padding: 0.5rem 0.9rem 0.9rem;
+  border-top: 1px solid var(--os-ink);
   background: var(--os-chrome);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.9);
 }
 
 .compose-stationery-title {
-  margin: 0 0 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
   font-family: var(--font-pixel), var(--font-ui), sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
+}
+
+.compose-stationery-title::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--os-shade);
+  border-bottom: 1px solid rgb(255 255 255 / 0.9);
 }
 
 .compose-set {
+  display: flow-root;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -151,19 +183,29 @@
 }
 
 .compose-set + .compose-set {
-  margin-top: 0.95rem;
+  margin-top: 0.75rem;
 }
 
 .compose-legend {
-  margin-bottom: 0.5rem;
-  padding: 0;
+  float: left;
+  width: var(--compose-label);
+  padding: 0.35rem 0.75rem 0 0;
   font-family: var(--font-pixel), var(--font-ui), sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
+  text-align: right;
 }
 
 .compose-legend span {
-  margin-left: 0.4rem;
-  color: color-mix(in oklab, var(--os-ink) 60%, var(--os-chrome));
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8125rem;
+  color: var(--os-ink);
+}
+
+.compose-covers,
+.compose-papers {
+  margin-left: var(--compose-label);
 }
 
 .compose-covers {
@@ -315,17 +357,31 @@
 }
 
 @media (max-width: 34rem) {
-  .compose-headers {
-    grid-template-columns: max-content minmax(0, 1fr);
+  .compose-window {
+    --compose-label: 4.9rem;
+  }
+
+  .compose-headers,
+  .compose-stationery {
     padding-inline: 0.7rem;
   }
 
-  .compose-label {
+  .compose-label,
+  .compose-legend {
     padding-right: 0.6rem;
   }
 
   .compose-covers {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .compose-papers {
+    gap: 0.45rem;
+  }
+
+  .compose-swatch {
+    width: 1.9rem;
+    height: 1.9rem;
   }
 }
 
@@ -369,7 +425,7 @@
 
 .compose-date-hint {
   font-size: 0.8125rem;
-  color: color-mix(in oklab, var(--os-ink) 58%, var(--os-chrome));
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
 }
 
 @media (prefers-reduced-motion: reduce) {

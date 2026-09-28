@@ -17,12 +17,13 @@ import {
   Bricolage_Grotesque,
   Pixelify_Sans,
   Satisfy,
+  Sono,
   Source_Sans_3,
 } from "next/font/google";
 import "./globals.css";
 
-// Bricolage Grotesque is everything a person reads or types on the computer.
-// Garamond is only printed on the card.
+// Bricolage Grotesque is the interface sans outside a letter.
+// Sono is mail typed on this screen. Garamond is only printed on the card.
 const garamond = EB_Garamond({
   variable: "--font-garamond",
   subsets: ["latin"],
@@ -35,10 +36,19 @@ const ui = Bricolage_Grotesque({
   axes: ["opsz"],
 });
 
-// The computer's chrome: menu bar, window titles, buttons.
+// The computer's chrome: menu bar, window titles, buttons, header labels.
 const pixel = Pixelify_Sans({
   variable: "--font-pixel",
   subsets: ["latin"],
+});
+
+// Mail typed on this screen. Sono is a soft monospace made to be read in
+// paragraphs, so a letter looks like the computer's own face. The mono axis
+// stays at its default. Pixelify is chrome; pens stay on the card.
+const mail = Sono({
+  variable: "--font-mail",
+  subsets: ["latin"],
+  weight: "variable",
 });
 
 // Cover greeting is printed Garamond. Signers pick a pen; each note uses that hand.
@@ -138,6 +148,7 @@ const maShan = Ma_Shan_Zheng({
 const fontVariables = [
   ui.variable,
   pixel.variable,
+  mail.variable,
   garamond.variable,
   caveat.variable,
   greatVibes.variable,

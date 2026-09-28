@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import {
+  useCallback,
   useContext,
-  useEffect,
   useId,
   useLayoutEffect,
   useRef,
@@ -46,11 +46,19 @@ function boundsFor(el: HTMLElement, offset: Offset): Bounds | null {
   const desk = el.closest(".os-desktop")?.getBoundingClientRect();
   if (!desk) return null;
   const box = el.getBoundingClientRect();
+  // Sit the whole window on the desktop. A window larger than the desktop
+  // cannot; then keep the title bar reachable so it can be dragged back.
+  const minX = offset.x + desk.left - box.left;
+  const maxX = offset.x + desk.right - box.right;
+  const minY = offset.y + desk.top - box.top;
+  const maxY = offset.y + desk.bottom - box.bottom;
+  const fitsX = maxX >= minX;
+  const fitsY = maxY >= minY;
   return {
-    minX: offset.x + desk.left + KEEP_X - box.right,
-    maxX: offset.x + desk.right - KEEP_X - box.left,
-    minY: offset.y + desk.top - box.top,
-    maxY: offset.y + desk.bottom - KEEP_BOTTOM - box.top,
+    minX: fitsX ? minX : offset.x + desk.left + KEEP_X - box.right,
+    maxX: fitsX ? maxX : offset.x + desk.right - KEEP_X - box.left,
+    minY,
+    maxY: fitsY ? maxY : offset.y + desk.bottom - KEEP_BOTTOM - box.top,
   };
 }
 
@@ -70,8 +78,8 @@ function readOffset(key: string): Offset | null {
 /**
  * A classic window: striped title bar, close box, optional toolbar and
  * status bar. On desktop widths, clicking or focusing a window brings it to
- * the front and dims the title bars behind it. With `draggable`, the title
- * bar moves the window on desktop pointers (remembered for the tab);
+ * the front. With `draggable`, the title bar moves the window on desktop
+ * pointers (remembered for the tab);
  * touch screens keep it in the flow. Inside an `AppWindow`, the close box
  * closes the app to the desktop unless `onClose` says otherwise.
  */
@@ -81,6 +89,7 @@ export default function OsWindow({
   onClose,
   closeLabel,
   draggable = false,
+  raiseOnMount = false,
   toolbar,
   status,
   className = "",
@@ -92,6 +101,8 @@ export default function OsWindow({
   onClose?: () => void;
   closeLabel?: string;
   draggable?: boolean;
+  /** Put this window in front as soon as it mounts. For windows opened over others. */
+  raiseOnMount?: boolean;
   toolbar?: ReactNode;
   status?: ReactNode;
   className?: string;
@@ -110,13 +121,9 @@ export default function OsWindow({
   const [dragging, setDragging] = useState(false);
 
   const depth = useSyncExternalStore(subscribeToStack, () => stack.indexOf(titleId), () => -1);
-  const front = useSyncExternalStore(subscribeToStack, () => stack.at(-1) ?? null, () => null);
-  const inactive = front !== null && front !== titleId;
 
   const name = className.trim().split(/\s+/)[0] || (typeof title === "string" ? title : "");
   const storageKey = draggable && name ? `birthday-mail:window:${pathname}:${name}` : null;
-
-  useEffect(() => () => setStack(stack.filter((id) => id !== titleId)), [titleId]);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -135,12 +142,28 @@ export default function OsWindow({
     return () => query.removeEventListener("change", onChange);
   }, [draggable, storageKey]);
 
-  function raise() {
+  const raise = useCallback(() => {
     if (stack.at(-1) === titleId) return;
     if (ref.current?.closest("dialog")) return;
     if (!window.matchMedia(STACK_QUERY).matches) return;
     setStack([...stack.filter((id) => id !== titleId), titleId]);
-  }
+  }, [titleId]);
+
+  // Focus from opening a window does not go through React's onFocus. The
+  // listener raises it, and the cleanup drops it when the window unmounts.
+  // That cleanup stays in layout so Strict Mode cannot wipe a raise that
+  // happens after this commit, in the same click that opened the window.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (raiseOnMount) raise();
+    const onFocusIn = () => raise();
+    el.addEventListener("focusin", onFocusIn);
+    return () => {
+      el.removeEventListener("focusin", onFocusIn);
+      setStack(stack.filter((id) => id !== titleId));
+    };
+  }, [raise, raiseOnMount, titleId]);
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     const el = ref.current;
@@ -198,7 +221,6 @@ export default function OsWindow({
       aria-labelledby={titleId}
       data-draggable={draggable || undefined}
       data-dragging={dragging || undefined}
-      data-inactive={inactive || undefined}
       onPointerDownCapture={raise}
       onFocusCapture={raise}
       style={{

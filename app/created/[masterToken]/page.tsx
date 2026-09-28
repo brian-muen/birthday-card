@@ -6,7 +6,8 @@ import { count, eq } from "drizzle-orm";
 import { claimCard } from "@/app/actions/claim-card";
 import ActionButton from "@/components/action-button";
 import CardPreview from "@/components/card-preview";
-import { OrganizerIcons, signInHref } from "@/components/mail/organizer-icons";
+import { OrganizerIcons } from "@/components/mail/organizer-icons";
+import { OpenSignInButton, SignInApp } from "@/components/mail/sign-in-window";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import OutboxLink from "@/components/mail/outbox-link";
 import Computer from "@/components/os/computer";
@@ -86,8 +87,9 @@ export default async function CardCreated({
   return (
     <Computer
       stock={card.stock}
+      initialClosed={["sign-in"]}
       icons={
-        <OrganizerIcons signedIn={organizer != null} next={herePath}>
+        <OrganizerIcons signedIn={organizer != null}>
           <AppIcon app="links" icon="mail" label="Share links" />
           <AppIcon app="preview" icon="card" label="Preview" />
           {showSave ? <AppIcon app="save" icon="disk" label="Save card" /> : null}
@@ -244,9 +246,7 @@ export default async function CardCreated({
                         Sign in with Google to keep this card in Sent. A lost
                         organizer link can’t be recovered.
                       </p>
-                      <Link href={signInHref(herePath)} className="os-button">
-                        Save with Google
-                      </Link>
+                      <OpenSignInButton className="os-button">Save with Google</OpenSignInButton>
                     </>
                   )}
                 </div>
@@ -255,6 +255,7 @@ export default async function CardCreated({
           ) : null}
         </div>
       </div>
+      {organizer ? null : <SignInApp next={herePath} />}
     </Computer>
   );
 }

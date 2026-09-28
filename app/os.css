@@ -2,12 +2,14 @@
    Hard outlines, offset shadows, a pixel face for chrome; everything a
    person reads or writes stays in the interface sans. */
 
+/* Only the wallpaper follows a card's paper. Window chrome, sheets and the
+   highlight are the system's own and read the same on every stock. */
 :root {
   --os-ink: #1f1b2e;
-  --os-chrome: #fbf7ee;
-  --os-sheet: #fffdf8;
-  --os-shade: #d9d2c3;
-  --os-select: #f2a7b8;
+  --os-chrome: #f1ede4;
+  --os-sheet: #ffffff;
+  --os-shade: #d3ccbd;
+  --os-select: #cdd0f5;
   --os-candle: #f5cf4b;
   --os-accent: var(--cinnabar);
   --os-desk: var(--paper);
@@ -24,14 +26,6 @@
 /* ---------- Screen ---------- */
 
 .computer {
-  /* 1-bit cursors, drawn in the same ink as the chrome. Each falls back to
-     the system cursor it stands in for. */
-  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='19' viewBox='0 0 12 19' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M1 2h1v1h-1zM1 3h2v1h-2zM1 4h3v1h-3zM1 5h4v1h-4zM1 6h5v1h-5zM1 7h6v1h-6zM1 8h7v1h-7zM1 9h8v1h-8zM1 10h9v1h-9zM1 11h6v1h-6zM1 12h3v1h-3zM5 12h2v1h-2zM1 13h2v1h-2zM5 13h2v1h-2zM1 14h1v1h-1zM6 14h2v1h-2zM6 15h2v1h-2zM7 16h2v1h-2zM7 17h2v1h-2z'/%3E%3Cpath fill='%231f1b2e' d='M0 0h1v1h-1zM0 1h2v1h-2zM0 2h1v1h-1zM2 2h1v1h-1zM0 3h1v1h-1zM3 3h1v1h-1zM0 4h1v1h-1zM4 4h1v1h-1zM0 5h1v1h-1zM5 5h1v1h-1zM0 6h1v1h-1zM6 6h1v1h-1zM0 7h1v1h-1zM7 7h1v1h-1zM0 8h1v1h-1zM8 8h1v1h-1zM0 9h1v1h-1zM9 9h1v1h-1zM0 10h1v1h-1zM10 10h1v1h-1zM0 11h1v1h-1zM7 11h5v1h-5zM0 12h1v1h-1zM4 12h1v1h-1zM7 12h1v1h-1zM0 13h1v1h-1zM3 13h2v1h-2zM7 13h1v1h-1zM0 14h1v1h-1zM2 14h1v1h-1zM5 14h1v1h-1zM8 14h1v1h-1zM0 15h2v1h-2zM5 15h1v1h-1zM8 15h1v1h-1zM0 16h1v1h-1zM6 16h1v1h-1zM9 16h1v1h-1zM6 17h1v1h-1zM9 17h1v1h-1zM7 18h2v1h-2z'/%3E%3C/svg%3E") 0 0, default;
-  --cursor-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='18' viewBox='0 0 16 18' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M4 1h2v1h-2zM4 2h2v1h-2zM4 3h2v1h-2zM4 4h2v1h-2zM4 5h2v1h-2zM7 5h2v1h-2zM4 6h2v1h-2zM7 6h2v1h-2zM10 6h2v1h-2zM4 7h2v1h-2zM7 7h2v1h-2zM10 7h2v1h-2zM13 7h1v1h-1zM1 8h1v1h-1zM4 8h8v1h-8zM13 8h1v1h-1zM1 9h2v1h-2zM4 9h10v1h-10zM2 10h1v1h-1zM4 10h10v1h-10zM2 11h12v1h-12zM3 12h11v1h-11zM3 13h10v1h-10zM4 14h9v1h-9zM5 15h7v1h-7zM5 16h7v1h-7z'/%3E%3Cpath fill='%231f1b2e' d='M4 0h2v1h-2zM3 1h1v1h-1zM6 1h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM3 3h1v1h-1zM6 3h1v1h-1zM3 4h1v1h-1zM6 4h3v1h-3zM3 5h1v1h-1zM6 5h1v1h-1zM9 5h3v1h-3zM3 6h1v1h-1zM6 6h1v1h-1zM9 6h1v1h-1zM12 6h2v1h-2zM0 7h2v1h-2zM3 7h1v1h-1zM6 7h1v1h-1zM9 7h1v1h-1zM12 7h1v1h-1zM14 7h1v1h-1zM0 8h1v1h-1zM2 8h2v1h-2zM12 8h1v1h-1zM14 8h1v1h-1zM0 9h1v1h-1zM3 9h1v1h-1zM14 9h1v1h-1zM1 10h1v1h-1zM3 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM14 12h1v1h-1zM2 13h1v1h-1zM13 13h1v1h-1zM3 14h1v1h-1zM13 14h1v1h-1zM4 15h1v1h-1zM12 15h1v1h-1zM4 16h1v1h-1zM12 16h1v1h-1zM4 17h9v1h-9z'/%3E%3C/svg%3E") 5 1, pointer;
-  --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M6 1h2v1h-2zM9 1h2v1h-2zM2 2h2v1h-2zM6 2h2v1h-2zM9 2h2v1h-2zM2 3h2v1h-2zM6 3h2v1h-2zM9 3h2v1h-2zM13 3h2v1h-2zM3 4h2v1h-2zM6 4h2v1h-2zM9 4h2v1h-2zM13 4h2v1h-2zM3 5h2v1h-2zM6 5h2v1h-2zM9 5h2v1h-2zM12 5h2v1h-2zM4 6h10v1h-10zM1 7h1v1h-1zM4 7h10v1h-10zM1 8h2v1h-2zM4 8h9v1h-9zM2 9h11v1h-11zM3 10h10v1h-10zM3 11h9v1h-9zM4 12h8v1h-8zM5 13h6v1h-6zM5 14h6v1h-6z'/%3E%3Cpath fill='%231f1b2e' d='M6 0h2v1h-2zM9 0h2v1h-2zM2 1h2v1h-2zM5 1h1v1h-1zM8 1h1v1h-1zM11 1h1v1h-1zM1 2h1v1h-1zM4 2h2v1h-2zM8 2h1v1h-1zM11 2h1v1h-1zM13 2h2v1h-2zM1 3h1v1h-1zM4 3h2v1h-2zM8 3h1v1h-1zM11 3h2v1h-2zM15 3h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM8 4h1v1h-1zM11 4h2v1h-2zM15 4h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM8 5h1v1h-1zM11 5h1v1h-1zM14 5h1v1h-1zM0 6h2v1h-2zM3 6h1v1h-1zM14 6h1v1h-1zM0 7h1v1h-1zM2 7h2v1h-2zM14 7h1v1h-1zM0 8h1v1h-1zM3 8h1v1h-1zM13 8h1v1h-1zM1 9h1v1h-1zM13 9h1v1h-1zM2 10h1v1h-1zM13 10h1v1h-1zM2 11h1v1h-1zM12 11h1v1h-1zM3 12h1v1h-1zM12 12h1v1h-1zM4 13h1v1h-1zM11 13h1v1h-1zM4 14h1v1h-1zM11 14h1v1h-1zM4 15h8v1h-8z'/%3E%3C/svg%3E") 8 8, grab;
-  --cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14' viewBox='0 0 16 14' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M4 4h2v1h-2zM7 4h2v1h-2zM10 4h2v1h-2zM4 5h2v1h-2zM7 5h2v1h-2zM10 5h2v1h-2zM13 5h1v1h-1zM2 6h1v1h-1zM4 6h10v1h-10zM2 7h12v1h-12zM3 8h11v1h-11zM3 9h10v1h-10zM4 10h9v1h-9zM5 11h7v1h-7zM5 12h7v1h-7z'/%3E%3Cpath fill='%231f1b2e' d='M4 3h2v1h-2zM7 3h2v1h-2zM10 3h2v1h-2zM3 4h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM12 4h2v1h-2zM2 5h2v1h-2zM6 5h1v1h-1zM9 5h1v1h-1zM12 5h1v1h-1zM14 5h1v1h-1zM1 6h1v1h-1zM3 6h1v1h-1zM14 6h1v1h-1zM1 7h1v1h-1zM14 7h1v1h-1zM2 8h1v1h-1zM14 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM3 10h1v1h-1zM13 10h1v1h-1zM4 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM12 12h1v1h-1zM4 13h9v1h-9z'/%3E%3C/svg%3E") 8 8, grabbing;
-  --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='16' viewBox='0 0 9 16' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M1 0h3v1h-3zM5 0h3v1h-3zM0 1h1v1h-1zM4 1h1v1h-1zM8 1h1v1h-1zM1 2h3v1h-3zM5 2h3v1h-3zM3 3h1v1h-1zM5 3h1v1h-1zM3 4h1v1h-1zM5 4h1v1h-1zM3 5h1v1h-1zM5 5h1v1h-1zM3 6h1v1h-1zM5 6h1v1h-1zM3 7h1v1h-1zM5 7h1v1h-1zM3 8h1v1h-1zM5 8h1v1h-1zM3 9h1v1h-1zM5 9h1v1h-1zM3 10h1v1h-1zM5 10h1v1h-1zM3 11h1v1h-1zM5 11h1v1h-1zM3 12h1v1h-1zM5 12h1v1h-1zM1 13h3v1h-3zM5 13h3v1h-3zM0 14h1v1h-1zM4 14h1v1h-1zM8 14h1v1h-1zM1 15h3v1h-3zM5 15h3v1h-3z'/%3E%3Cpath fill='%231f1b2e' d='M1 1h3v1h-3zM5 1h3v1h-3zM4 2h1v1h-1zM4 3h1v1h-1zM4 4h1v1h-1zM4 5h1v1h-1zM4 6h1v1h-1zM4 7h1v1h-1zM4 8h1v1h-1zM4 9h1v1h-1zM4 10h1v1h-1zM4 11h1v1h-1zM4 12h1v1h-1zM4 13h1v1h-1zM1 14h3v1h-3zM5 14h3v1h-3z'/%3E%3C/svg%3E") 4 8, text;
-  --cursor-busy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='14' viewBox='0 0 16 14' shape-rendering='crispEdges'%3E%3Cpath fill='%23ffffff' d='M5 1h4v1h-4zM3 3h8v1h-8zM2 4h4v1h-4zM7 4h5v1h-5zM2 5h4v1h-4zM7 5h5v1h-5zM2 6h4v1h-4zM7 6h5v1h-5zM2 7h4v1h-4zM10 7h2v1h-2zM2 8h10v1h-10zM2 9h10v1h-10zM3 10h8v1h-8zM5 12h4v1h-4z'/%3E%3Cpath fill='%231f1b2e' d='M4 0h6v1h-6zM4 1h1v1h-1zM9 1h1v1h-1zM3 2h8v1h-8zM2 3h1v1h-1zM11 3h1v1h-1zM1 4h1v1h-1zM6 4h1v1h-1zM12 4h1v1h-1zM1 5h1v1h-1zM6 5h1v1h-1zM12 5h2v1h-2zM1 6h1v1h-1zM6 6h1v1h-1zM12 6h2v1h-2zM1 7h1v1h-1zM6 7h4v1h-4zM12 7h1v1h-1zM1 8h1v1h-1zM12 8h1v1h-1zM1 9h1v1h-1zM12 9h1v1h-1zM2 10h1v1h-1zM11 10h1v1h-1zM3 11h8v1h-8zM4 12h1v1h-1zM9 12h1v1h-1zM4 13h6v1h-6z'/%3E%3C/svg%3E") 7 7, progress;
   --os-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='.8'/%3E%3C/svg%3E");
   --os-pattern-size: 4px 4px;
   --os-pattern-opacity: 1;
@@ -45,39 +39,6 @@
   font-family: var(--font-pixel), var(--font-ui), var(--cjk-sans), sans-serif;
   color: var(--os-ink);
   transition: background-color 400ms var(--ease-out);
-  cursor: var(--cursor-arrow);
-}
-
-.computer :where(button, summary, select, label, input[type="checkbox"], input[type="radio"]) {
-  cursor: var(--cursor-arrow);
-}
-
-.computer :where(a[href]) {
-  cursor: var(--cursor-hand);
-}
-
-.computer
-  :where(
-    textarea,
-    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="button"], [type="submit"])
-  ) {
-  cursor: var(--cursor-text);
-}
-
-.computer:has([aria-busy="true"]),
-.computer:has([aria-busy="true"]) * {
-  cursor: var(--cursor-busy) !important;
-}
-
-@media (forced-colors: active) {
-  .computer {
-    --cursor-arrow: default;
-    --cursor-hand: pointer;
-    --cursor-grab: grab;
-    --cursor-grabbing: grabbing;
-    --cursor-text: text;
-    --cursor-busy: progress;
-  }
 }
 
 .computer::before {
@@ -90,15 +51,6 @@
   mask: var(--os-pattern) 0 0 / var(--os-pattern-size) repeat;
   opacity: var(--os-pattern-opacity);
   transition: background-color 400ms var(--ease-out);
-}
-
-/* A card's paper tints the whole system: chrome, sheets and highlight come
-   from the stock, ink stays put so every label keeps its contrast. */
-.computer[data-stock] {
-  --os-chrome: oklch(from var(--wallpaper) 0.975 min(calc(c * 0.9), 0.022) h);
-  --os-sheet: oklch(from var(--wallpaper) 0.993 min(calc(c * 0.4), 0.008) h);
-  --os-shade: oklch(from var(--wallpaper) 0.86 min(calc(c * 1.2 + 0.01), 0.035) h);
-  --os-select: oklch(from var(--wallpaper) 0.88 min(calc(c * 2.2 + 0.035), 0.085) h);
 }
 
 .computer[data-stock="ivory"] {
@@ -148,6 +100,12 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 0.75rem max(2rem, env(safe-area-inset-bottom));
+  /* A dragged window is only translated, so without this it sticks out of the
+     desktop and the page grows a scrollbar on the right. Hidden also zeroes
+     the flex item's automatic minimum, so min-height keeps a tall window
+     scrolling with the page instead of being clipped. */
+  min-height: min-content;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -387,21 +345,6 @@
     0 48px 70px -40px rgb(31 27 46 / 0.45);
 }
 
-/* Windows behind the active one lose their stripes and close box, like any
-   desktop of the era; the title stays readable. */
-.os-desktop .os-window[data-inactive="true"] .os-titlebar {
-  background: var(--os-chrome);
-}
-
-.os-desktop .os-window[data-inactive="true"] .os-window-title {
-  color: color-mix(in oklab, var(--os-ink) 68%, var(--os-chrome));
-}
-
-.os-desktop .os-window[data-inactive="true"] .os-close:not(:focus-visible) {
-  opacity: 0;
-  pointer-events: none;
-}
-
 .os-titlebar {
   position: relative;
   display: flex;
@@ -422,14 +365,6 @@
   font-size: 0.9375rem;
   line-height: 1;
   user-select: none;
-}
-
-.os-window[data-draggable="true"] .os-titlebar {
-  cursor: var(--cursor-grab, grab);
-}
-
-.os-window[data-dragging="true"] .os-titlebar {
-  cursor: var(--cursor-grabbing, grabbing);
 }
 
 .os-window-title {
@@ -457,7 +392,6 @@
   background: var(--os-chrome);
   box-shadow: 0 0 0 2px var(--os-chrome);
   color: inherit;
-  cursor: var(--cursor-arrow, default);
 }
 
 .os-close:hover::after,
@@ -522,7 +456,6 @@
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
-  cursor: var(--cursor-arrow, default);
   transition:
     translate 90ms var(--ease-out),
     box-shadow 90ms var(--ease-out);
@@ -659,7 +592,6 @@
   font-size: 0.875rem;
   text-align: center;
   text-decoration: none;
-  cursor: var(--cursor-arrow, default);
 }
 
 .os-icon svg {

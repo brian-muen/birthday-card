@@ -1,25 +1,22 @@
 import type { ReactNode } from "react";
 
 import { logOut } from "@/app/actions/organizer-auth";
+import { SignInWatch } from "@/components/mail/sign-in-watch";
+import { AppIcon } from "@/components/os/desktop";
 import { DesktopIcon } from "@/components/os/pixel-icon";
 
-export function signInHref(next?: string) {
-  return next ? `/account?next=${encodeURIComponent(next)}` : "/account";
-}
-
 /**
- * The desktop icons every organizer page shares; `next` is where sign-in
- * returns to. `children` are the page's own app icons and go first; the
- * `current` page's app is one of them, so it isn't linked again.
+ * The desktop icons every organizer page shares. `children` are the page's
+ * own app icons and go first; the `current` page's app is one of them, so
+ * it isn't linked again. Sign in opens the sign-in window on this desktop
+ * (`SignInApp`); it does not leave the page.
  */
 export function OrganizerIcons({
   signedIn,
-  next,
   current,
   children,
 }: {
   signedIn: boolean;
-  next?: string;
   current?: "new" | "sent" | "sign-in";
   children?: ReactNode;
 }) {
@@ -32,8 +29,11 @@ export function OrganizerIcons({
           {current === "sent" ? null : <DesktopIcon icon="folder" label="Sent" href="/cards" />}
           <DesktopIcon icon="signout" label="Sign out" action={logOut} />
         </>
-      ) : current === "sign-in" ? null : (
-        <DesktopIcon icon="person" label="Sign in" href={signInHref(next)} />
+      ) : (
+        <>
+          <SignInWatch />
+          {current === "sign-in" ? null : <AppIcon app="sign-in" icon="person" label="Sign in" />}
+        </>
       )}
     </>
   );

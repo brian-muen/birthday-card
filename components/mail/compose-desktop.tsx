@@ -12,7 +12,7 @@ import {
 } from "@/components/mail/compose-draft";
 import { HomeMailIcon, HomeMailWindow } from "@/components/mail/home-mail";
 import { OrganizerIcons } from "@/components/mail/organizer-icons";
-import ComposeSignIn from "@/components/mail/compose-signin";
+import { SignInApp, SignInBridge } from "@/components/mail/sign-in-window";
 import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import BlinkDots from "@/components/os/blink-dots";
@@ -54,8 +54,8 @@ export default function ComposeDesktop({
   const [intro, setIntro] = useState("");
   const [alert, setAlert] = useState(error ?? null);
   const [shownError, setShownError] = useState(error);
-  const [signInOpen, setSignInOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
+  const openSignIn = useRef<(from?: Element | null) => void>(() => {});
   const savedDraft = useRef<ComposeDraft | null | undefined>(undefined);
 
   if (error !== shownError) {
@@ -69,11 +69,6 @@ export default function ComposeDesktop({
 
   const dismissAlert = useCallback(() => {
     setAlert(null);
-    nameRef.current?.focus();
-  }, []);
-
-  const dismissSignIn = useCallback(() => {
-    setSignInOpen(false);
     nameRef.current?.focus();
   }, []);
 
@@ -101,8 +96,9 @@ export default function ComposeDesktop({
     <div className="compose-screen">
       <Computer
         stock={stock}
+        initialClosed={["sign-in"]}
         icons={
-          <OrganizerIcons signedIn={signedIn} next="/" current="new">
+          <OrganizerIcons signedIn={signedIn} current="new">
             <AppIcon app="compose" icon="compose" label="New card" />
             <AppIcon app="preview" icon="card" label="Preview" />
             <HomeMailIcon />
@@ -118,7 +114,9 @@ export default function ComposeDesktop({
             if (!signedIn) {
               event.preventDefault();
               setAlert(null);
-              setSignInOpen(true);
+              const submitter =
+                "submitter" in event.nativeEvent ? event.nativeEvent.submitter : null;
+              openSignIn.current(submitter instanceof Element ? submitter : null);
               return;
             }
             if (trimmed) {
@@ -223,10 +221,20 @@ export default function ComposeDesktop({
         </form>
 
         <HomeMailWindow />
+        <SignInBridge openRef={openSignIn} />
+        {signedIn ? null : (
+          <SignInApp
+            next="/"
+            heading="Sign in to send your card"
+            detail="Organizers sign in with Google, so every card you start stays in Sent with its links. People signing never need an account."
+            note={
+              trimmed || birthday || intro.trim()
+                ? "Your message will be here when you get back."
+                : undefined
+            }
+          />
+        )}
         {alert ? <ComposeAlert message={alert} onDismiss={dismissAlert} /> : null}
-        {signInOpen ? (
-          <ComposeSignIn hasDraft={Boolean(trimmed || birthday || intro.trim())} onDismiss={dismissSignIn} />
-        ) : null}
       </Computer>
     </div>
   );

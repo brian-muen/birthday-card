@@ -396,7 +396,7 @@
 }
 
 .outbox-row-notes[data-none] {
-  color: color-mix(in oklab, var(--os-ink) 55%, var(--os-sheet));
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-sheet));
 }
 
 .outbox-row-date {

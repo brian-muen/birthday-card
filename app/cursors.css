@@ -1,0 +1,91 @@
+/* ---------- Cursors ----------
+   Classic 1-bit pointers, drawn from pixel art in scripts/cursors.mjs, for
+   every page. The arrow is the resting cursor, the pointing hand marks
+   anything you can click, and the open hand anything you can drag. Only a
+   mouse or trackpad gets them; with no fine pointer, or in forced colors,
+   the variables are unset and every rule falls back to the system cursor it
+   names. Hotspots are in image pixels. */
+
+@media (any-pointer: fine) {
+  :root {
+    --cursor-arrow: url("/cursors/arrow.svg") 1 1, default;
+    --cursor-hand: url("/cursors/hand.svg") 5 0, pointer;
+    --cursor-grab: url("/cursors/grab.svg") 8 8, grab;
+    --cursor-grabbing: url("/cursors/grabbing.svg") 8 8, grabbing;
+    --cursor-text: url("/cursors/text.svg") 4 9, text;
+    --cursor-busy: url("/cursors/busy.svg") 6 8, progress;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --cursor-arrow: initial;
+    --cursor-hand: initial;
+    --cursor-grab: initial;
+    --cursor-grabbing: initial;
+    --cursor-text: initial;
+    --cursor-busy: initial;
+  }
+}
+
+/* The `:root` prefix lifts these over the single-class `cursor: pointer`
+   rules in page stylesheets that load after this one. */
+:root {
+  cursor: var(--cursor-arrow, auto);
+}
+
+/* Browsers give labels their own cursor instead of inheriting one. */
+:root label {
+  cursor: var(--cursor-arrow, default);
+}
+
+:root
+  :is(
+    a[href],
+    button,
+    summary,
+    select,
+    [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="option"],
+    input:is([type="checkbox"], [type="radio"], [type="button"], [type="submit"], [type="reset"], [type="file"], [type="color"])
+  ),
+:root label:has(input:is([type="checkbox"], [type="radio"], [type="file"])) {
+  cursor: var(--cursor-hand, pointer);
+}
+
+:root
+  :is(
+    textarea,
+    [contenteditable]:not([contenteditable="false"]),
+    input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="button"], [type="submit"], [type="reset"])
+  ) {
+  cursor: var(--cursor-text, text);
+}
+
+:root :is(button, select, textarea, input, a, [role="button"]):is(:disabled, [aria-disabled="true"]) {
+  cursor: var(--cursor-arrow, default);
+}
+
+:root .os-window[data-draggable="true"] .os-titlebar,
+:root .card-frame,
+:root .card-frame .card-face,
+:root input[type="range"] {
+  cursor: var(--cursor-grab, grab);
+}
+
+:root input[type="range"]:active {
+  cursor: var(--cursor-grabbing, grabbing);
+}
+
+/* A drag or a send holds its cursor wherever the pointer wanders. */
+:root:has([data-dragging="true"]),
+:root:has([data-dragging="true"]) * {
+  cursor: var(--cursor-grabbing, grabbing) !important;
+}
+
+:root:has([aria-busy="true"]),
+:root:has([aria-busy="true"]) * {
+  cursor: var(--cursor-busy, progress) !important;
+}

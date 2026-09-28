@@ -232,7 +232,7 @@ export default function InboxApp({
         <span className="os-icon-label">Mail</span>
       </button>
       <DesktopIcon icon="card" label="Transform" onClick={transform} />
-      <DesktopIcon icon="keepsake" label="Keepsake" href={pdfHref} download />
+      <DesktopIcon icon="keepsake" label="Print" href={pdfHref} download />
       {canManage ? <DesktopIcon icon="folder" label="Share links" href={shareHref} /> : null}
     </>
   );
@@ -256,7 +256,7 @@ export default function InboxApp({
               Turn it back
             </button>
             <a href={pdfHref} download className="inbox-table-link">
-              Save PDF keepsake
+              Print
             </a>
           </nav>
           <div className="inbox-table-card">

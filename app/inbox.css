@@ -105,7 +105,7 @@
   display: grid;
   place-items: center;
   border-right: 1px solid var(--os-ink);
-  background: oklch(from var(--wallpaper) calc(l - 0.1) min(calc(c * 3.2 + 0.015), 0.085) h);
+  background: var(--os-select);
 }
 
 .inbox-boot-art svg {
@@ -165,7 +165,7 @@
 }
 
 .inbox-boot-bar span[data-on] {
-  background: oklch(from var(--wallpaper) 0.62 min(calc(c * 3 + 0.06), 0.13) h);
+  background: color-mix(in oklab, var(--os-select) 45%, var(--os-ink));
 }
 
 /* ---------- Mail window ---------- */
