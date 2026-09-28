@@ -12,6 +12,8 @@ import { flushSync } from "react-dom";
 
 import Computer from "@/components/os/computer";
 import { DesktopIcon, PixelIcon } from "@/components/os/pixel-icon";
+import { playSound } from "@/components/os/sound";
+import { zoomRects } from "@/components/os/zoom-rects";
 import {
   getReducedMotion,
   getServerFalse,
@@ -21,12 +23,14 @@ import { rememberCard } from "@/lib/remembered-mail";
 import CardBook from "./card-book";
 import InboxArrival from "./inbox-arrival";
 import InboxBalloons from "./inbox-balloons";
+import InboxBoot, { hasBooted, markBooted } from "./inbox-boot";
 import InboxMail, { useWide, type InboxNote, type Pane } from "./inbox-mail";
 import { useReadState } from "./inbox-read-state";
 
 type Phase = "computer" | "leaving" | "card";
 
 const ARRIVAL_DELAY = 700;
+const AFTER_BOOT_MS = 150;
 const RECEDE_MS = 780;
 const BALLOONS_MS = 2300;
 
@@ -40,6 +44,7 @@ export default function InboxApp({
   intro,
   dedication,
   stock,
+  birthday,
   notes,
 }: {
   token: string;
@@ -51,6 +56,7 @@ export default function InboxApp({
   intro: string | null;
   dedication: string | null;
   stock: string;
+  birthday: string | null;
   notes: InboxNote[];
 }) {
   const reducedMotion = useSyncExternalStore(
@@ -64,6 +70,7 @@ export default function InboxApp({
   const [phase, setPhase] = useState<Phase>("computer");
   const [returned, setReturned] = useState(false);
   const [balloons, setBalloons] = useState(0);
+  const [booting, setBooting] = useState(false);
   const [arrival, setArrival] = useState<"waiting" | "shown" | "done">("waiting");
   const [mailOpen, setMailOpen] = useState(false);
   const [mailFocus, setMailFocus] = useState<"list" | "transform">("list");
@@ -74,6 +81,7 @@ export default function InboxApp({
   const mailIconRef = useRef<HTMLButtonElement>(null);
   const tableRef = useRef<HTMLElement>(null);
   const timers = useRef<number[]>([]);
+  const zoomFrom = useRef<DOMRect | null>(null);
 
   const pdfHref = `/card/${token}/pdf`;
   const shareHref = `/created/${masterToken}`;
@@ -82,30 +90,73 @@ export default function InboxApp({
     ? selectedId
     : (notes[0]?.id ?? null);
 
-  const openMail = useCallback(() => {
-    setArrival("done");
-    setMailFocus("list");
-    setMailOpen(true);
-    setSelectedId((id) =>
-      notes.some((note) => note.id === id)
-        ? id
-        : (notes.find((note) => !readIds.has(note.id)) ?? notes[0])?.id ?? null,
-    );
-  }, [notes, readIds]);
+  const openMail = useCallback(
+    (from?: Element | null) => {
+      if (!mailOpen) zoomFrom.current = from?.getBoundingClientRect() ?? null;
+      setArrival("done");
+      setMailFocus("list");
+      setMailOpen(true);
+      setSelectedId((id) =>
+        notes.some((note) => note.id === id)
+          ? id
+          : (notes.find((note) => !readIds.has(note.id)) ?? notes[0])?.id ?? null,
+      );
+    },
+    [mailOpen, notes, readIds],
+  );
 
-  const latest = useRef({ unread: unreadNotes.length, total: notes.length, openMail });
+  const arrive = useCallback(() => {
+    if (notes.length > 0 && unreadNotes.length === 0) {
+      openMail(mailIconRef.current);
+      return;
+    }
+    setArrival("shown");
+    if (unreadNotes.length) playSound("mail");
+  }, [notes.length, unreadNotes.length, openMail]);
+
+  const latest = useRef(arrive);
   useLayoutEffect(() => {
-    latest.current = { unread: unreadNotes.length, total: notes.length, openMail };
+    latest.current = arrive;
   });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const { unread, total, openMail: open } = latest.current;
-      if (total > 0 && unread === 0) open();
-      else setArrival("shown");
-    }, ARRIVAL_DELAY);
+    const boot = remember && !getReducedMotion() && !hasBooted(token);
+    const timer = window.setTimeout(
+      () => (boot ? setBooting(true) : latest.current()),
+      boot ? 0 : ARRIVAL_DELAY,
+    );
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [remember, token]);
+
+  function finishBoot() {
+    markBooted(token);
+    setBooting(false);
+    timers.current.push(window.setTimeout(() => latest.current(), AFTER_BOOT_MS));
+  }
+
+  useLayoutEffect(() => {
+    const from = zoomFrom.current;
+    zoomFrom.current = null;
+    if (!mailOpen || !from || phase !== "computer") return;
+    const win = document.querySelector(".inbox-mail");
+    zoomRects(from, win, { hide: win });
+  }, [mailOpen, phase]);
+
+  useEffect(() => {
+    const title =
+      phase === "card"
+        ? `${recipientName}’s birthday card`
+        : `${unreadNotes.length ? `(${unreadNotes.length}) ` : ""}Happy birthday, ${recipientName}`;
+    const full = `${title} · Birthday Mail`;
+    const apply = () => {
+      if (document.title !== full) document.title = full;
+    };
+    apply();
+    // Streamed metadata can land after hydration and reset the title.
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [phase, unreadNotes.length, recipientName]);
 
   useEffect(() => {
     const pending = timers.current;
@@ -128,6 +179,7 @@ export default function InboxApp({
       setPhase("card");
       return;
     }
+    playSound("pop");
     setBalloons((n) => n + 1);
     setPhase("leaving");
     timers.current.push(
@@ -136,8 +188,11 @@ export default function InboxApp({
     );
   }
 
-  function toDesktop(change: () => void) {
+  /** Closes a window back onto the desktop, zooming it into the Mail icon. */
+  function toDesktop(selector: string, change: () => void) {
+    const from = document.querySelector(selector)?.getBoundingClientRect();
     flushSync(change);
+    zoomRects(from, mailIconRef.current);
     mailIconRef.current?.focus({ preventScroll: true });
   }
 
@@ -161,7 +216,7 @@ export default function InboxApp({
         type="button"
         className="os-icon"
         aria-label={unreadNotes.length ? `Mail, ${unreadNotes.length} unread` : "Mail"}
-        onClick={openMail}
+        onClick={(event) => openMail(event.currentTarget)}
       >
         <span className="inbox-icon-art">
           <PixelIcon name={unreadNotes.length ? "unread" : "mail"} />
@@ -222,7 +277,28 @@ export default function InboxApp({
           data-returned={returned || undefined}
           inert={phase === "leaving" || undefined}
         >
-          <Computer stock={stock} icons={icons}>
+          <Computer
+            stock={stock}
+            icons={icons}
+            birthday={
+              birthday
+                ? {
+                    day: birthday,
+                    greeting: canManage
+                      ? `It’s ${recipientName}’s birthday!`
+                      : `Happy birthday, ${recipientName}!`,
+                  }
+                : null
+            }
+          >
+            {booting ? (
+              <InboxBoot
+                recipientName={recipientName}
+                senders={notes.map((note) => note.authorName)}
+                onDone={finishBoot}
+              />
+            ) : null}
+
             {mailOpen ? (
               <InboxMail
                 notes={notes}
@@ -237,7 +313,7 @@ export default function InboxApp({
                 readIds={readIds}
                 setRead={setRead}
                 onTransform={transform}
-                onClose={() => toDesktop(() => setMailOpen(false))}
+                onClose={() => toDesktop(".inbox-mail", () => setMailOpen(false))}
                 transformRef={transformRef}
                 focusOnMount={mailFocus}
               />
@@ -249,8 +325,8 @@ export default function InboxApp({
                 canManage={canManage}
                 recipientName={recipientName}
                 shareHref={shareHref}
-                onOpen={openMail}
-                onDismiss={() => toDesktop(() => setArrival("done"))}
+                onOpen={() => openMail(document.querySelector(".inbox-alert"))}
+                onDismiss={() => toDesktop(".inbox-alert", () => setArrival("done"))}
               />
             ) : null}
           </Computer>

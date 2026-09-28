@@ -43,7 +43,7 @@ export async function generateMetadata({
 
   return {
     title: card
-      ? `Happy Birthday, ${card.recipientName}`
+      ? `Happy birthday, ${card.recipientName}`
       : "Card not found",
     robots: { index: false, follow: false },
   };
@@ -79,6 +79,7 @@ export default async function CardPage({ params }: PageParams) {
         intro={card.intro}
         dedication={card.dedication}
         stock={parseStock(card.stock)}
+        birthday={card.birthday}
         notes={notes.map((note) => ({
           id: note.id,
           authorName: note.authorName,

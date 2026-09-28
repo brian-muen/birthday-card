@@ -6,6 +6,7 @@ import { useRef } from "react";
 
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
+import { zoomRects } from "@/components/os/zoom-rects";
 import {
   dismissUntilLater,
   forgetCard,
@@ -58,8 +59,14 @@ export function HomeMailIcon() {
       type="button"
       className="os-icon"
       aria-label={unread ? `Mail, ${unread} unread` : "Mail"}
-      onClick={() => {
+      onClick={(event) => {
+        const icon = event.currentTarget;
         flushSync(showAgain);
+        const root = document.querySelector<HTMLElement>(".home-mail");
+        if (root) {
+          root.style.animation = "none";
+          zoomRects(icon, root, { hide: root });
+        }
         document.getElementById(OPEN_ID)?.focus({ preventScroll: true });
       }}
     >
@@ -94,8 +101,11 @@ export function HomeMailWindow() {
   function dismiss() {
     if (!top) return;
     const refocus = hadFocus();
+    const from = rootRef.current?.getBoundingClientRect();
     flushSync(() => dismissUntilLater(top.token));
-    if (refocus) document.getElementById(ICON_ID)?.focus({ preventScroll: true });
+    const icon = document.getElementById(ICON_ID);
+    zoomRects(from, icon);
+    if (refocus) icon?.focus({ preventScroll: true });
   }
 
   function forget() {

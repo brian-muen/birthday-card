@@ -5,13 +5,16 @@ import { useEffect, useId, useRef } from "react";
 
 import { PixelIcon } from "@/components/os/pixel-icon";
 
-function fromLine(names: string[]) {
-  if (names.length === 0) return "";
-  if (names.length === 1) return `From ${names[0]}.`;
-  if (names.length === 2) return `From ${names[0]} and ${names[1]}.`;
-  if (names.length === 3) return `From ${names[0]}, ${names[1]}, and ${names[2]}.`;
+/** "Ana, Ben, Cy, and 2 others", or "" for no one. */
+export function nameList(names: string[]) {
+  if (names.length <= 2) return names.join(" and ");
+  if (names.length === 3) return `${names[0]}, ${names[1]}, and ${names[2]}`;
   const others = names.length - 3;
-  return `From ${names.slice(0, 3).join(", ")}, and ${others === 1 ? "1 other" : `${others} others`}.`;
+  return `${names.slice(0, 3).join(", ")}, and ${others === 1 ? "1 other" : `${others} others`}`;
+}
+
+function fromLine(names: string[]) {
+  return names.length ? `From ${nameList(names)}.` : "";
 }
 
 function headlineFor(count: number, canManage: boolean, recipientName: string) {

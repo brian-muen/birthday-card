@@ -347,7 +347,7 @@
 }
 
 .compose-date::-webkit-calendar-picker-indicator {
-  cursor: pointer;
+  cursor: var(--cursor-hand, pointer);
   opacity: 0.55;
 }
 

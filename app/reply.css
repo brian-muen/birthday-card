@@ -283,7 +283,7 @@
   border-radius: 3px;
   background: var(--os-sheet);
   color: var(--os-ink);
-  cursor: default;
+  cursor: var(--cursor-arrow, default);
   transition:
     translate 90ms var(--ease-out),
     box-shadow 90ms var(--ease-out);

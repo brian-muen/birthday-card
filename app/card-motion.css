@@ -19,7 +19,7 @@
   margin-inline: auto;
   overflow: visible;
   touch-action: pan-y;
-  cursor: grab;
+  cursor: var(--cursor-grab, grab);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -30,7 +30,7 @@
 
 .card-frame[data-dragging="true"],
 .card-frame[data-dragging="true"] * {
-  cursor: grabbing;
+  cursor: var(--cursor-grabbing, grabbing);
   user-select: none;
 }
 

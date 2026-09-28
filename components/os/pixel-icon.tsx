@@ -60,6 +60,32 @@ const ICONS = {
       <path d="M8 7h4v2H8zM12 5h1v6h-1zM13 6h1v4h-1zM14 7h1v2h-1z" fill="#b33a2e" />
     </>
   ),
+  cake: (
+    <>
+      <path d="M7 1h2v2H7z" fill="#f5cf4b" />
+      <path d="M7 3h2v4H7z" fill="#f2a7b8" />
+      <path d="M3 8h10v2H3zM1 11h14v3H1z" fill={SHEET} />
+      <path d="M1 12h14v1H1z" fill="#f2a7b8" />
+      <path
+        d="M7 0h2v1H7zM6 1h1v6H6zM9 1h1v6H9zM2 7h12v1H2zM2 8h1v2H2zM13 8h1v2h-1zM0 10h16v1H0zM0 11h1v3H0zM15 11h1v3h-1zM0 14h16v1H0z"
+        fill={INK}
+      />
+    </>
+  ),
+  sound: (
+    <>
+      <path d="M2 6h3l3-3h1v10H8l-3-3H2z" fill={SHEET} />
+      <path d="M2.5 6.5h2.5l3-3h.5v9H8l-3-3H2.5z" fill="none" stroke={INK} />
+      <path d="M11 6h1v4h-1zM13 4h1v8h-1z" fill={INK} />
+    </>
+  ),
+  mute: (
+    <>
+      <path d="M2 6h3l3-3h1v10H8l-3-3H2z" fill={SHEET} />
+      <path d="M2.5 6.5h2.5l3-3h.5v9H8l-3-3H2.5z" fill="none" stroke={INK} />
+      <path d="M11 6h1v1h-1zM14 6h1v1h-1zM12 7h2v2h-2zM11 9h1v1h-1zM14 9h1v1h-1z" fill={INK} />
+    </>
+  ),
   help: (
     <>
       <path d="M1 1h14v11H1z" fill="#f5cf4b" />

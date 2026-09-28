@@ -23,7 +23,9 @@
 }
 
 @media (min-width: 48rem) {
+  /* Stacks with the compose windows: whichever was clicked last is on top. */
   .home-mail {
+    z-index: auto;
     top: auto;
     right: 1.5rem;
     bottom: 1.5rem;
@@ -116,7 +118,7 @@
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
   text-underline-offset: 0.15em;
-  cursor: default;
+  cursor: var(--cursor-arrow, default);
 }
 
 .home-mail-forget:hover {

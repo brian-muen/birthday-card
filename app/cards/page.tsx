@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { count, desc, eq, inArray } from "drizzle-orm";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -13,6 +14,8 @@ import { cards, messages } from "@/lib/db/schema";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { stockHex } from "@/lib/stock";
 import "@/app/outbox.css";
+
+export const metadata: Metadata = { title: "Sent", robots: { index: false, follow: false } };
 
 function noteLabel(n: number) {
   if (n === 0) return "No notes";

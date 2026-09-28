@@ -15,13 +15,15 @@ import { OrganizerIcons } from "@/components/mail/organizer-icons";
 import ComposeSignIn from "@/components/mail/compose-signin";
 import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
+import BlinkDots from "@/components/os/blink-dots";
 import Computer from "@/components/os/computer";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
+import { playSound } from "@/components/os/sound";
 import { signByDay } from "@/lib/birthday";
 import type { DesignId } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
-import { stockHex, type StockId } from "@/lib/stock";
+import type { StockId } from "@/lib/stock";
 import "@/app/compose.css";
 
 const NAME_MAX = 80;
@@ -95,8 +97,9 @@ export default function ComposeDesktop({
   }, [signedIn, name, birthday, intro, stock, design]);
 
   return (
-    <div className="compose-screen" style={{ ["--wallpaper" as string]: stockHex(stock) }}>
+    <div className="compose-screen">
       <Computer
+        stock={stock}
         icons={
           <>
             <OrganizerIcons signedIn={signedIn} next="/" current="new" />
@@ -118,6 +121,7 @@ export default function ComposeDesktop({
             }
             if (trimmed) {
               setAlert(null);
+              playSound("sent");
               return;
             }
             event.preventDefault();
@@ -232,7 +236,7 @@ function ComposeToolbar({ signedIn, introLength }: { signedIn: boolean; introLen
         aria-busy={pending}
       >
         <PixelIcon name={signedIn ? "mail" : "person"} />
-        {pending ? "Sending…" : signedIn ? "Send" : "Sign in to send"}
+        {pending ? <BlinkDots label="Sending" /> : signedIn ? "Send" : "Sign in to send"}
       </button>
       {pending ? (
         <span className="compose-progress" aria-hidden="true">

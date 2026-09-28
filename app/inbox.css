@@ -79,6 +79,95 @@
   padding: 0.85rem 1.35rem 1.2rem;
 }
 
+/* ---------- Start-up ---------- */
+
+.inbox-boot {
+  position: absolute;
+  z-index: 20;
+  top: 8rem;
+  left: 50%;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  width: min(27rem, calc(100% - 1.5rem));
+  translate: -50% 0;
+  overflow: hidden;
+  border-radius: var(--os-radius);
+  user-select: none;
+}
+
+@media (min-width: 48rem) {
+  .inbox-boot {
+    top: clamp(4rem, 24%, 13rem);
+  }
+}
+
+.inbox-boot-art {
+  display: grid;
+  place-items: center;
+  border-right: 1px solid var(--os-ink);
+  background: oklch(from var(--wallpaper) calc(l - 0.1) min(calc(c * 3.2 + 0.015), 0.085) h);
+}
+
+.inbox-boot-art svg {
+  width: 4rem;
+  height: 4rem;
+  image-rendering: pixelated;
+}
+
+.inbox-boot-main {
+  min-width: 0;
+  padding: 1rem 1.1rem 1rem;
+}
+
+.inbox-boot-mark {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.inbox-boot-for {
+  margin: 0.4rem 0 0;
+  font-size: 0.875rem;
+}
+
+.inbox-boot-credits {
+  margin: 0.2rem 0 0;
+  overflow: hidden;
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  font-size: 0.8125rem;
+  font-style: italic;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: color-mix(in oklab, var(--os-ink) 70%, var(--os-chrome));
+}
+
+.inbox-boot-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.inbox-boot-bar {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+  height: 0.9rem;
+  margin-top: 0.3rem;
+  padding: 2px;
+  border: 1px solid var(--os-ink);
+  border-radius: 2px;
+  background: var(--os-sheet);
+}
+
+.inbox-boot-bar span[data-on] {
+  background: oklch(from var(--wallpaper) 0.62 min(calc(c * 3 + 0.06), 0.13) h);
+}
+
 /* ---------- Mail window ---------- */
 
 .inbox-mail {
@@ -193,7 +282,7 @@
   column-gap: 0.55rem;
   padding: 0.7rem 0.85rem 0.8rem 0.6rem;
   border-bottom: 1px solid var(--os-shade);
-  cursor: default;
+  cursor: var(--cursor-arrow, default);
   user-select: none;
 }
 
@@ -265,6 +354,11 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+/* The highlight is mid-tone, so grey text on it needs more ink to stay legible. */
+.inbox-row[aria-selected="true"] :is(.inbox-row-date, .inbox-row-preview) {
+  color: color-mix(in oklab, var(--os-ink) 80%, transparent);
 }
 
 /* ---------- Reading pane ---------- */

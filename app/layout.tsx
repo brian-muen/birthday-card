@@ -156,7 +156,7 @@ const fontVariables = [
 ].join(" ");
 
 export const metadata: Metadata = {
-  title: "Birthday card",
+  title: { default: "Birthday Mail", template: "%s · Birthday Mail" },
   description:
     "Start a birthday card and collect private messages from everyone. Share the finished card with the birthday person when you are ready.",
 };

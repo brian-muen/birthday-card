@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { count, eq } from "drizzle-orm";
@@ -20,6 +21,8 @@ import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { parseStock } from "@/lib/stock";
 import "@/app/outbox.css";
+
+export const metadata: Metadata = { title: "Sent", robots: { index: false, follow: false } };
 
 function noteCountLabel(n: number) {
   if (n === 0) return "No notes yet";
@@ -83,6 +86,7 @@ export default async function CardCreated({
     <Computer
       stock={card.stock}
       icons={<OrganizerIcons signedIn={organizer != null} next={herePath} />}
+      birthday={card.birthday ? { day: card.birthday, greeting: `It’s ${name}’s birthday!` } : null}
     >
       <div className="outbox">
         <OsWindow

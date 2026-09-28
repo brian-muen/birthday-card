@@ -4,6 +4,7 @@ import { useRef } from "react";
 
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
+import { zoomRects } from "@/components/os/zoom-rects";
 
 const QUESTIONS = [
   {
@@ -50,14 +51,32 @@ const QUESTIONS = [
 
 export default function HelpButton() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function open() {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    const win = dialog.querySelector(".os-window");
+    zoomRects(triggerRef.current, win, { host: dialog, hide: win });
+  }
+
+  function close() {
+    const dialog = dialogRef.current;
+    if (!dialog?.open) return;
+    const from = dialog.querySelector(".os-window")?.getBoundingClientRect();
+    dialog.close();
+    zoomRects(from, triggerRef.current);
+  }
 
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         className="os-icon os-help-trigger"
         aria-haspopup="dialog"
-        onClick={() => dialogRef.current?.showModal()}
+        onClick={open}
       >
         <PixelIcon name="help" />
         <span className="os-icon-label">Help</span>
@@ -66,14 +85,14 @@ export default function HelpButton() {
         ref={dialogRef}
         className="os-help"
         onClick={(event) => {
-          if (event.target === event.currentTarget) event.currentTarget.close();
+          if (event.target === event.currentTarget) close();
+        }}
+        onCancel={(event) => {
+          event.preventDefault();
+          close();
         }}
       >
-        <OsWindow
-          title="Help"
-          onClose={() => dialogRef.current?.close()}
-          closeLabel="Close help"
-        >
+        <OsWindow title="Help" onClose={close} closeLabel="Close help">
           <div className="os-help-body">
             {QUESTIONS.map(({ q, a }) => (
               <details key={q} className="os-help-item">

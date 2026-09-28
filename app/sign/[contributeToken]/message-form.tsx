@@ -6,7 +6,9 @@ import ReplyInvitation from "@/components/mail/reply-invitation";
 import ReplyPaper from "@/components/mail/reply-paper";
 import ReplyPenPicker from "@/components/mail/reply-pen-picker";
 import ReplySent from "@/components/mail/reply-sent";
+import BlinkDots from "@/components/os/blink-dots";
 import OsWindow from "@/components/os/os-window";
+import { playSound } from "@/components/os/sound";
 import { prepareNoteImage } from "@/lib/prepare-note-image";
 import type { BirthdayTiming } from "@/lib/birthday";
 import { DEFAULT_PEN, parsePen, type PenId } from "@/lib/pen";
@@ -243,6 +245,7 @@ export default function MessageForm({
         setImage(null);
         focusTarget.current = "sent";
         setView("sent");
+        playSound("sent");
       } catch {
         fail("Your note couldn't be sent. It's still here, so you can try again.", "form");
       }
@@ -328,7 +331,7 @@ export default function MessageForm({
                 data-variant="accent"
                 disabled={busy}
               >
-                {pending ? "Sending…" : "Send"}
+                {pending ? <BlinkDots label="Sending" /> : "Send"}
               </button>
               <label className="os-button reply-attach">
                 <input

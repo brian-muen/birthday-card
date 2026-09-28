@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -9,6 +10,8 @@ import { PixelIcon } from "@/components/os/pixel-icon";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
 import { safeNextPath } from "@/lib/safe-next-path";
 import "@/app/signin.css";
+
+export const metadata: Metadata = { title: "Sign in" };
 
 export default async function AccountPage({
   searchParams,
