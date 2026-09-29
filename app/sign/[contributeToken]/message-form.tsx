@@ -24,20 +24,6 @@ type View = "compose" | "sent";
 type DraftStatus = "none" | "restored" | "saved" | "unsaved";
 type FocusTarget = "name" | "body" | "sent";
 
-function signerWhen(recipientName: string, birthday: BirthdayTiming | null) {
-  if (!birthday) return null;
-  if (birthday.when === "upcoming" && birthday.signBy) {
-    return `${recipientName} turns a year older on ${birthday.day}. Please sign by ${birthday.signBy}.`;
-  }
-  if (birthday.when === "today") {
-    return `It's ${recipientName}'s birthday today, so please sign soon.`;
-  }
-  if (birthday.when === "past") {
-    return `${recipientName}'s birthday was ${birthday.day}, so please sign soon.`;
-  }
-  return null;
-}
-
 const DRAFT_LABEL: Record<DraftStatus, string> = {
   none: "Drafts save as you type",
   restored: "Draft restored",
@@ -129,7 +115,7 @@ export default function MessageForm({
   const focusTarget = useRef<FocusTarget | null>(null);
   const scrollToPaper = useRef(false);
 
-  const subject = `Sign ${recipientName}'s birthday card`;
+  const subject = `Sign ${recipientName}'s birthday card${birthday ? ` (${birthday.short})` : ""}`;
   const showPreview = view === "compose" && (preview ?? wide);
 
   useEffect(() => {
@@ -300,7 +286,6 @@ export default function MessageForm({
   }
 
   const busy = pending || imageBusy;
-  const when = signerWhen(recipientName, birthday);
   const describedBy = error ? "reply-error" : undefined;
 
   return (
@@ -364,15 +349,12 @@ export default function MessageForm({
               </>
             }
           >
-            {intro || when ? (
+            {intro ? (
               <div className="reply-brief">
-                {intro ? (
-                  <p className="reply-brief-intro">
-                    <span className="sr-only">Note from the organizer: </span>
-                    {intro}
-                  </p>
-                ) : null}
-                {when ? <p className="reply-brief-when">{when}</p> : null}
+                <p className="reply-brief-intro">
+                  <span className="sr-only">Note from the organizer: </span>
+                  {intro}
+                </p>
               </div>
             ) : null}
 

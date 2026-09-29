@@ -22,7 +22,7 @@ import { AppIcon, AppWindow } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import { playSound } from "@/components/os/sound";
-import { signByDay } from "@/lib/birthday";
+import { formatBirthday, signByDay } from "@/lib/birthday";
 import type { DesignId } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import type { SentCardRow } from "@/lib/sent-cards";
@@ -188,6 +188,7 @@ export default function ComposeDesktop({
                 <p className="compose-subject" data-empty={trimmed ? undefined : true}>
                   <span className="sr-only">Subject: </span>
                   {trimmed ? `Sign ${trimmed}’s birthday card` : "Sign their birthday card"}
+                  {birthday ? ` (${formatBirthday(birthday, "short")})` : ""}
                 </p>
               </div>
               <label htmlFor="intro" className="sr-only">
