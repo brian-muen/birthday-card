@@ -77,6 +77,7 @@ export default function SentFolder({
                         </span>
                       ) : null}
                       Sign {card.recipientName}’s birthday card
+                      {card.birthday ? ` (${formatBirthday(card.birthday, "short")})` : ""}
                     </span>
                     <span className="outbox-row-notes" data-none={card.notes === 0 || undefined}>
                       {noteLabel(card.notes)}

@@ -63,6 +63,8 @@ export function signByDay(iso: string) {
 
 export type BirthdayTiming = {
   day: string;
+  /** "Oct 3", for a subject line. */
+  short: string;
   /** The birthday, while that day is still ahead. */
   signBy: string | null;
   when: "upcoming" | "today" | "past";
@@ -74,6 +76,7 @@ export function birthdayTiming(iso: string, now = new Date()): BirthdayTiming | 
   const offset = (time - today(now)) / DAY_MS;
   return {
     day: longFormat.format(time),
+    short: shortFormat.format(time),
     signBy: offset > 0 ? signByDay(iso) : null,
     when: offset > 0 ? "upcoming" : offset === 0 ? "today" : "past",
   };

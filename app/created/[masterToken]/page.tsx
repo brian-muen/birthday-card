@@ -127,7 +127,10 @@ export default async function CardCreated({
                 <PixelIcon name="mail" className="outbox-message-icon" />
                 <div className="outbox-message-main">
                   <div className="outbox-message-head">
-                    <h3>Sign {name}’s birthday card</h3>
+                    <h3>
+                      Sign {name}’s birthday card
+                      {birthday ? ` (${birthday.short})` : ""}
+                    </h3>
                     <span className="outbox-when" data-when="now">
                       Send now
                     </span>
@@ -141,7 +144,7 @@ export default async function CardCreated({
                     path={`/sign/${card.contributeToken}`}
                     label="Signing link"
                     openLabel="Open the signing page"
-                    shareTitle={`Sign ${name}'s birthday card`}
+                    shareTitle={`Sign ${name}'s birthday card${birthday ? ` (${birthday.short})` : ""}`}
                     shareText={
                       birthday?.signBy
                         ? `Write a private note in ${name}'s birthday card by ${birthday.signBy}.`
