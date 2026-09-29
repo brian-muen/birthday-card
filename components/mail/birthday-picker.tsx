@@ -93,7 +93,6 @@ export default function BirthdayPicker({
         aria-label={value ? `Birthday, ${fieldLabel(value)}` : "Birthday, no date"}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-describedby="birthday-hint"
         onClick={() => (open ? setOpen(false) : openAtValue())}
       >
         {value ? fieldLabel(value) : "mm/dd/yyyy"}

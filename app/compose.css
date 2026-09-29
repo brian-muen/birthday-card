@@ -543,11 +543,6 @@ button.compose-date {
   text-underline-offset: 0.15em;
 }
 
-.compose-date-hint {
-  font-size: 0.8125rem;
-  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
-}
-
 @media (prefers-reduced-motion: reduce) {
   .compose-progress {
     display: none;
