@@ -319,6 +319,9 @@
 
 .os-window {
   position: relative;
+  /* One layer per window. A cover's own z-index must not paint over a
+     sibling window when the two overlap. */
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   width: 100%;

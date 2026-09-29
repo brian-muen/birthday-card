@@ -143,10 +143,15 @@ export default function OsWindow({
   }, [draggable, storageKey]);
 
   const raise = useCallback(() => {
-    if (stack.at(-1) === titleId) return;
-    if (ref.current?.closest("dialog")) return;
+    const el = ref.current;
+    if (!el || el.closest("dialog")) return;
     if (!window.matchMedia(STACK_QUERY).matches) return;
-    setStack([...stack.filter((id) => id !== titleId), titleId]);
+    if (stack.at(-1) === titleId) return;
+    const next = [...stack.filter((id) => id !== titleId), titleId];
+    // Apply before the next paint. A dragged window otherwise stays under
+    // whichever window is later in the page, for the whole gesture.
+    el.style.zIndex = String(next.length);
+    setStack(next);
   }, [titleId]);
 
   // Focus from opening a window does not go through React's onFocus. The
