@@ -39,6 +39,7 @@ export default function SentFolder({
         width="44rem"
         className="outbox-folder"
         draggable
+        raiseOnMount
         toolbar={
           <p className="outbox-toolbar-note">Saved to {email}</p>
         }

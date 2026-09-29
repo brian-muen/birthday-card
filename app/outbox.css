@@ -273,10 +273,18 @@
 
 /* ---------- Sent folder ---------- */
 
+/* Sent floats over the desktop, so opening it leaves the other windows where
+   they are. */
 @media (min-width: 48rem) {
-  .outbox-folder {
-    max-height: min(29rem, 100%);
-    margin-block: auto;
+  .outbox-folder.os-window {
+    --sent-width: min(44rem, calc(100vw - var(--os-icon-rail) * 2 - 2rem));
+    position: fixed;
+    top: calc(var(--os-top) + 3rem);
+    left: 50%;
+    width: var(--sent-width);
+    max-width: none;
+    max-height: min(29rem, calc(100dvh - var(--os-top) - 5rem));
+    margin: 0 0 0 calc(var(--sent-width) / -2);
   }
 
   .outbox-folder .os-window-body {
