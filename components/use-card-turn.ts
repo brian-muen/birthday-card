@@ -191,6 +191,7 @@ export function useCardTurn({
     function move(e: PointerEvent) {
       if (e.pointerId !== d.id) return;
       const dx = e.clientX - d.x;
+      const dy = e.clientY - d.y;
       if (!d.active) {
         if (Math.hypot(dx, dy) < DRAG_SLOP) return;
         d.active = true;
