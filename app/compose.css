@@ -74,7 +74,7 @@
   }
 }
 
-/* Phones: each open window fills the screen, one after the other. */
+/* Phones: each window is its own desktop window, stacked with a gap. */
 @media (max-width: 47.99rem) {
   .compose {
     display: contents;
@@ -345,9 +345,18 @@ button.compose-select {
   z-index: 60;
   top: 38%;
   left: 50%;
-  width: calc(100vw - 2rem);
+  width: min(23rem, calc(100dvw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)));
   translate: -50% -50%;
   box-shadow: 5px 5px 0 var(--os-ink);
+}
+
+@media (max-width: 47.99rem) {
+  .compose-alert {
+    left: max(0.75rem, env(safe-area-inset-left));
+    right: max(0.75rem, env(safe-area-inset-right));
+    width: auto;
+    translate: 0 -50%;
+  }
 }
 
 .compose-alert-body {

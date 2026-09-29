@@ -372,7 +372,7 @@
   display: grid;
   justify-items: center;
   gap: 1rem;
-  width: min(100%, 22rem, calc(100vw - 3rem));
+  width: min(100%, 22rem);
   margin: 0;
   scroll-margin-top: calc(var(--os-top) + 1rem);
 }
@@ -545,7 +545,7 @@
   }
 }
 
-/* Phones: the reply window fills the screen and the page lies under it. */
+/* Phones: the reply window and the page stack on the desktop. */
 @media (max-width: 47.99rem) {
   .reply-desk,
   .reply-form {

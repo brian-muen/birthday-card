@@ -215,7 +215,10 @@
 }
 
 .os-help {
-  width: min(34rem, calc(100vw - 1.5rem));
+  width: min(
+    34rem,
+    calc(100dvw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right))
+  );
   max-width: none;
   margin: auto;
   padding: 0;
@@ -232,6 +235,13 @@
 
 /* A 50% dither rather than a blur: the desktop stays legible behind it, the
    way a modal greyed out the screen on a 1-bit display. */
+.os-help:focus,
+.os-help:focus-visible,
+.os-help-body:focus,
+.os-help-body:focus-visible {
+  outline: none;
+}
+
 .os-help::backdrop {
   background:
     repeating-conic-gradient(rgb(31 27 46 / 0.3) 0 25%, transparent 0 50%) 0 0 / 2px 2px,
@@ -325,6 +335,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
   max-width: var(--window-width, 40rem);
   background: var(--os-chrome);
   border: 1px solid var(--os-ink);
@@ -405,6 +416,19 @@
   background:
     linear-gradient(45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%),
     linear-gradient(-45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%);
+}
+
+/* No hover on a finger, so the mark stays drawn. Focus does not draw it:
+   opening a dialog focuses the close box and would otherwise flash the X. */
+@media (hover: none) {
+  .os-close::after {
+    content: "";
+    width: 0.45rem;
+    height: 0.45rem;
+    background:
+      linear-gradient(45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%),
+      linear-gradient(-45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%);
+  }
 }
 
 .os-toolbar {
@@ -637,66 +661,59 @@
   box-shadow: 0 0 0 1px var(--os-ink);
 }
 
-/* Phones: the icons are a home screen on the wallpaper. An open app fills
-   the screen over them, and its close box brings them back. */
+/* Phones keep the desktop: wallpaper in the margin, window chrome, and the
+   icons along the bottom so a window is not crushed into a side column. */
 @media (max-width: 47.99rem) {
-  .os-icons {
-    position: absolute;
-    top: var(--os-top);
-    right: 0;
-    bottom: auto;
-    left: 0;
-    grid-auto-flow: row;
-    grid-template-rows: none;
-    grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr));
-    row-gap: 1.25rem;
-    padding: 1.5rem max(0.75rem, env(safe-area-inset-right)) 1.5rem
-      max(0.75rem, env(safe-area-inset-left));
-    direction: ltr;
-  }
-
-  .os-icons .os-icon svg {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  .computer:has(.os-app) .os-icons {
-    display: none;
+  .computer {
+    --os-icon-rail: 0px;
+    --os-dock: 5.15rem;
   }
 
   .os-desktop {
-    padding: 0;
-    gap: 0;
+    gap: 0.85rem;
+    padding:
+      0.75rem
+      max(0.75rem, env(safe-area-inset-right))
+      calc(var(--os-dock) + env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
   }
 
-  .os-app .os-window {
-    flex: 1 0 auto;
-    max-width: none;
-    padding-bottom: env(safe-area-inset-bottom);
-    border-inline: 0;
-    border-radius: 0;
-    box-shadow: none;
+  .os-icons {
+    z-index: 5;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    height: auto;
+    padding: 0.35rem max(0.25rem, env(safe-area-inset-right))
+      max(0.35rem, env(safe-area-inset-bottom)) max(0.25rem, env(safe-area-inset-left));
+    direction: ltr;
+    overflow-x: auto;
   }
 
-  .os-app .os-window > .os-titlebar {
-    height: 2.5rem;
-    border-radius: 0;
-    padding-inline: 3rem;
+  .os-icon {
+    width: 4.25rem;
+    flex: 0 0 auto;
+    gap: 0.2rem;
+    font-size: 0.75rem;
   }
 
-  .os-app .os-window > .os-titlebar .os-close {
-    left: max(0.75rem, env(safe-area-inset-left));
-    width: 1.5rem;
-    height: 1.5rem;
+  .os-icon svg {
+    width: 1.7rem;
+    height: 1.7rem;
   }
 
-  .os-app .os-window > .os-titlebar .os-close::after {
-    content: "";
-    width: 0.7rem;
-    height: 0.7rem;
-    background:
-      linear-gradient(45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%),
-      linear-gradient(-45deg, transparent 44%, var(--os-ink) 44% 56%, transparent 56%);
+  .os-icon-label {
+    max-width: 4.4rem;
+    white-space: normal;
+  }
+
+  .os-window {
+    max-width: min(var(--window-width, 40rem), 100%);
   }
 }
 

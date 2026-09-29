@@ -13,13 +13,25 @@
   --cast-l: 0;
   width: min(
     var(--card-max),
-    calc(100vw - 3rem),
+    calc(100% - 1rem),
     calc((100svh - var(--card-chrome)) * var(--fit-w) / var(--fit-h))
   );
   margin-inline: auto;
   overflow: visible;
-  touch-action: pan-y;
+  /* The page claims the touch. pan-y let the browser cancel the swipe. */
+  touch-action: none;
+  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+.card-book,
+.card-preview {
+  width: 100%;
+  max-width: 100%;
+}
+
+.card-frame .card-face {
+  touch-action: none;
 }
 
 .card-frame[data-spread="true"] {

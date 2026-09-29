@@ -168,7 +168,8 @@ export function useCardTurn({
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || isControl(event.target)) return;
-    const leaf = frameRef.current?.querySelector<HTMLElement>(".card-leaf");
+    const frame = frameRef.current;
+    const leaf = frame?.querySelector<HTMLElement>(".card-leaf");
     const d = {
       id: event.pointerId,
       x: event.clientX,
@@ -179,22 +180,24 @@ export function useCardTurn({
       samples: [] as { t: number; at: number }[],
     };
     suppressClick.current = false;
+    // Capture so a finger can leave the card mid-swipe. touch-action: none
+    // keeps the browser from cancelling that gesture to scroll the page.
+    try {
+      frame?.setPointerCapture(event.pointerId);
+    } catch {
+      // The pointer is already gone. Window listeners still follow it.
+    }
 
     function move(e: PointerEvent) {
       if (e.pointerId !== d.id) return;
       const dx = e.clientX - d.x;
-      const dy = e.clientY - d.y;
       if (!d.active) {
         if (Math.hypot(dx, dy) < DRAG_SLOP) return;
-        if (Math.abs(dy) > Math.abs(dx)) {
-          detach();
-          return;
-        }
         d.active = true;
         suppressClick.current = true;
         stop();
         d.t0 = motion.current.t;
-        frameRef.current?.setAttribute("data-dragging", "true");
+        frame?.setAttribute("data-dragging", "true");
       }
       const base = Math.round(d.t0);
       const t = clamp(
@@ -214,7 +217,7 @@ export function useCardTurn({
       if (e.pointerId !== d.id) return;
       detach();
       if (!d.active) return;
-      frameRef.current?.removeAttribute("data-dragging");
+      frame?.removeAttribute("data-dragging");
       const first = d.samples[0];
       const latest = d.samples[d.samples.length - 1];
       const span = latest && first ? (latest.at - first.at) / 1000 : 0;
@@ -227,15 +230,24 @@ export function useCardTurn({
       );
     }
 
+    function onTouchMove(e: TouchEvent) {
+      const touch = [...e.changedTouches].find((item) => item.identifier === d.id);
+      if (!touch) return;
+      if (!d.active && Math.hypot(touch.clientX - d.x, touch.clientY - d.y) < DRAG_SLOP) return;
+      if (e.cancelable) e.preventDefault();
+    }
+
     function detach() {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
+      window.removeEventListener("touchmove", onTouchMove);
     }
 
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
   }
 
   function onClickCapture(event: React.MouseEvent<HTMLDivElement>) {

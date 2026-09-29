@@ -11,15 +11,16 @@
   right: -0.7rem;
 }
 
-/* Phones: a banner along the bottom, clear of the full-screen window's close box. */
+/* A window on the wallpaper, clear of the icon column. */
 .home-mail {
   position: fixed;
   z-index: 25;
-  bottom: calc(0.75rem + env(safe-area-inset-bottom));
-  left: 50%;
-  width: min(24rem, calc(100% - 1.5rem));
-  translate: -50% 0;
-  transform-origin: 50% 100%;
+  right: calc(var(--os-icon-rail) + 0.65rem);
+  bottom: calc(var(--os-dock, 0px) + max(0.75rem, env(safe-area-inset-bottom)));
+  left: max(0.75rem, env(safe-area-inset-left));
+  width: auto;
+  max-width: 24rem;
+  transform-origin: 0 100%;
   animation: home-mail-in 260ms var(--ease-out) 450ms both;
 }
 
