@@ -59,7 +59,7 @@
   }
 }
 
-/* Phones: each open window fills the screen, one after the other. */
+/* Phones: each window is its own desktop window, stacked with a gap. */
 @media (max-width: 47.99rem) {
   .outbox,
   .outbox-side {

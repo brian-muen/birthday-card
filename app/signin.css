@@ -21,9 +21,11 @@
   .signin.os-window {
     position: fixed;
     z-index: 30;
-    inset: var(--os-top) 0 0 0;
+    top: max(calc(var(--os-top) + 1rem), calc(50svh - 11rem));
+    left: max(0.75rem, env(safe-area-inset-left));
+    right: max(0.75rem, env(safe-area-inset-right));
     width: auto;
-    max-width: none;
+    max-width: 27rem;
     margin: 0;
   }
 }

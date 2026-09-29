@@ -57,6 +57,8 @@ export default function HelpButton() {
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
+    // showModal focuses the close box, which draws a focus ring on it.
+    dialog.querySelector<HTMLElement>(".os-help-body")?.focus({ preventScroll: true });
     const win = dialog.querySelector(".os-window");
     zoomRects(triggerRef.current, win, { host: dialog, hide: win });
   }
@@ -93,7 +95,7 @@ export default function HelpButton() {
         }}
       >
         <OsWindow title="Help" onClose={close} closeLabel="Close help">
-          <div className="os-help-body">
+          <div className="os-help-body" tabIndex={-1}>
             {QUESTIONS.map(({ q, a }) => (
               <details key={q} className="os-help-item">
                 <summary>{q}</summary>
