@@ -49,6 +49,12 @@ export function parseBirthday(
   return { ok: true, birthday: raw };
 }
 
+/** Whether this calendar day can be stored as the card's birthday. */
+export function birthdayAllowed(iso: string, now = new Date()) {
+  const parsed = parseBirthday(iso, now);
+  return parsed.ok && parsed.birthday !== null;
+}
+
 /** "Friday, Oct 3", or "Oct 3" when short. Invalid input formats as "". */
 export function formatBirthday(iso: string, style: "long" | "short" = "long") {
   const time = dayStart(iso);

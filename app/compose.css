@@ -197,6 +197,11 @@
   appearance: none;
 }
 
+button.compose-select {
+  text-align: left;
+  cursor: var(--cursor-hand, pointer);
+}
+
 .compose-select:focus-visible {
   outline: 1px solid var(--os-ink);
   outline-offset: 2px;
@@ -355,32 +360,187 @@
   min-width: 0;
 }
 
-.compose-date.os-header-field {
+button.compose-date {
   width: auto;
   font-variant-numeric: tabular-nums;
-  color-scheme: light;
+  text-align: left;
+  cursor: var(--cursor-hand, pointer);
 }
 
-.compose-date[data-empty]::-webkit-datetime-edit {
+.compose-date[data-empty] {
   color: color-mix(in oklab, var(--os-ink) 40%, transparent);
 }
 
-.compose-date::-webkit-datetime-edit-month-field:focus,
-.compose-date::-webkit-datetime-edit-day-field:focus,
-.compose-date::-webkit-datetime-edit-year-field:focus {
-  border-radius: 1px;
+/* Menus and the calendar are portaled onto the desktop, above the windows. */
+.retro-popover {
+  font-family: var(--font-ui), var(--cjk-sans), sans-serif;
+  color: var(--os-ink);
+}
+
+.retro-menu {
+  min-width: 11rem;
+  margin: 0;
+  padding: 0.2rem;
+  list-style: none;
+  border: 1px solid var(--os-ink);
+  background: var(--os-sheet);
+  box-shadow: 3px 3px 0 var(--os-ink);
+}
+
+.retro-menu-option {
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0.28rem 0.45rem 0.28rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: var(--cursor-hand, pointer);
+}
+
+.retro-menu-option[aria-selected="true"]::before {
+  content: "✓";
+  font-size: 0.8rem;
+}
+
+.retro-menu-option[data-active] {
+  background: var(--os-select);
+}
+
+.retro-menu-option:focus-visible {
+  outline: none;
+}
+
+.retro-calendar {
+  width: 16.5rem;
+  border: 1px solid var(--os-ink);
+  background: var(--os-chrome);
+  box-shadow: 3px 3px 0 var(--os-ink);
+}
+
+.retro-calendar-bar {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr 1.6rem;
+  align-items: center;
+  height: 1.7rem;
+  border-bottom: 1px solid var(--os-ink);
+  background:
+    repeating-linear-gradient(180deg, var(--os-ink) 0 1px, transparent 1px 3px) center /
+      calc(100% - 3.6rem) 0.7rem no-repeat,
+    var(--os-chrome);
+}
+
+.retro-calendar-title {
+  margin: 0;
+  justify-self: center;
+  padding: 0 0.4rem;
+  background: var(--os-chrome);
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.retro-calendar-step,
+.retro-calendar-clear {
+  border: 0;
+  background: transparent;
+  color: var(--os-ink);
+  font: inherit;
+  cursor: var(--cursor-hand, pointer);
+}
+
+.retro-calendar-step {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.retro-calendar-step::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-bottom: 1.5px solid var(--os-ink);
+  border-left: 1.5px solid var(--os-ink);
+  rotate: 45deg;
+}
+
+.retro-calendar-step[data-dir="next"]::before {
+  rotate: -135deg;
+}
+
+.retro-calendar-step:focus-visible,
+.retro-calendar-clear:focus-visible,
+.retro-calendar-day:focus-visible {
+  outline: 1px dotted var(--os-ink);
+  outline-offset: -2px;
+}
+
+.retro-calendar-week,
+.retro-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0.35rem 0.4rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.retro-calendar-week {
+  padding-bottom: 0;
+  color: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
+  font-family: var(--font-pixel), var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.retro-calendar-grid {
+  padding-bottom: 0.35rem;
+}
+
+.retro-calendar-day {
+  height: 1.7rem;
+  border: 0;
+  background: transparent;
+  color: var(--os-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: var(--cursor-hand, pointer);
+}
+
+.retro-calendar-day[data-outside],
+.retro-calendar-day:disabled {
+  color: color-mix(in oklab, var(--os-ink) 35%, var(--os-chrome));
+  cursor: default;
+}
+
+.retro-calendar-day:hover:not(:disabled) {
+  background: var(--os-select);
+}
+
+.retro-calendar-day[data-today]:not([data-selected]) {
+  box-shadow: inset 0 0 0 1px var(--os-ink);
+}
+
+.retro-calendar-day[data-selected] {
   background: var(--os-ink);
   color: var(--os-chrome);
 }
 
-.compose-date::-webkit-calendar-picker-indicator {
-  cursor: var(--cursor-hand, pointer);
-  opacity: 0.55;
+.retro-calendar-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.15rem 0.45rem 0.4rem;
 }
 
-.compose-date:hover::-webkit-calendar-picker-indicator,
-.compose-date:focus-visible::-webkit-calendar-picker-indicator {
-  opacity: 1;
+.retro-calendar-clear {
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .compose-date-hint {
