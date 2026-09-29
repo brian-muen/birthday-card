@@ -1,4 +1,4 @@
-const FALLBACK = "/cards";
+const FALLBACK = "/?sent=1";
 const APP_ORIGIN = "https://birthday-card.invalid";
 
 function decodePath(raw: string): string | null {

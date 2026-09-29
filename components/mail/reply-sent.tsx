@@ -1,6 +1,7 @@
 "use client";
 
-import type { Ref } from "react";
+import { useContext, type Ref } from "react";
+import { AppCloseContext } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import type { PenId } from "@/lib/pen";
@@ -19,23 +20,17 @@ export default function ReplySent({
   pen,
   headingRef,
   onWriteAnother,
-  onDone,
 }: {
   recipientName: string;
   authorName: string;
   pen: PenId;
   headingRef: Ref<HTMLHeadingElement>;
   onWriteAnother: () => void;
-  onDone: () => void;
 }) {
+  const close = useContext(AppCloseContext);
+
   return (
-    <OsWindow
-      title="Sent"
-      width="27rem"
-      className="reply-sent"
-      onClose={onDone}
-      closeLabel="Close"
-    >
+    <OsWindow title="Sent" width="27rem" className="reply-sent" closeLabel="Close">
       <div className="reply-sent-body">
         <PixelIcon name="card" className="reply-sent-icon" />
         <div>
@@ -53,8 +48,8 @@ export default function ReplySent({
         <button type="button" className="os-button" onClick={onWriteAnother}>
           Write another note
         </button>
-        <button type="button" className="os-button" onClick={onDone}>
-          Back to inbox
+        <button type="button" className="os-button" onClick={() => close?.()}>
+          Done
         </button>
       </div>
     </OsWindow>

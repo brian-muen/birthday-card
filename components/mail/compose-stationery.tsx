@@ -1,7 +1,6 @@
 "use client";
 
-import CoverThumb from "@/components/mail/outbox-thumb";
-import { PICKER_DESIGNS, type DesignId } from "@/lib/design";
+import { PICKER_DESIGNS, parseDesign, type DesignId } from "@/lib/design";
 import { STOCKS, type StockId } from "@/lib/stock";
 
 export default function ComposeStationery({
@@ -15,58 +14,51 @@ export default function ComposeStationery({
   onDesign: (id: DesignId) => void;
   onStock: (id: StockId) => void;
 }) {
-  const coverLabel = PICKER_DESIGNS.find((option) => option.id === design)?.label;
-  const paper = STOCKS.find((option) => option.id === stock);
-
   return (
-    <div className="compose-stationery" style={{ ["--card-stock" as string]: paper?.hex }}>
+    <div className="compose-stationery">
       <h3 className="compose-stationery-title">Stationery</h3>
-      <fieldset className="compose-set">
-        <legend className="compose-legend">
-          Cover <span>{coverLabel}</span>
-        </legend>
-        <div className="compose-covers">
+      <div className="compose-stationery-rows">
+        <label htmlFor="design" className="compose-label">
+          Cover
+        </label>
+        <select
+          id="design"
+          name="design"
+          value={design}
+          onChange={(event) => onDesign(parseDesign(event.target.value))}
+          className="compose-select"
+        >
           {PICKER_DESIGNS.map((option) => (
-            <label key={option.id} className="compose-cover" title={option.label}>
-              <input
-                type="radio"
-                name="design"
-                value={option.id}
-                checked={design === option.id}
-                onChange={() => onDesign(option.id)}
-                className="sr-only"
-              />
-              <CoverThumb design={option.id} className="compose-thumb" />
-              <span className="sr-only">{option.label}</span>
-            </label>
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
           ))}
-        </div>
-      </fieldset>
-      <fieldset className="compose-set">
-        <legend className="compose-legend">
-          Paper <span>{paper?.label}</span>
-        </legend>
+        </select>
+        <span id="compose-paper" className="compose-label">
+          Paper
+        </span>
         <div className="compose-papers">
-          {STOCKS.map((option) => (
-            <label key={option.id} className="compose-paper" title={option.label}>
-              <input
-                type="radio"
-                name="stock"
-                value={option.id}
-                checked={stock === option.id}
-                onChange={() => onStock(option.id)}
-                className="sr-only"
-              />
-              <span
-                className="compose-swatch"
-                style={{ backgroundColor: option.hex }}
-                aria-hidden="true"
-              />
-              <span className="sr-only">{option.label}</span>
-            </label>
-          ))}
+          <div className="compose-swatches" role="radiogroup" aria-labelledby="compose-paper">
+            {STOCKS.map((option) => (
+              <label key={option.id} className="compose-swatch-label">
+                <input
+                  type="radio"
+                  name="stock"
+                  value={option.id}
+                  checked={option.id === stock}
+                  onChange={() => onStock(option.id)}
+                  className="compose-swatch"
+                  style={{ backgroundColor: option.hex }}
+                />
+                <span className="sr-only">{option.label}</span>
+              </label>
+            ))}
+          </div>
+          <span className="compose-paper-name">
+            {STOCKS.find((option) => option.id === stock)?.label}
+          </span>
         </div>
-      </fieldset>
+      </div>
     </div>
   );
 }

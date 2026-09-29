@@ -10,7 +10,7 @@ export async function claimCard(formData: FormData) {
   const organizer = await getCurrentOrganizer();
 
   if (!organizer) {
-    const next = masterToken ? `/created/${masterToken}` : "/cards";
+    const next = masterToken ? `/created/${masterToken}` : "/?sent=1";
     redirect(`/account?next=${encodeURIComponent(next)}`);
   }
 

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { count, eq } from "drizzle-orm";
 
 import { claimCard } from "@/app/actions/claim-card";
 import ActionButton from "@/components/action-button";
-import CardPreview from "@/components/card-preview";
+import StillCover from "@/components/mail/still-cover";
 import { OrganizerIcons } from "@/components/mail/organizer-icons";
+import OpenSent from "@/components/mail/open-sent";
+import SentFolder from "@/components/mail/sent-folder";
 import { OpenSignInButton, SignInApp } from "@/components/mail/sign-in-window";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import OutboxLink from "@/components/mail/outbox-link";
@@ -21,7 +22,7 @@ import { cards, messages } from "@/lib/db/schema";
 import { parseDesign } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import { getCurrentOrganizer } from "@/lib/organizer-auth";
-import { parseStock } from "@/lib/stock";
+import { listSentCards } from "@/lib/sent-cards";
 import "@/app/outbox.css";
 
 export const metadata: Metadata = { title: "Share links", robots: { index: false, follow: false } };
@@ -52,6 +53,7 @@ export default async function CardCreated({
   const { masterToken } = await params;
   const status = await searchParams;
   const organizer = await getCurrentOrganizer();
+  const sentCards = organizer ? await listSentCards(organizer.id) : [];
 
   const db = await getDb();
   const found = await db.query.cards.findFirst({
@@ -87,7 +89,7 @@ export default async function CardCreated({
   return (
     <Computer
       stock={card.stock}
-      initialClosed={["sign-in"]}
+      initialClosed={["sign-in", "sent"]}
       icons={
         <OrganizerIcons signedIn={organizer != null}>
           <AppIcon app="links" icon="mail" label="Share links" />
@@ -209,7 +211,7 @@ export default async function CardCreated({
               closeLabel="Close the card preview"
             >
               <div className="outbox-preview-stage" style={{ ["--stage" as string]: stage }}>
-                <CardPreview name={name} stock={parseStock(card.stock)} design={design} compact />
+                <StillCover name={name} design={design} />
               </div>
             </OsWindow>
           </AppWindow>
@@ -220,7 +222,7 @@ export default async function CardCreated({
                 <div className="outbox-save-body">
                   {savedToThisAccount ? (
                     <p role="status">
-                      Saved. Find it again in <Link href="/cards">Sent cards</Link>.
+                      Saved. Find it again in <OpenSent>Sent</OpenSent>.
                     </p>
                   ) : organizer ? (
                     <>
@@ -255,6 +257,7 @@ export default async function CardCreated({
           ) : null}
         </div>
       </div>
+      {organizer ? <SentFolder cards={sentCards} email={organizer.email} /> : null}
       {organizer ? null : <SignInApp next={herePath} />}
     </Computer>
   );

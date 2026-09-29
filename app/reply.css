@@ -1,5 +1,6 @@
-/* The signer's mail: one invitation in the inbox, a reply window, and a
-   page of the card lying beside it. The page is paper, never chrome. */
+/* The signer's mail: the reply they write, with the organizer's note and
+   the birthday line above the letter, and a page of the card beside it.
+   The page is paper, never chrome. */
 
 .reply-window {
   --reply-muted: color-mix(in oklab, var(--os-ink) 62%, var(--os-chrome));
@@ -17,125 +18,43 @@
   row-gap: 0.15rem;
 }
 
-/* ---------- Inbox ---------- */
+/* ---------- Organizer note ---------- */
 
-.reply-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  border-bottom: 1px solid var(--os-ink);
-  background: var(--os-sheet);
-}
-
-.reply-row {
+.reply-brief {
   display: grid;
-  grid-template-columns: 1.1rem minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.5rem 0.8rem;
-  background: var(--os-select);
-  font-size: 0.9375rem;
-  line-height: 1.3;
-}
-
-.reply-row-icon {
-  width: 1.1rem;
-  height: 1.1rem;
-}
-
-.reply-row-text {
-  display: flex;
-  gap: 1rem;
-  min-width: 0;
-}
-
-.reply-row-from {
-  flex: none;
-  width: 8.5rem;
-  font-weight: 650;
-}
-
-.reply-row-subject {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.reply-row-flag,
-.reply-row-date {
-  font-family: var(--font-pixel), sans-serif;
-  font-size: 0.8125rem;
-  white-space: nowrap;
-}
-
-.reply-row-flag {
-  padding: 0.1rem 0.4rem;
-  border: 1px solid var(--os-ink);
-  border-radius: 2px;
-  background: var(--os-sheet);
-}
-
-.reply-letter-head {
-  padding: 1rem 1.25rem 0.85rem;
+  gap: 0.55rem;
+  padding: 0.95rem 1.05rem 1rem;
   border-bottom: 1px solid var(--os-ink);
+  background: var(--os-chrome);
 }
 
-.reply-letter-head h3 {
-  margin: 0 0 0.6rem;
-  font-size: 1.3rem;
-  font-weight: 650;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
-  text-wrap: balance;
-}
-
-.reply-letter-head dl {
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  gap: 0.2rem 0.5rem;
+.reply-brief p {
+  max-width: 58ch;
   margin: 0;
-  font-size: 0.9375rem;
 }
 
-.reply-letter-head dt,
+.reply-brief-intro {
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--os-select);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.reply-brief-when {
+  color: var(--reply-muted);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.reply-brief-intro + .reply-brief-when {
+  padding-left: calc(0.8rem + 3px);
+}
+
 .reply-label {
   font-family: var(--font-pixel), sans-serif;
   font-size: 0.875rem;
   color: var(--reply-muted);
-}
-
-.reply-letter-head dd {
-  margin: 0;
-}
-
-.reply-letter-body {
-  padding: 1.25rem 1.25rem 1.6rem;
-  background: var(--os-chrome);
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.reply-letter-body p {
-  max-width: 58ch;
-  margin: 0 0 0.9rem;
-}
-
-.reply-letter-body p:last-child {
-  margin-bottom: 0;
-}
-
-.reply-letter-lead {
-  color: var(--reply-muted);
-}
-
-.reply-quote {
-  max-width: 54ch;
-  margin: 0 0 1.4rem;
-  padding: 0.15rem 0 0.15rem 1rem;
-  border-left: 3px solid var(--os-select);
-  font-size: 1.0625rem;
-  white-space: pre-wrap;
 }
 
 /* ---------- Reply ---------- */
@@ -639,54 +558,8 @@
 }
 
 @media (max-width: 39.99rem) {
-  .reply-inbox {
-    flex: 1 0 auto;
-  }
-
-  .reply-inbox .os-window-body,
-  .reply-letter {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .reply-letter,
-  .reply-letter-body {
-    flex: 1 0 auto;
-  }
-
-  .reply-row {
-    grid-template-columns: 1.1rem minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 0.6rem;
-  }
-
-  .reply-row-icon {
-    margin-top: 0.1rem;
-  }
-
-  .reply-row-text {
-    flex-direction: column;
-    gap: 0.1rem;
-  }
-
-  .reply-row-from {
-    width: auto;
-  }
-
-  .reply-row-flag {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: start;
-  }
-
-  .reply-row-date {
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .reply-letter-head,
-  .reply-letter-body {
-    padding-inline: 1rem;
+  .reply-brief {
+    padding-inline: 0.85rem;
   }
 
   .reply-fields {
