@@ -1,107 +1,72 @@
-# Group Card
+# Birthday Mail
 
-A Thankbox-style group card app. Create a card for someone, share a
-**contributor link** so friends can privately leave messages (they never see
-each other's messages), and keep a **master link** that shows every message —
-send it to the recipient when you're ready.
+A group birthday card that arrives like email. One person starts the card, friends each write a private note, and the birthday person opens the notes as messages — then turns them into a paper card.
 
-## How it works
+Birthday Mail does not send email. You deliver the links yourself: paste each one into a text, an email, or the group chat.
 
-- Each card has unguessable URL tokens:
-  - `contributeToken` → `/sign/[contributeToken]` — write-only message form
-  - `giftToken` → `/card/[giftToken]` — read the finished card
-  - `masterToken` → `/card/[masterToken]` — view all messages, delete messages
-- `/` — landing page with a create-card form. After creating, you're shown
-  the links at `/created/[masterToken]`.
-- A card can carry an optional birthday (`cards.birthday`, a Postgres `date`).
-  It's only shown: a label in `/cards`, a suggested send day on the links page,
-  and a sign-by date (the birthday itself) in the signing invitation. Nothing is
-  scheduled or locked; sharing the gift link is still the delivery.
-- Organizers sign in with Google to start a card. Every card they start is
-  saved to `/cards`, so its links can be found later. Cards started before
-  sign-in was required can still be saved from their links page. Contributors
-  and the birthday person never need an account.
+## What you can do
 
-## Tech
+- **Start a card.** Name who it’s for, pick a cover and paper, and leave an optional note for the people signing. Sign in with Google, then Send.
+- **Collect notes in private.** Everyone with the signing link can write a message, choose a pen, and attach one photo. They see the organizer’s note and their own — never anyone else’s.
+- **Keep the card.** Cards you start stay in Sent, so the links are still there later.
+- **Hand it over when it’s ready.** Sharing the gift link is the delivery. A birthday on the card only tells signers when to sign by; nothing is scheduled or locked.
+- **Open it two ways.** The birthday person reads the notes as mail, then Transform turns the inbox into a paper card they can flip through. Print downloads the whole card as a PDF.
 
-- Next.js (App Router) + TypeScript + Tailwind CSS v4
-- Drizzle ORM. Local dev uses an embedded PGlite database (`.pglite/`,
-  gitignored, zero setup). Production uses hosted Postgres via `DATABASE_URL`
-  (e.g. Neon on Vercel). Tables are auto-created on first use: the idempotent
-  `ENSURE_TABLES` statements in `lib/db/index.ts` run on the first `getDb()`
-  of each server process, so schema changes go there as `ADD COLUMN IF NOT
-  EXISTS` lines.
+## The three links
 
-## Shared modules (the contract)
+Each card has its own links. Whoever has a link can do what that link allows.
 
-- `lib/db/schema.ts` — `organizers`, `organizer_sessions`, `cards`, and `messages` tables
-- `lib/db/index.ts` — `getDb(): Promise<Db>` returns the Drizzle instance
-- `lib/tokens.ts` — `generateToken()` for URL tokens
-- `lib/organizer-auth.ts` — organizer session cookie
+| Link | Who it’s for | What it does |
+| --- | --- | --- |
+| Signing | Everyone writing a note | Write one note. Does not show other people’s notes. |
+| Gift | The birthday person | Read every note, flip through the paper card, and download a PDF. |
+| Organizer | You | Read every note, remove one if you need to, and get the links again. |
 
-Example usage in a server action:
+Only starting a card needs an account. Signing a card and opening one do not.
 
-```ts
-import { getDb } from "@/lib/db";
-import { cards } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+## Run it locally
 
-const db = await getDb();
-const card = await db.query.cards.findFirst({
-  where: eq(cards.masterToken, token),
-});
+```bash
+npm install
+npm run dev
 ```
 
-## Birthday message
+Open [http://localhost:3000](http://localhost:3000).
 
-`scripts/birthday_message.py` prints the usual nudge for a signing link and
-copies it to the clipboard, ready to paste wherever the group talks:
+Local development uses an embedded Postgres database in `.pglite/` (gitignored), so there is nothing else to install. Set `DATABASE_URL` to use hosted Postgres instead, for example Neon.
+
+Starting a card needs Google sign-in, including locally. Without it, the home screen still loads, but Send cannot go through. Signing and opening a card never need these settings.
+
+1. In [Google Cloud](https://console.cloud.google.com/apis/credentials), create an OAuth client of type **Web application**.
+2. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/google/callback`
+   - `https://your-domain/api/auth/google/callback`
+3. Put these in `.env.local` (and in your host’s environment):
+
+```bash
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+APP_URL=http://localhost:3000
+```
+
+`APP_URL` is the public origin with no trailing slash, so the redirect Google sees matches the one in the console.
+
+## Stack
+
+Next.js (App Router), React, TypeScript, and Tailwind CSS. Data is stored with Drizzle ORM on Postgres — PGlite locally, hosted Postgres when `DATABASE_URL` is set. Tables are created on first use.
+
+## Extra scripts
+
+`scripts/birthday_message.py` writes the usual nudge for a signing link and copies it to the clipboard:
 
 ```bash
 python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc
 ```
 
-Run it with no arguments to be asked for the name, date, and link.
+Run it with no arguments to be asked for the name, date, and link. Add `--except` with the birthday person’s Slack email or member ID to DM everyone else in the workspace. It lists who will get it and asks before sending. `--dry-run` stops after the list. It reads `SLACK_BOT_TOKEN` from `.env.local`; the bot needs `chat:write`, `im:write`, `users:read`, and `users:read.email`.
 
-Add `--except` with the birthday person's Slack email or member ID to DM
-everyone else in the workspace instead. It lists who will get it and asks
-before sending; `--dry-run` stops after the list. It reads `SLACK_BOT_TOKEN`
-from `.env.local`, and the bot needs `chat:write`, `im:write`, `users:read`, and
-`users:read.email`.
-
-```bash
-python3 scripts/birthday_message.py Sarah 2026-10-03 https://…/sign/abc --except sarah@example.com
-```
-
-## Demo data
-
-`scripts/seed-demo.mjs` fills the local PGlite database with three cards
-(many notes, one note, none). Stop `next dev` first, then:
+`scripts/seed-demo.mjs` fills the local database with sample cards. Stop the dev server first, then:
 
 ```bash
 node scripts/seed-demo.mjs
-```
-
-It prints each card's gift, organizer, and signing paths.
-
-## Organizer Google sign-in
-
-Starting a card requires Google sign-in, including locally: without these
-settings, `/` still renders but Send can't go through. Signing and opening a
-card never need an account.
-
-1. In [Google Cloud](https://console.cloud.google.com/apis/credentials), create
-   an OAuth client of type **Web application**.
-2. Add authorized redirect URIs:
-   - `http://localhost:3000/api/auth/google/callback`
-   - `https://your-domain/api/auth/google/callback`
-3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local` and on
-   Vercel.
-4. Set `APP_URL` to the public origin (no trailing slash) so the redirect URI
-   Google sees matches the console exactly.
-
-## Development
-
-```bash
-npm run dev
 ```

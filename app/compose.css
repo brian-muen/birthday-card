@@ -5,32 +5,72 @@
   display: contents;
 }
 
+/* The two windows keep a fixed slot. Closing one used to shorten this group
+   and the desktop's auto margins slid the other window. The heights are the
+   windows' own, so the group stays the size it was with both open. */
 .compose {
-  display: grid;
-  justify-items: center;
-  gap: 1rem;
+  --compose-message: 30.8125rem;
+  --compose-preview: 23.325rem;
   width: 100%;
   max-width: 38rem;
-  margin-block: auto;
+  margin-inline: auto;
 }
 
-@media (max-width: 71.99rem) {
+@media (min-width: 48rem) and (max-width: 71.99rem) {
+  .os-desktop > .compose {
+    position: relative;
+    height: calc(var(--compose-message) + 1rem + var(--compose-preview));
+    margin-block: auto;
+    pointer-events: none;
+  }
+
+  .compose-window.os-window,
   .compose-preview.os-window {
+    position: absolute;
+    left: 0;
+    width: 100%;
     max-width: none;
+    margin: 0;
+    pointer-events: auto;
+  }
+
+  .compose-window.os-window {
+    top: 0;
+  }
+
+  .compose-preview.os-window {
+    top: calc(var(--compose-message) + 1rem);
   }
 }
 
 @media (min-width: 72rem) {
-  .compose {
-    grid-template-columns: minmax(0, 38rem) 19rem;
-    align-items: start;
-    gap: 1.5rem;
+  .os-desktop > .compose {
+    position: relative;
     width: min(100%, 58.5rem);
+    max-width: none;
+    height: var(--compose-message);
+    margin-block: auto;
+    pointer-events: none;
+  }
+
+  .compose-window.os-window,
+  .compose-preview.os-window {
+    position: absolute;
+    top: 0;
+    margin: 0;
+    pointer-events: auto;
+  }
+
+  .compose-window.os-window {
+    left: 0;
+    width: min(38rem, calc(100% - 20.5rem));
     max-width: none;
   }
 
-  .compose-preview {
-    grid-column: 2;
+  .compose-preview.os-window {
+    left: calc(min(38rem, 100% - 20.5rem) + 1.5rem);
+    width: 19rem;
+    max-width: none;
   }
 }
 
