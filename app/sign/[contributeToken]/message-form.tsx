@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { addMessage } from "@/app/actions/add-message";
-import ReplyInvitation from "@/components/mail/reply-invitation";
 import ReplyPaper from "@/components/mail/reply-paper";
 import ReplyPenPicker from "@/components/mail/reply-pen-picker";
 import ReplySent from "@/components/mail/reply-sent";
@@ -21,9 +20,23 @@ const WIDE_QUERY = "(min-width: 64rem)";
 
 type Draft = { authorName: string; body: string; pen: PenId };
 type ErrorField = "name" | "body" | "form";
-type View = "inbox" | "compose" | "sent";
+type View = "compose" | "sent";
 type DraftStatus = "none" | "restored" | "saved" | "unsaved";
-type FocusTarget = "name" | "body" | "reply" | "sent";
+type FocusTarget = "name" | "body" | "sent";
+
+function signerWhen(recipientName: string, birthday: BirthdayTiming | null) {
+  if (!birthday) return null;
+  if (birthday.when === "upcoming" && birthday.signBy) {
+    return `${recipientName} turns a year older on ${birthday.day}. Please sign by ${birthday.signBy}.`;
+  }
+  if (birthday.when === "today") {
+    return `It's ${recipientName}'s birthday today, so please sign soon.`;
+  }
+  if (birthday.when === "past") {
+    return `${recipientName}'s birthday was ${birthday.day}, so please sign soon.`;
+  }
+  return null;
+}
 
 const DRAFT_LABEL: Record<DraftStatus, string> = {
   none: "Drafts save as you type",
@@ -71,19 +84,27 @@ function clearDraft(contributeToken: string) {
   }
 }
 
+function subscribeWide(onChange: () => void) {
+  const query = window.matchMedia(WIDE_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function wideNow() {
+  return window.matchMedia(WIDE_QUERY).matches;
+}
+
 export default function MessageForm({
   contributeToken,
   recipientName,
   intro,
   birthday,
-  received,
   stock,
 }: {
   contributeToken: string;
   recipientName: string;
   intro: string | null;
   birthday: BirthdayTiming | null;
-  received: string;
   stock: string;
 }) {
   const [authorName, setAuthorName] = useState("");
@@ -93,43 +114,44 @@ export default function MessageForm({
   const [imageBusy, setImageBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorField, setErrorField] = useState<ErrorField | null>(null);
-  const [view, setView] = useState<View>("inbox");
+  const [view, setView] = useState<View>("compose");
   const [sent, setSent] = useState<{ name: string; pen: PenId } | null>(null);
-  const [replied, setReplied] = useState(false);
   const [draftStatus, setDraftStatus] = useState<DraftStatus>("none");
+  const wide = useSyncExternalStore(subscribeWide, wideNow, () => false);
   const [preview, setPreview] = useState<boolean | null>(null);
   const [composeMotion, setComposeMotion] = useState(false);
   const [paperMotion, setPaperMotion] = useState(false);
   const [pending, startTransition] = useTransition();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
-  const replyRef = useRef<HTMLButtonElement>(null);
   const sentRef = useRef<HTMLHeadingElement>(null);
   const paperRef = useRef<HTMLElement>(null);
   const focusTarget = useRef<FocusTarget | null>(null);
   const scrollToPaper = useRef(false);
 
   const subject = `Sign ${recipientName}'s birthday card`;
-  const showPreview = view === "compose" && preview === true;
+  const showPreview = view === "compose" && (preview ?? wide);
 
   useEffect(() => {
     const restore = window.setTimeout(() => {
+      let name = "";
       try {
         const saved = window.localStorage.getItem(draftKey(contributeToken));
-        if (!saved) return;
-        const draft = JSON.parse(saved) as Partial<Draft>;
-        const name = typeof draft.authorName === "string" ? draft.authorName : "";
-        const text = typeof draft.body === "string" ? draft.body : "";
-        if (!name && !text) return;
-        setAuthorName(name);
-        setBody(text);
-        if (typeof draft.pen === "string") setPen(parsePen(draft.pen));
-        setDraftStatus("restored");
-        setPreview(window.matchMedia(WIDE_QUERY).matches);
-        setView("compose");
+        if (saved) {
+          const draft = JSON.parse(saved) as Partial<Draft>;
+          name = typeof draft.authorName === "string" ? draft.authorName : "";
+          const text = typeof draft.body === "string" ? draft.body : "";
+          if (name || text) {
+            setAuthorName(name);
+            setBody(text);
+            if (typeof draft.pen === "string") setPen(parsePen(draft.pen));
+            setDraftStatus("restored");
+          }
+        }
       } catch {
         // Storage can be unavailable; the form still works.
       }
+      (name.trim() ? bodyRef : nameRef).current?.focus({ preventScroll: true });
     }, 0);
     return () => window.clearTimeout(restore);
   }, [contributeToken]);
@@ -145,7 +167,6 @@ export default function MessageForm({
     const element = {
       name: nameRef.current,
       body: bodyRef.current,
-      reply: replyRef.current,
       sent: sentRef.current,
     }[target];
     element?.focus();
@@ -178,19 +199,6 @@ export default function MessageForm({
     setErrorField(field);
     if (field === "name") nameRef.current?.focus();
     if (field === "body") bodyRef.current?.focus();
-  }
-
-  function openReply() {
-    setPreview((current) => current ?? window.matchMedia(WIDE_QUERY).matches);
-    setComposeMotion(true);
-    setPaperMotion(true);
-    focusTarget.current = authorName.trim() ? "body" : "name";
-    setView("compose");
-  }
-
-  function backToInbox() {
-    focusTarget.current = "reply";
-    setView("inbox");
   }
 
   function togglePreview() {
@@ -240,7 +248,6 @@ export default function MessageForm({
         clearDraft(contributeToken);
         setDraftStatus("none");
         setSent({ name, pen: chosen });
-        setReplied(true);
         setAuthorName("");
         setBody("");
         setImage(null);
@@ -287,30 +294,13 @@ export default function MessageForm({
           pen={sent.pen}
           headingRef={sentRef}
           onWriteAnother={writeAnother}
-          onDone={backToInbox}
-        />
-      </AppWindow>
-    );
-  }
-
-  if (view === "inbox") {
-    return (
-      <AppWindow app="mail">
-        <ReplyInvitation
-          recipientName={recipientName}
-          intro={intro}
-          birthday={birthday}
-          received={received}
-          hasDraft={Boolean(authorName || body)}
-          replied={replied}
-          replyRef={replyRef}
-          onReply={openReply}
         />
       </AppWindow>
     );
   }
 
   const busy = pending || imageBusy;
+  const when = signerWhen(recipientName, birthday);
   const describedBy = error ? "reply-error" : undefined;
 
   return (
@@ -327,7 +317,6 @@ export default function MessageForm({
             title={`Re: ${subject}`}
             width="40rem"
             className="reply-window reply-compose"
-            onClose={backToInbox}
             closeLabel="Close reply and keep the draft"
             toolbar={
               <>
@@ -375,6 +364,18 @@ export default function MessageForm({
               </>
             }
           >
+            {intro || when ? (
+              <div className="reply-brief">
+                {intro ? (
+                  <p className="reply-brief-intro">
+                    <span className="sr-only">Note from the organizer: </span>
+                    {intro}
+                  </p>
+                ) : null}
+                {when ? <p className="reply-brief-when">{when}</p> : null}
+              </div>
+            ) : null}
+
             <div className="reply-fields">
               <span className="reply-label">To</span>
               <span className="reply-static">

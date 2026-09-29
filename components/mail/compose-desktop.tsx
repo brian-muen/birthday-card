@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { createCard } from "@/app/actions/create-card";
-import CardPreview from "@/components/card-preview";
+import StillCover from "@/components/mail/still-cover";
 import {
   saveComposeDraft,
   takeComposeDraft,
@@ -12,6 +12,7 @@ import {
 } from "@/components/mail/compose-draft";
 import { HomeMailIcon, HomeMailWindow } from "@/components/mail/home-mail";
 import { OrganizerIcons } from "@/components/mail/organizer-icons";
+import SentFolder from "@/components/mail/sent-folder";
 import { SignInApp, SignInBridge } from "@/components/mail/sign-in-window";
 import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
@@ -24,6 +25,7 @@ import { playSound } from "@/components/os/sound";
 import { signByDay } from "@/lib/birthday";
 import type { DesignId } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
+import type { SentCardRow } from "@/lib/sent-cards";
 import type { StockId } from "@/lib/stock";
 import "@/app/compose.css";
 
@@ -34,6 +36,9 @@ const PAINTING_STAGE = "#e4dcd2";
 
 export default function ComposeDesktop({
   signedIn,
+  sentCards = [],
+  sentEmail = "",
+  sentOpen = false,
   error,
   initialName,
   initialBirthday,
@@ -41,6 +46,10 @@ export default function ComposeDesktop({
   initialDesign,
 }: {
   signedIn: boolean;
+  sentCards?: SentCardRow[];
+  sentEmail?: string;
+  /** Open the Sent window on arrival, for the old /cards address. */
+  sentOpen?: boolean;
   error?: string;
   initialName: string;
   initialBirthday: string;
@@ -96,7 +105,7 @@ export default function ComposeDesktop({
     <div className="compose-screen">
       <Computer
         stock={stock}
-        initialClosed={["sign-in"]}
+        initialClosed={sentOpen ? ["sign-in"] : ["sign-in", "sent"]}
         icons={
           <OrganizerIcons signedIn={signedIn} current="new">
             <AppIcon app="compose" icon="compose" label="New card" />
@@ -214,12 +223,13 @@ export default function ComposeDesktop({
               closeLabel="Close the card preview"
             >
               <div className="compose-preview-stage" style={{ ["--stage" as string]: stage }}>
-                <CardPreview name={name} stock={stock} design={design} compact />
+                <StillCover name={name} design={design} />
               </div>
             </OsWindow>
           </AppWindow>
         </form>
 
+        {signedIn ? <SentFolder cards={sentCards} email={sentEmail} /> : null}
         <HomeMailWindow />
         <SignInBridge openRef={openSignIn} />
         {signedIn ? null : (
@@ -258,13 +268,9 @@ function ComposeToolbar({ signedIn, introLength }: { signedIn: boolean; introLen
         <span className="compose-progress" aria-hidden="true">
           <span />
         </span>
-      ) : (
-        <p className="compose-toolbar-note">
-          {signedIn
-            ? "Sending gives you the links to share."
-            : "Organizers sign in with Google first."}
-        </p>
-      )}
+      ) : signedIn ? (
+        <p className="compose-toolbar-note">Sending gives you the links to share.</p>
+      ) : null}
       {introLength > INTRO_MAX - 100 ? (
         <span className="compose-count">
           {introLength}/{INTRO_MAX}

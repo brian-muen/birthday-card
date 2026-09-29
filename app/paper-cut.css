@@ -1,3 +1,23 @@
+/* A still front, used where the card is only a picture. */
+.still-cover {
+  width: min(13.5rem, 100%);
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  border: 1px solid var(--os-ink);
+  box-shadow: 3px 3px 0 var(--os-ink);
+  background: var(--os-sheet);
+}
+
+.still-cover .cut-cover,
+.still-cover .card-body {
+  width: 100%;
+  height: 100%;
+}
+
+.still-cover .cut-cover {
+  --turn: 0;
+}
+
 /* Layered paper-cut covers. The art is one SVG of stacked sheets; the type
    sits on the lower band of the front sheet like a pressed foil stamp. */
 .cut-cover {

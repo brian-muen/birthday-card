@@ -14,12 +14,6 @@ import "../../reply.css";
 
 type PageParams = { params: Promise<{ contributeToken: string }> };
 
-const receivedFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
-
 const getCard = cache(async (contributeToken: string) => {
   const db = await getDb();
   return db.query.cards.findFirst({
@@ -66,7 +60,6 @@ export default async function SignPage({ params }: PageParams) {
         recipientName={card.recipientName}
         intro={card.intro?.trim() || null}
         birthday={card.birthday ? birthdayTiming(card.birthday) : null}
-        received={receivedFormat.format(card.createdAt)}
         stock={stock}
       />
     </Computer>

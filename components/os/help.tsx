@@ -21,7 +21,7 @@ const QUESTIONS = [
   },
   {
     q: "Who can read the notes?",
-    a: "Only the birthday person and the organizer. People signing see the invitation and their own note, never anyone else’s.",
+    a: "Only the birthday person and the organizer. People signing see the organizer’s note and their own, never anyone else’s.",
   },
   {
     q: "When does the birthday person get the card?",

@@ -212,18 +212,10 @@
 }
 
 .outbox-preview-stage {
-  padding: 1.2rem 1.2rem 0.8rem;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
   background: var(--stage);
-}
-
-.outbox-preview .card-frame {
-  width: min(12rem, 100%);
-  min-width: 0;
-}
-
-.outbox-preview .card-scrub {
-  --scrub-gap: var(--stage);
-  margin-top: 0.9rem;
 }
 
 .outbox-save-body {
