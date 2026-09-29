@@ -1,6 +1,7 @@
 "use client";
 
-import { PICKER_DESIGNS, parseDesign, type DesignId } from "@/lib/design";
+import CoverPicker from "@/components/mail/cover-picker";
+import { type DesignId } from "@/lib/design";
 import { STOCKS, type StockId } from "@/lib/stock";
 
 export default function ComposeStationery({
@@ -21,19 +22,7 @@ export default function ComposeStationery({
         <label htmlFor="design" className="compose-label">
           Cover
         </label>
-        <select
-          id="design"
-          name="design"
-          value={design}
-          onChange={(event) => onDesign(parseDesign(event.target.value))}
-          className="compose-select"
-        >
-          {PICKER_DESIGNS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <CoverPicker value={design} onChange={onDesign} />
         <span id="compose-paper" className="compose-label">
           Paper
         </span>

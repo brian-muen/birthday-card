@@ -37,7 +37,7 @@ const QUESTIONS = [
   },
   {
     q: "What does Transform do?",
-    a: "It turns the inbox into the paper card, with each note in the pen its writer chose. Turn it back returns you to the messages.",
+    a: "It turns the inbox into the paper card, closed on the cover, so you can flip through. Each note is in the pen its writer chose. Turn it back returns you to the messages.",
   },
   {
     q: "Can I keep a copy?",

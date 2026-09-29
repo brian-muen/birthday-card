@@ -14,6 +14,7 @@ import { HomeMailIcon, HomeMailWindow } from "@/components/mail/home-mail";
 import { OrganizerIcons } from "@/components/mail/organizer-icons";
 import SentFolder from "@/components/mail/sent-folder";
 import { SignInApp, SignInBridge } from "@/components/mail/sign-in-window";
+import BirthdayPicker from "@/components/mail/birthday-picker";
 import ComposeStationery from "@/components/mail/compose-stationery";
 import { MailIcon } from "@/components/mail/outbox-icons";
 import BlinkDots from "@/components/os/blink-dots";
@@ -168,16 +169,7 @@ export default function ComposeDesktop({
                   Birthday
                 </label>
                 <div className="compose-birthday">
-                  <input
-                    id="birthday"
-                    name="birthday"
-                    type="date"
-                    value={birthday}
-                    onChange={(event) => setBirthday(event.target.value)}
-                    aria-describedby="birthday-hint"
-                    data-empty={birthday ? undefined : true}
-                    className="os-header-field compose-date"
-                  />
+                  <BirthdayPicker value={birthday} onChange={setBirthday} />
                   <span id="birthday-hint" className="compose-date-hint">
                     {signBy ? `Signers are asked to sign by ${signBy}.` : "Optional. Signers get a sign-by date."}
                   </span>

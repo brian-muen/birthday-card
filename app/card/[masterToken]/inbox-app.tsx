@@ -25,7 +25,7 @@ import CardBook from "./card-book";
 import InboxArrival from "./inbox-arrival";
 import InboxBalloons from "./inbox-balloons";
 import InboxBoot, { hasBooted, markBooted } from "./inbox-boot";
-import InboxMail, { useWide, type InboxNote, type Pane } from "./inbox-mail";
+import InboxMail, { type InboxNote, type Pane } from "./inbox-mail";
 import { useReadState } from "./inbox-read-state";
 
 type Phase = "computer" | "leaving" | "card";
@@ -65,7 +65,6 @@ export default function InboxApp({
     getReducedMotion,
     getServerFalse,
   );
-  const wide = useWide();
   const { readIds, setRead } = useReadState(token);
 
   const [phase, setPhase] = useState<Phase>("computer");
@@ -237,9 +236,6 @@ export default function InboxApp({
     </>
   );
 
-  const openToNote =
-    mailOpen && currentId !== null && (wide || pane === "message") ? currentId : null;
-
   return (
     <>
       {phase === "card" ? (
@@ -269,7 +265,6 @@ export default function InboxApp({
               dedication={dedication}
               stock={stock}
               notes={notes}
-              openToNote={openToNote}
             />
           </div>
         </main>
