@@ -14,14 +14,14 @@ test("parseEmail lowercases and rejects junk", () => {
 test("safeNextPath stays on this site", () => {
   assert.equal(safeNextPath("/cards"), "/cards");
   assert.equal(safeNextPath("/created/abc"), "/created/abc");
-  assert.equal(safeNextPath("https://evil.example/"), "/cards");
-  assert.equal(safeNextPath("//evil.example"), "/cards");
-  assert.equal(safeNextPath("/\\evil"), "/cards");
-  assert.equal(safeNextPath(null), "/cards");
-  assert.equal(safeNextPath("/\t//evil.com"), "/cards");
-  assert.equal(safeNextPath("/%09//evil.com"), "/cards");
-  assert.equal(safeNextPath("/account"), "/cards");
-  assert.equal(safeNextPath("/account?next=/cards"), "/cards");
+  assert.equal(safeNextPath("https://evil.example/"), "/?sent=1");
+  assert.equal(safeNextPath("//evil.example"), "/?sent=1");
+  assert.equal(safeNextPath("/\\evil"), "/?sent=1");
+  assert.equal(safeNextPath(null), "/?sent=1");
+  assert.equal(safeNextPath("/\t//evil.com"), "/?sent=1");
+  assert.equal(safeNextPath("/%09//evil.com"), "/?sent=1");
+  assert.equal(safeNextPath("/account"), "/?sent=1");
+  assert.equal(safeNextPath("/account?next=/cards"), "/?sent=1");
 });
 
 test("profileFromGoogleIdentity keeps a Google email even if verified is missing", () => {
