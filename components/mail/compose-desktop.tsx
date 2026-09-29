@@ -23,7 +23,7 @@ import { AppIcon, AppWindow } from "@/components/os/desktop";
 import OsWindow from "@/components/os/os-window";
 import { PixelIcon } from "@/components/os/pixel-icon";
 import { playSound } from "@/components/os/sound";
-import { formatBirthday, signByDay } from "@/lib/birthday";
+import { formatBirthday } from "@/lib/birthday";
 import type { DesignId } from "@/lib/design";
 import { isPaperCut, paperCut } from "@/lib/paper-cut";
 import type { SentCardRow } from "@/lib/sent-cards";
@@ -74,7 +74,6 @@ export default function ComposeDesktop({
   }
 
   const trimmed = name.trim();
-  const signBy = birthday ? signByDay(birthday) : "";
   const stage = isPaperCut(design) ? paperCut(design).stage : PAINTING_STAGE;
 
   const dismissAlert = useCallback(() => {
@@ -170,9 +169,6 @@ export default function ComposeDesktop({
                 </label>
                 <div className="compose-birthday">
                   <BirthdayPicker value={birthday} onChange={setBirthday} />
-                  <span id="birthday-hint" className="compose-date-hint">
-                    {signBy ? `Signers are asked to sign by ${signBy}.` : "Optional. Signers get a sign-by date."}
-                  </span>
                 </div>
                 <span className="compose-label" aria-hidden="true">
                   Subject
